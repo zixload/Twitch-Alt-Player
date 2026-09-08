@@ -546,13 +546,11 @@ function вставитьНашуКнопку() {
 			</button>
 			<style>
 				.tw5-автоперенаправление
-				// .tw5-autoredirect
 				{
-					flex: 0 0;
+					flex: 0 0 auto;
 					margin: 0 0 0 .5rem;
 				}
 				.tw5-автоперенаправление button
-				// .tw5-autoredirect button
 				{
 					align-items: center;
 					background-color: transparent;
@@ -569,7 +567,6 @@ function вставитьНашуКнопку() {
 					color: #efeff1;
 				}
 				.tw5-автоперенаправление button:active
-				// .tw5-autoredirect button:active
 				{
 					background-color: rgba(0, 0, 0, 0.05);
 				}
@@ -579,13 +576,11 @@ function вставитьНашуКнопку() {
 					background-color: rgba(255, 255, 255, 0.15);
 				}
 				.tw5-автоперенаправление svg
-				// .tw5-autoredirect svg
 				{
 					fill: currentColor;
 					width: 75%;
 				}
 				.tw5-запрещено svg
-				// .tw5-forbidden svg
 				{
 					opacity: .4;
 				}
@@ -622,14 +617,12 @@ function вставитьНашуКнопку() {
 			</div>
 			<style>
 				.tw5-автоперенаправление
-				// .tw5-autoredirect
 				{
-					flex: 0 0;
+					flex: 0 0 auto;
 					margin: 0 .5rem;
 					position: relative;
 				}
 				.tw5-автоперенаправление button
-				// .tw5-autoredirect button
 				{
 					align-items: center;
 					background-color: var(--color-background-button-text-default);
@@ -641,25 +634,21 @@ function вставитьНашуКнопку() {
 					width: var(--button-size-default);
 				}
 				.tw5-автоперенаправление button:hover
-				// .tw5-autoredirect button:hover
 				{
 					background-color: var(--color-background-button-text-hover);
 					color: var(--color-fill-button-icon-hover);
 				}
 				.tw5-автоперенаправление button:active
-				// .tw5-autoredirect button:active
 				{
 					background-color: var(--color-background-button-text-active);
 					color: var(--color-fill-button-icon-active);
 				}
 				.tw5-автоперенаправление svg
-				// .tw5-autoredirect svg
 				{
 					fill: currentColor;
 					width: 75%;
 				}
 				.tw5-запрещено svg
-				// .tw5-forbidden svg
 				{
 					opacity: .4;
 				}
@@ -697,12 +686,10 @@ function вставитьНашуКнопку() {
 					z-index: var(--z-index-below);
 				}
 				.tw5-автоперенаправление:hover .tw5-tooltip
-				// .tw5-autoredirect:hover .tw5-tooltip
 				{
 					display: block;
 				}
 				.tw5-справка .tw5-tooltip
-				// .tw5-help .tw5-tooltip
 				{
 					background: #f00000;
 					color: #fff;
