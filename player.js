@@ -6396,11 +6396,11 @@ const м_Список = (() => {
     }
     _обновленСписокСегментов(лУкороченныйИнтервал) {
       м_Журнал.Вот(
-        `[AdBlock] Backup stream updated. Segments=${this.оСписокСегментов.моСегменты.length} EndOfList=${this.оСписокСегментов.лКонецСписка}`
+        `[AdBlock] Main stream updated. Segments=${this.оСписокСегментов.моСегменты.length} EndOfList=${this.оСписокСегментов.лКонецСписка}`
       );
       if (this.оСписокСегментов.моСегменты.length === 0) {
-        // A backup stream with no segments is what leaves the picture frozen.
-        м_Журнал.Ой("[AdBlock] Backup stream is empty");
+        // An empty segment list is what leaves the picture frozen.
+        м_Журнал.Ой("[AdBlock] Main stream is empty");
       }
       const лСписокЗаканчиваетсяРекламой = этотСписокЗаканчиваетсяРекламой(
         this.оСписокСегментов
@@ -7153,6 +7153,8 @@ const м_Список = (() => {
   let _чДобавленныйПорядковыйНомер;
   let _чДобавленноеВремя;
   let _лДобавитьРазрыв;
+  // URI of the #EXT-X-MAP whose initialisation segment the queue is currently on.
+  let _sAddedInitSegmentUrl;
   function очиститьСтатистикуДобавления() {
     _сДобавленныйИдТрансляции = "";
     _чДобавленныйИдСессии = NaN;
@@ -7160,6 +7162,7 @@ const м_Список = (() => {
     _чДобавленныйПорядковыйНомер = -1;
     _чДобавленноеВремя = -1;
     _лДобавитьРазрыв = false;
+    _sAddedInitSegmentUrl = "";
   }
   очиститьСтатистикуДобавления();
   function ДобавитьСегментыВОчередь(
@@ -7289,6 +7292,20 @@ const м_Список = (() => {
         );
         _лДобавитьРазрыв = true;
       }
+      // A different #EXT-X-MAP means a different moov box, so the new initialisation
+      // segment has to reach the SourceBuffer before any media that depends on it.
+      // The ad bypass switches between two fMP4 streams that each ship their own, and
+      // that switch does not otherwise always raise a discontinuity: the two playlists
+      // can select renditions with the same identifier. Appending media from one
+      // encode against the other's moov is what leaves a black picture behind.
+      if (оНовыеСегменты.sInitSegmentUrl !== _sAddedInitSegmentUrl) {
+        if (_sAddedInitSegmentUrl !== "") {
+          м_Журнал.Окак(
+            "[AdBlock] Initialisation segment changed, forcing a discontinuity"
+          );
+        }
+        _лДобавитьРазрыв = true;
+      }
       const оДобавлено = г_моОчередь.Добавить(
         new Сегмент(
           ОБРАБОТКА_ЖДЕТ_ЗАГРУЗКИ,
@@ -7313,6 +7330,7 @@ const м_Список = (() => {
       _чДобавленныйИдСессии = оНовыеВарианты.чИдСессии;
       _сДобавленныйИдВарианта = оВыбранныйВариант.сИдентификатор;
       _чДобавленныйПорядковыйНомер = чПорядковыйНомер;
+      _sAddedInitSegmentUrl = оНовыеСегменты.sInitSegmentUrl || "";
       if (!Number.isNaN(оСегмент.чВремя)) {
         _чДобавленноеВремя = оСегмент.чВремя;
       }
