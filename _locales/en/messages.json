@@ -1023,7 +1023,7 @@
 	},
 	"F0723":
 	{
-		"message": "In case of incorrect or missing English translation, please write the correct variant below. You can also <a href='https://coolcmd.github.io/tw5/translate.html' target='_blank' rel='noopener noreferrer'>do it yourself</a>, without the help of extension developer."
+		"message": "In case of incorrect or missing English translation, please write the correct variant below. You can also do it yourself, without the help of extension developer."
 	},
 	"F0726":
 	{
@@ -1051,7 +1051,7 @@
 	},
 	"F1000":
 	{
-		"message": "<p>The browser extension <cite>Alternate Player for Twitch.tv</cite> was created by independent developer <cite>Alexander Choporov (CoolCmd)</cite>, and this takes a lot of free time. Extension is free. If you liked it, then you can thank the developer by donating him some money. Donation will also serve as a great motivation to continue the extension development.</p><p>To make a donation, click <a href='https://coolcmd.github.io/tw5/donate.html' target='_blank' rel='noopener noreferrer'>this link</a>.</p>",
+		"message": "<p>The browser extension <cite>Alternate Player for Twitch.tv</cite> was created by independent developer <cite>Alexander Choporov (CoolCmd)</cite>, and this takes a lot of free time. Extension is free. If you liked it, then you can thank the developer by donating him some money. Donation will also serve as a great motivation to continue the extension development.</p><p>To make a donation, click this link.</p>",
 		"description": "Новость."
 	},
 	"J1003":
@@ -1181,7 +1181,7 @@
 	},
 	"F1049":
 	{
-		"message": "<p>Added a full-featured chat, which is identical to the popout chat on the Twitch.tv website. The following features are now available: rooms, moderation, raids, Bits, popout window, you do not need to confirm the sending of the first message. Whispers do not work in chat yet. If you need to toggle the dark mode, do it on the Twitch.tv website. Full-featured chat is not available in Microsoft Edge.</p><p>Now in chat (for example, attached to the bottom or top side of the window) there is room for much more <a href='https://coolcmd.github.io/img/tw5/messages.png' target='_blank' rel='noopener noreferrer'>messages</a> and <a href='https://coolcmd.github.io/img/tw5/emotes.png' target='_blank' rel='noopener noreferrer'>emotes</a>. This optimization is compatible with current versions of <cite>BetterTTV</cite> and <cite>FrankerFaceZ</cite> browser extensions. This optimization is not available in Microsoft Edge.</p><p>Added “Incognito” player color theme. Added setting to select a chat version.</p>",
+		"message": "<p>Added a full-featured chat, which is identical to the popout chat on the Twitch.tv website. The following features are now available: rooms, moderation, raids, Bits, popout window, you do not need to confirm the sending of the first message. Whispers do not work in chat yet. If you need to toggle the dark mode, do it on the Twitch.tv website. Full-featured chat is not available in Microsoft Edge.</p><p>Now in chat (for example, attached to the bottom or top side of the window) there is room for much more messages and emotes. This optimization is compatible with current versions of <cite>BetterTTV</cite> and <cite>FrankerFaceZ</cite> browser extensions. This optimization is not available in Microsoft Edge.</p><p>Added “Incognito” player color theme. Added setting to select a chat version.</p>",
 		"description": "Новость."
 	},
 	"J1054":
@@ -1361,12 +1361,12 @@
 	},
 	"F1570":
 	{
-		"message": "<p>Embedded chat is developed by Twitch.tv. The extension just inserts the chat into its player (and optimizes the <a href='https://coolcmd.github.io/img/tw5/messages.png' target='_blank' rel='noopener noreferrer'>height</a> of the <a href='https://coolcmd.github.io/img/tw5/emotes.png' target='_blank' rel='noopener noreferrer'>content</a>). This chat has some limitations compared to the version used on the Twitch.tv website. See the description of the chat version in the player settings.</p>",
+		"message": "<p>Embedded chat is developed by Twitch.tv. The extension just inserts the chat into its player (and optimizes the height of the content). This chat has some limitations compared to the version used on the Twitch.tv website. See the description of the chat version in the player settings.</p>",
 		"description": "Часть справки для Chrome и Firefox."
 	},
 	"F1571":
 	{
-		"message": "<p>If you have problems with chat, then try the following:</p><ul><li>Open your browser settings and allow to save and read cookie data, including third-party cookie data.<li>Go to <a href='https://www.twitch.tv/' rel='noopener noreferrer'>Twitch.tv</a> website and remove its cookies.<li>Select a different chat version in the player settings.<li>Chat can be broken by: other browser extensions, ad blockers, firewalls, antiviruses. To diagnose a problem, try temporarily turning off all of the above. Here are the <a href='https://coolcmd.github.io/img/tw5/privacy%20badger%20options.png' target='_blank' rel='noopener noreferrer'>Privacy Badger extension settings</a>, which do not interfere with chat.</ul>",
+		"message": "<p>If you have problems with chat, then try the following:</p><ul><li>Open your browser settings and allow to save and read cookie data, including third-party cookie data.<li>Go to <a href='https://www.twitch.tv/' rel='noopener noreferrer'>Twitch.tv</a> website and remove its cookies.<li>Select a different chat version in the player settings.<li>Chat can be broken by: other browser extensions, ad blockers, firewalls, antiviruses. To diagnose a problem, try temporarily turning off all of the above. Here are the Privacy Badger extension settings, which do not interfere with chat.</ul>",
 		"description": "Часть справки для Chrome."
 	},
 	"F1572":
@@ -1391,7 +1391,7 @@
 	},
 	"F1581":
 	{
-		"message": "<p>If you have problems with chat, try the following:</p><ul><li>In your browser settings do not block third-party cookies and cookies from unvisited websites, or add an address <b>https://twitch.tv</b> to exceptions.<li>Go to <a href='https://www.twitch.tv/' rel='noopener noreferrer'>Twitch.tv</a> website and remove its cookies (click the icon in the address bar).<li>Select a different chat version in the player settings.<li>Open the tab with the address <b>about:config</b>, find the setting <b>privacy.firstparty.isolate</b> and make sure its value is <b>false</b>.<li>Chat can be broken by: other browser extensions, ad blockers, firewalls, antiviruses. To diagnose a problem, try temporarily turning off all of the above. Here are the <a href='https://coolcmd.github.io/img/tw5/privacy%20badger%20options.png' target='_blank' rel='noopener noreferrer'>Privacy Badger extension settings</a>, which do not interfere with chat.</ul>",
+		"message": "<p>If you have problems with chat, try the following:</p><ul><li>In your browser settings do not block third-party cookies and cookies from unvisited websites, or add an address <b>https://twitch.tv</b> to exceptions.<li>Go to <a href='https://www.twitch.tv/' rel='noopener noreferrer'>Twitch.tv</a> website and remove its cookies (click the icon in the address bar).<li>Select a different chat version in the player settings.<li>Open the tab with the address <b>about:config</b>, find the setting <b>privacy.firstparty.isolate</b> and make sure its value is <b>false</b>.<li>Chat can be broken by: other browser extensions, ad blockers, firewalls, antiviruses. To diagnose a problem, try temporarily turning off all of the above. Here are the Privacy Badger extension settings, which do not interfere with chat.</ul>",
 		"description": "Часть справки для Firefox."
 	},
 	"F1582":
