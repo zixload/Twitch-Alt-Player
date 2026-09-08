@@ -9,9 +9,35 @@
 <link rel=preconnect href=https://gql.twitch.tv>
 <script src=common.js defer></script>
 <script src=player.js defer></script>
+<script src=sidebar.js defer></script>
 <link rel=stylesheet href=common.css>
 <link rel=stylesheet href=player.css>
+<link rel=stylesheet href=sidebar.css>
+<link rel=stylesheet href=glass.css>
 <body hidden>
+	<aside id=alt-sidebar hidden>
+		<div class=alt-sb-top>
+			<span class=alt-sb-title data-i18n=F1900></span>
+			<button type=button class="alt-sb-icon-button alt-sb-collapse" data-i18n=^A0900>
+				<svg xmlns=http://www.w3.org/2000/svg viewBox="0 0 24 24">
+					<path d="M20 4h2v16h-2zM17 11H6.8l4.6-4.6L10 5l-7 7 7 7 1.4-1.4L6.8 13H17z"/>
+				</svg>
+			</button>
+		</div>
+		<div class=alt-sb-scroll>
+			<section class=alt-sb-section data-alt-sb-section=followed hidden>
+				<h2 class=alt-sb-heading data-i18n=F1901></h2>
+				<div class=alt-sb-list></div>
+				<button type=button class=alt-sb-more data-i18n=F1903 hidden></button>
+			</section>
+			<section class=alt-sb-section data-alt-sb-section=live hidden>
+				<h2 class=alt-sb-heading data-i18n=F1902></h2>
+				<div class=alt-sb-list></div>
+				<button type=button class=alt-sb-more data-i18n=F1903 hidden></button>
+			</section>
+		</div>
+		<div class=alt-sb-status hidden></div>
+	</aside>
 	<div id=проигрывательичат>
 	<!-- <div id=playerandchat> -->
 		<div id=проигрыватель>

@@ -1,0 +1,422 @@
+@charset "utf-8";
+
+/*
+	Left navigation sidebar for the alternate player.
+	Mirrors the Twitch site sidebar (followed channels + live recommendations)
+	so the player no longer feels like a dead end.
+
+	Colour tokens fall back to sane defaults when the appearance module has not
+	published its theme variables yet (they are RGB triplets, e.g. "40,40,40").
+*/
+
+#alt-sidebar {
+	--sb-width: 15.5rem;
+	--sb-width-collapsed: 3.5rem;
+	--sb-ink: 242, 242, 245;
+	--sb-ink-dim: 154, 155, 166;
+	--sb-line: 255, 255, 255;
+	--sb-accent: var(--сЦветВыделения, 168, 128, 255);
+	--sb-live: 236, 62, 62;
+	--sb-glass: var(--сЦветФона, 16, 16, 21);
+
+	flex: 0 0 var(--sb-width);
+	width: var(--sb-width);
+	height: 100%;
+	position: relative;
+	z-index: 7;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	font: 400 .8125rem/1.35 "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+	color: rgb(var(--sb-ink));
+	background: linear-gradient(180deg, rgba(var(--sb-glass), .72), rgba(var(--sb-glass), .58));
+	backdrop-filter: blur(1.375rem) saturate(150%);
+	-webkit-backdrop-filter: blur(1.375rem) saturate(150%);
+	box-shadow: inset -.0625rem 0 0 rgba(var(--sb-line), .07);
+	transition: flex-basis .22s ease, width .22s ease;
+}
+
+#alt-sidebar.alt-sb-collapsed {
+	flex-basis: var(--sb-width-collapsed);
+	width: var(--sb-width-collapsed);
+}
+
+/* Nothing to show (logged out, request failed) — stay out of the way. */
+#alt-sidebar[hidden] {
+	display: none !important;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.alt-sb-top {
+	flex: none;
+	height: 2.75rem;
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	padding: 0 .375rem 0 .875rem;
+	box-shadow: inset 0 -.0625rem 0 rgba(var(--sb-line), .06);
+}
+
+.alt-sb-title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font-size: .875rem;
+	font-weight: 600;
+	letter-spacing: .01em;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.alt-sb-collapsed .alt-sb-title {
+	opacity: 0;
+}
+
+.alt-sb-icon-button {
+	flex: none;
+	width: 2rem;
+	height: 2rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: .5rem;
+	padding: 0;
+	cursor: pointer;
+	color: rgb(var(--sb-ink-dim));
+	background: 0 0;
+	transition: background-color .15s ease, color .15s ease;
+}
+
+.alt-sb-icon-button:hover {
+	color: rgb(var(--sb-ink));
+	background: rgba(var(--sb-line), .09);
+}
+
+.alt-sb-icon-button>svg {
+	width: 1.125rem;
+	height: 1.125rem;
+	pointer-events: none;
+}
+
+.alt-sb-collapsed .alt-sb-collapse>svg {
+	transform: scaleX(-1);
+}
+
+/* ------------------------------------------------------------ scroll area */
+
+.alt-sb-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	padding-bottom: .75rem;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(var(--sb-line), .18) transparent;
+	overscroll-behavior: contain;
+}
+
+.alt-sb-scroll::-webkit-scrollbar {
+	width: .375rem;
+}
+
+.alt-sb-scroll::-webkit-scrollbar-thumb {
+	border-radius: .375rem;
+	background: rgba(var(--sb-line), .16);
+}
+
+.alt-sb-scroll::-webkit-scrollbar-thumb:hover {
+	background: rgba(var(--sb-line), .28);
+}
+
+.alt-sb-scroll::-webkit-scrollbar-track {
+	background: 0 0;
+}
+
+/* --------------------------------------------------------------- sections */
+
+.alt-sb-section {
+	padding-top: .75rem;
+}
+
+.alt-sb-section[hidden] {
+	display: none !important;
+}
+
+.alt-sb-heading {
+	margin: 0 0 .25rem;
+	padding: 0 .875rem;
+	font-size: .6875rem;
+	font-weight: 600;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: rgb(var(--sb-ink-dim));
+}
+
+.alt-sb-collapsed .alt-sb-heading {
+	height: .0625rem;
+	margin: .5rem .875rem;
+	padding: 0;
+	overflow: hidden;
+	text-indent: -100rem;
+	background: rgba(var(--sb-line), .08);
+}
+
+/* -------------------------------------------------------------- item rows */
+
+.alt-sb-row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: .625rem;
+	height: 2.875rem;
+	padding: 0 .75rem 0 .875rem;
+	cursor: pointer;
+	text-decoration: none;
+	color: inherit;
+	transition: background-color .12s ease;
+}
+
+.alt-sb-row:hover {
+	background: rgba(var(--sb-line), .07);
+}
+
+.alt-sb-row::before {
+	content: "";
+	position: absolute;
+	top: .5rem;
+	bottom: .5rem;
+	left: 0;
+	width: .1875rem;
+	border-radius: 0 .1875rem .1875rem 0;
+	background: rgb(var(--sb-accent));
+	opacity: 0;
+	transition: opacity .12s ease;
+}
+
+.alt-sb-row.alt-sb-current {
+	background: rgba(var(--sb-line), .1);
+}
+
+.alt-sb-row.alt-sb-current::before {
+	opacity: 1;
+}
+
+.alt-sb-avatar {
+	flex: none;
+	width: 1.875rem;
+	height: 1.875rem;
+	position: relative;
+	border-radius: 50%;
+	overflow: hidden;
+	background: rgba(var(--sb-line), .1);
+}
+
+.alt-sb-avatar>img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: cover;
+}
+
+.alt-sb-offline .alt-sb-avatar {
+	opacity: .45;
+}
+
+/* Live ring, drawn only for channels that are actually streaming. */
+.alt-sb-row:not(.alt-sb-offline) .alt-sb-avatar::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 .09375rem rgba(var(--sb-live), .9);
+}
+
+.alt-sb-meta {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	line-height: 1.25;
+}
+
+.alt-sb-collapsed .alt-sb-meta,
+.alt-sb-collapsed .alt-sb-count,
+.alt-sb-collapsed .alt-sb-more,
+.alt-sb-collapsed .alt-sb-status {
+	display: none;
+}
+
+.alt-sb-collapsed .alt-sb-row {
+	justify-content: center;
+	padding: 0;
+}
+
+.alt-sb-name {
+	overflow: hidden;
+	font-size: .8125rem;
+	font-weight: 600;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.alt-sb-game {
+	overflow: hidden;
+	font-size: .75rem;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: rgb(var(--sb-ink-dim));
+}
+
+.alt-sb-count {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: .3125rem;
+	font-size: .75rem;
+	font-variant-numeric: tabular-nums;
+	color: rgb(var(--sb-ink-dim));
+}
+
+.alt-sb-dot {
+	width: .5rem;
+	height: .5rem;
+	border-radius: 50%;
+	background: rgb(var(--sb-live));
+}
+
+.alt-sb-offline .alt-sb-count {
+	opacity: .7;
+}
+
+/* ------------------------------------------------------- footer & actions */
+
+.alt-sb-more {
+	display: block;
+	width: 100%;
+	border: 0;
+	padding: .4375rem .875rem;
+	font: inherit;
+	font-size: .75rem;
+	font-weight: 600;
+	text-align: left;
+	cursor: pointer;
+	color: rgb(var(--sb-accent));
+	background: 0 0;
+}
+
+.alt-sb-more:hover {
+	background: rgba(var(--sb-line), .07);
+}
+
+.alt-sb-more[hidden] {
+	display: none !important;
+}
+
+.alt-sb-status {
+	flex: none;
+	padding: .625rem .875rem;
+	font-size: .75rem;
+	line-height: 1.4;
+	white-space: normal;
+	color: rgb(var(--sb-ink-dim));
+	box-shadow: inset 0 .0625rem 0 rgba(var(--sb-line), .06);
+}
+
+.alt-sb-status[hidden] {
+	display: none !important;
+}
+
+.alt-sb-status a,
+.alt-sb-retry {
+	border: 0;
+	padding: 0;
+	font: inherit;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	color: rgb(var(--sb-accent));
+	background: 0 0;
+}
+
+/* Skeleton rows shown while the first request is in flight. */
+.alt-sb-skeleton {
+	height: 2.875rem;
+	display: flex;
+	align-items: center;
+	gap: .625rem;
+	padding: 0 .875rem;
+}
+
+.alt-sb-skeleton::before {
+	content: "";
+	width: 1.875rem;
+	height: 1.875rem;
+	flex: none;
+	border-radius: 50%;
+	background: rgba(var(--sb-line), .08);
+}
+
+.alt-sb-skeleton::after {
+	content: "";
+	height: .625rem;
+	flex: 1;
+	border-radius: .3125rem;
+	background: rgba(var(--sb-line), .08);
+}
+
+.анимацияинтерфейса .alt-sb-skeleton::before,
+.анимацияинтерфейса .alt-sb-skeleton::after {
+	animation: alt-sb-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes alt-sb-pulse {
+	50% {
+		opacity: .4;
+	}
+}
+
+/*
+	The sidebar is a sibling of the fullscreen element, so the browser hides it
+	automatically in fullscreen. Hide it too when the player is opened as a
+	popup-sized window, where there is no room for it.
+*/
+@media (max-width: 40rem) {
+	#alt-sidebar {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#alt-sidebar,
+	.alt-sb-row,
+	.alt-sb-icon-button {
+		transition: none;
+	}
+
+	.alt-sb-skeleton::before,
+	.alt-sb-skeleton::after {
+		animation: none;
+	}
+}
+
+/*
+	Layout host. `common.css` already gives html/body a full-size box; turning the
+	body into a flex row lets the sidebar sit beside `#проигрывательичат` without
+	touching that element's own flex-direction, which the chat module reads to work
+	out which side the chat panel is on.
+*/
+body {
+	display: flex;
+	align-items: stretch;
+}
+
+body>#проигрывательичат {
+	flex: 1;
+	min-width: 0;
+}

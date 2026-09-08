@@ -1423,5 +1423,53 @@
 	{
 		"message": "<p>To enable inline moderation icons in the player's chat, check the <a href='https://discuss.dev.twitch.tv/uploads/default/original/2X/f/f3049202b1456ee758ea81487a193ee540c84e7e.gif' target='_blank' rel='noopener noreferrer'>Mod Icons</a> option in your chat setting on the Twitch.tv website.</p>",
 		"description": "Часть справки для Edge."
+	},
+	"F1900":
+	{
+		"message": "For You"
+	},
+	"F1901":
+	{
+		"message": "Followed Channels"
+	},
+	"F1902":
+	{
+		"message": "Live Channels"
+	},
+	"F1903":
+	{
+		"message": "Show More"
+	},
+	"F1904":
+	{
+		"message": "Show Less"
+	},
+	"F1905":
+	{
+		"message": "Offline"
+	},
+	"F1906":
+	{
+		"message": "Sign in on twitch.tv to see your followed channels."
+	},
+	"F1907":
+	{
+		"message": "Open Twitch"
+	},
+	"F1908":
+	{
+		"message": "Could not load channels."
+	},
+	"F1909":
+	{
+		"message": "Retry"
+	},
+	"A0900":
+	{
+		"message": "Collapse the sidebar"
+	},
+	"A0901":
+	{
+		"message": "Expand the sidebar"
 	}
 }

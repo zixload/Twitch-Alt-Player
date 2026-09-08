@@ -1,0 +1,320 @@
+@charset "utf-8";
+
+/*
+	Glass skin for the alternate player.
+
+	Loaded after `player.css`, this file only restyles: it never changes geometry
+	that the scripts measure (panel heights, drag targets, the `--x`/`--y` offsets of
+	the statistics overlay). Everything here is colour, radius, blur and typography.
+
+	It keeps the user's appearance settings meaningful: the theme colours arrive as
+	RGB triplets in `--сЦветФона` / `--сЦветКнопок` / `--сЦветВыделения`, and the
+	transparency slider arrives as `--чНепрозрачность`, which is scaled down rather
+	than ignored so the slider still does something.
+*/
+
+:root {
+	--gl-radius: .75rem;
+	--gl-radius-small: .5rem;
+	--gl-blur: blur(1.25rem) saturate(160%);
+	--gl-line: 255, 255, 255;
+	--gl-ink: 240, 240, 244;
+	--gl-ink-dim: 158, 160, 170;
+	--gl-field: 26, 26, 32;
+
+	/* Panels sit over video, so they stay lighter than free-floating windows. */
+	--gl-panel-alpha: calc(var(--чНепрозрачность, .75) * .55);
+	--gl-window-alpha: calc(var(--чНепрозрачностьОкна, .85) * .74);
+
+	scrollbar-color: rgba(var(--gl-line), .2) transparent;
+}
+
+/* ------------------------------------------------------------------ panels */
+
+.панель {
+	background:
+		linear-gradient(to right,
+			rgba(var(--сЦветГрадиента), 0) 0%,
+			rgba(var(--сЦветГрадиента), .1) 50%,
+			rgba(var(--сЦветГрадиента), 0) 100%),
+		rgba(var(--сЦветФона), var(--gl-panel-alpha));
+	backdrop-filter: var(--gl-blur);
+	-webkit-backdrop-filter: var(--gl-blur);
+}
+
+.верхняя {
+	box-shadow: inset 0 -.0625rem 0 rgba(var(--gl-line), .07);
+}
+
+.нижняя {
+	box-shadow: inset 0 .0625rem 0 rgba(var(--gl-line), .07);
+}
+
+/* ----------------------------------------------------------------- windows */
+
+.окно {
+	border: .0625rem solid rgba(var(--gl-line), .1);
+	border-radius: var(--gl-radius);
+	background:
+		linear-gradient(150deg,
+			rgba(var(--сЦветГрадиента), .1),
+			rgba(var(--сЦветГрадиента), 0) 55%),
+		rgba(var(--сЦветФона), var(--gl-window-alpha));
+	backdrop-filter: var(--gl-blur);
+	-webkit-backdrop-filter: var(--gl-blur);
+	box-shadow:
+		0 1.25rem 2.5rem rgba(0, 0, 0, .45),
+		inset 0 .0625rem 0 rgba(var(--gl-line), .08);
+}
+
+/* ------------------------------------------------------------------- menus */
+
+.меню-пункт {
+	border-radius: var(--gl-radius-small);
+}
+
+.меню-пункт:hover {
+	text-shadow: inherit;
+	color: rgb(var(--сЦветВыделения));
+	background: rgba(var(--gl-line), .09);
+}
+
+hr {
+	border: 0;
+	border-top: .0625rem solid rgba(var(--gl-line), .09);
+}
+
+/* -------------------------------------------------------- settings windows */
+
+.заголовокнастроек {
+	margin-top: .25rem;
+	border: .0625rem solid transparent;
+	border-radius: 999rem;
+	padding: .25rem 0;
+	font-weight: 600;
+	letter-spacing: .08em;
+	text-shadow: none;
+	color: rgb(var(--gl-ink-dim));
+	background: rgba(var(--gl-line), .06);
+	transition: color .15s ease, background-color .15s ease;
+}
+
+.заголовокнастроек:hover {
+	color: rgb(var(--gl-ink));
+	background: rgba(var(--gl-line), .11);
+}
+
+input:checked+.заголовокнастроек {
+	color: #111;
+	background: rgb(var(--сЦветВыделения));
+}
+
+.настройка-имя {
+	color: rgb(var(--gl-ink-dim));
+}
+
+/* ------------------------------------------------------------ form widgets */
+
+/*
+	The originals are a light silver gradient with near-black text, which reads as
+	a 2008 desktop dialog dropped onto a dark video. Flatten them into dark fields.
+*/
+input[type=color],
+button,
+select,
+.вводчисла-число.вводчисла-число {
+	border: .0625rem solid rgba(var(--gl-line), .12);
+	border-radius: var(--gl-radius-small);
+	color: rgb(var(--gl-ink));
+	background: rgba(var(--gl-field), .85);
+	transition: border-color .15s ease, background-color .15s ease;
+}
+
+input[type=color]:enabled:hover,
+button:enabled:hover,
+select:enabled:hover,
+.вводчисла-число.вводчисла-число:enabled:hover {
+	border-color: rgba(var(--gl-line), .22);
+	background: rgba(var(--gl-field), .95);
+}
+
+input[type=color]:enabled:active,
+button:enabled:active {
+	background: rgba(var(--gl-line), .14);
+}
+
+input[type=color]:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+	outline: .125rem solid rgb(var(--сЦветВыделения));
+	outline-offset: .0625rem;
+}
+
+input[type=color]:disabled,
+button:disabled,
+select:disabled,
+select:empty {
+	opacity: .4;
+}
+
+/* Options are rendered by the browser, so they need their own dark ground. */
+select>option,
+select>optgroup {
+	color: rgb(var(--gl-ink));
+	background: rgb(var(--gl-field));
+}
+
+.вводчисла-плюс.вводчисла-плюс,
+.вводчисла-минус {
+	border-radius: var(--gl-radius-small);
+}
+
+.радио-значок,
+.флажок-значок {
+	border: .0625rem solid rgba(var(--gl-line), .2);
+	background: rgba(var(--gl-field), .8);
+}
+
+.флажок-значок {
+	border-radius: .25rem;
+}
+
+.радио-значок {
+	border-radius: 50%;
+}
+
+input:checked+.радио-значок,
+input:checked+.флажок-значок {
+	border-color: rgb(var(--сЦветВыделения));
+	background: rgb(var(--сЦветВыделения));
+}
+
+kbd,
+.меню-клавиши {
+	border: .0625rem solid rgba(var(--gl-line), .14);
+	border-radius: .25rem;
+	color: rgb(var(--gl-ink-dim));
+	background: rgba(var(--gl-line), .07);
+}
+
+/* --------------------------------------------------------- player controls */
+
+.кнопка {
+	border-radius: 50%;
+	transition: background-color .15s ease;
+}
+
+.можнотыкать:not(:disabled):not(select):hover {
+	border-radius: var(--gl-radius-small);
+	background: rgba(var(--gl-line), .1);
+}
+
+.кнопка:not(:disabled):hover {
+	background: rgba(var(--gl-line), .12) !important;
+}
+
+.типтрансляции {
+	border-radius: 999rem;
+	padding: .125rem .4375rem;
+	font-weight: 600;
+	letter-spacing: .03em;
+}
+
+.прямаятрансляция {
+	background: rgb(236, 62, 62);
+}
+
+.категориятрансляции {
+	color: rgb(var(--gl-ink-dim));
+}
+
+#шкала,
+.шкала-фон,
+#шкала-просмотрено,
+#громкость::-webkit-slider-runnable-track {
+	border-radius: 999rem;
+}
+
+#громкость::-webkit-slider-thumb {
+	border-radius: 50%;
+	box-shadow: 0 .0625rem .1875rem rgba(0, 0, 0, .5);
+}
+
+/* ------------------------------------------------------ statistics overlay */
+
+#статистика {
+	border: .0625rem solid rgba(var(--gl-line), .1);
+	border-radius: var(--gl-radius);
+	overflow: hidden;
+	background: rgba(10, 10, 14, .5);
+	backdrop-filter: var(--gl-blur);
+	-webkit-backdrop-filter: var(--gl-blur);
+	box-shadow: 0 .75rem 1.75rem rgba(0, 0, 0, .4);
+}
+
+#статистика:not(.тащилка):hover {
+	background: rgba(10, 10, 14, .82);
+}
+
+#статистика.тащилка {
+	outline: .0625rem solid rgb(var(--сЦветВыделения));
+}
+
+.статистика-главнаятаблица>tbody>tr>th {
+	color: rgb(var(--gl-ink-dim));
+	font-weight: 600;
+}
+
+/* ------------------------------------------------------------ misc surfaces */
+
+#уведомление {
+	filter: drop-shadow(0 .25rem .75rem rgba(0, 0, 0, .55));
+}
+
+.новости {
+	border-radius: var(--gl-radius);
+}
+
+.обновлениерасширения {
+	border-radius: var(--gl-radius-small);
+}
+
+#размерчата {
+	background: 0 0;
+	box-shadow: inset .1875rem 0 0 rgba(var(--gl-line), .07);
+}
+
+#размерчата:hover,
+#размерчата.тащилка {
+	box-shadow: inset .1875rem 0 0 rgb(var(--сЦветВыделения));
+}
+
+::-webkit-scrollbar {
+	width: .4375rem;
+	height: .4375rem;
+}
+
+::-webkit-scrollbar-thumb {
+	border-radius: .4375rem;
+	background: rgba(var(--gl-line), .18);
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(var(--gl-line), .3);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+	background: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.заголовокнастроек,
+	.кнопка,
+	input[type=color],
+	button,
+	select {
+		transition: none;
+	}
+}

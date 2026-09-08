@@ -55,6 +55,9 @@ Twitch's native video player with a custom implementation featuring:
 | `player.html` | Player UI | Full alternate player — video element, controls, settings tabs, stats overlay |
 | `player.js` | Player Logic | ~8,000-line main module: HLS fetching, MSE pipeline, stats, settings, chat |
 | `player.css` | Styles | Player UI styling |
+| `sidebar.js` | Player UI | Left navigation sidebar — followed / live channels fetched from GraphQL. Self-contained: reads the auth cookie itself and never calls into `м_Twitch`, so a failure here cannot take the player down |
+| `sidebar.css` | Styles | Sidebar styling, plus the `body` flex rule that seats the sidebar beside `#проигрывательичат` |
+| `glass.css` | Styles | Glass skin, loaded after `player.css` — colour, radius, blur and typography only, never geometry the scripts measure |
 | `common.js` | Shared Util | Shared helpers: i18n wrapper, storage, DOM utilities |
 | `worker.js` | Web Worker | MPEG-TS demuxer → MP4 muxer, runs off main thread |
 | `wasm.wasm` | Binary | Compiled WebAssembly runtime for segment transcoding |
