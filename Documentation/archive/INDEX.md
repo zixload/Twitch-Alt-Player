@@ -37,7 +37,7 @@ is done.
 - `CRITICAL_BUG_FIX_PLAN_2_HARDCODED_TOOLTIPS.md` — the plan
 - `HANDOFF.md` — the session that reported it finished
 
-**Status: NOT closed, despite `HANDOFF.md` marking it complete.** That handoff claims
+**Status: closed on 2026-09-08** — but it was not when archived, despite `HANDOFF.md` marking it complete. That handoff claims
 "0 active Russian tooltips remaining", verified by a script that stripped HTML comments
 and checked `title=` attributes for Cyrillic. Re-checking the same way on 2026-09-08:
 **11 of the 22 active `title=` attributes in `player.html` still contain Russian**, and

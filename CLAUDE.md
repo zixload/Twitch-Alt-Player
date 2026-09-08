@@ -188,11 +188,13 @@ different states — both re-verified against the code on 2026-09-08:
 - **Element IDs: done.** All 58 IDs that `player.js` looks up resolve in `player.html` or
   `report.html`, the 17 statistics-overlay IDs included. The crash the archived reports
   investigated is fixed.
-- **Tooltips: not done**, despite `Documentation/archive/HANDOFF.md` marking them complete.
-  11 of the 22 active `title=` attributes in `player.html` still contain Russian, and so do
-  several visible text nodes. The tooltips are multi-line: the first line of each was
-  translated and the rest left in Cyrillic inside the same attribute, which is why the
-  original verification script reported zero.
+- **Tooltips: done** (2026-09-08), after a false start recorded in
+  `Documentation/archive/HANDOFF.md`. That session marked them complete while 11 of the
+  22 active `title=` attributes still held Russian: the tooltips are multi-line, and the
+  comment meant to hide the Russian closed on its first line, so the attribute ended on
+  the Russian text and the English spilled into the page as loose text — five of them
+  showing a literal `-->` to the reader. Verified in the live DOM: 75 tooltips, none
+  carrying Cyrillic or a stray marker.
 
 Also outstanding: identifiers were never actually renamed. Measured on 2026-09-08, `player.js`
 is 9419 lines, of which 5448 contain Cyrillic, across 1722 distinct Cyrillic identifiers. The
