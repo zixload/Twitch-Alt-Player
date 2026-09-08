@@ -79,28 +79,13 @@
  *  14. MAIN INITIALIZATION (Запускалка)...................(lines 9045-9095)
  *      - The main entry point. Initializes all modules and starts the player.
  * 
- *  15. AD Data Debug Logging ..............................(lines 6716)
- *      - The control for where are beginning the search for information
- *        pertaining to the "Hiding ADS" problem where either the player's 
- *        video freezes, displays a solid black screen, or on first load of a stream
- *        the player erroneously waits for the entire set of pre-roll ads until
- *        video playback starts
- * 
- * 
- * This triggers outside of the devtools console
- * console.warn(`[AdBlock] Skipping Expired Ad...`);
- * 
- * console.log(`[AdBlock] Skipping Expired Ad...`);
- * // OR
- * console.info(`[AdBlock] Skipping Expired Ad...`);
- * 
- * 
- * Line ~6802
- * console.warn  >>  console.log
- * Line ~6809
- * console.warn  >>  console.log
- * 
- * 
+ *  15. AD DATA LOGGING
+ *      - Where to start looking into the "hiding ads" problem: the video freezing,
+ *        showing a solid black screen, or the player waiting through the whole
+ *        pre-roll pod before playback starts.
+ *      - Search the log for the [AdBlock] prefix. Those messages go through
+ *        м_Журнал, so they land in the debug window and in bug reports rather
+ *        than only in the devtools console.
  */
 "use strict";
 const ВЕРСИЯ_РАСШИРЕНИЯ = chrome.runtime.getManifest().version;
@@ -6410,12 +6395,13 @@ const м_Список = (() => {
       super(false);
     }
     _обновленСписокСегментов(лУкороченныйИнтервал) {
-      // --- INSERT DEBUG LOGGING ---
-      console.log(`[AdBlock] Backup Stream Updated. Segments: ${this.оСписокСегментов.моСегменты.length}, EndOfList: ${this.оСписокСегментов.лКонецСписка}`);
+      м_Журнал.Вот(
+        `[AdBlock] Backup stream updated. Segments=${this.оСписокСегментов.моСегменты.length} EndOfList=${this.оСписокСегментов.лКонецСписка}`
+      );
       if (this.оСписокСегментов.моСегменты.length === 0) {
-        console.error("[AdBlock] Backup Stream is EMPTY! This causes the freeze.");
+        // A backup stream with no segments is what leaves the picture frozen.
+        м_Журнал.Ой("[AdBlock] Backup stream is empty");
       }
-      // ----------------------------
       const лСписокЗаканчиваетсяРекламой = этотСписокЗаканчиваетсяРекламой(
         this.оСписокСегментов
       );
@@ -6539,8 +6525,9 @@ const м_Список = (() => {
 
               // Log if skew > 30s
               if (чСдвиг > 30000) {
-                //console.warn(`[TemporalValidity] Skew Detected! Segment ${i}: Skew=${чСдвиг}ms, SegTime=${new Date(чВремяСегмента).toISOString()}, LocalTime=${new Date(чСейчас).toISOString()}, ExaTimeOffset=${чТочноеВремя}`);
-                console.log(`[TemporalValidity] Skew Detected! Segment ${i}: Skew=${чСдвиг}ms, SegTime=${new Date(чВремяСегмента).toISOString()}, LocalTime=${new Date(чСейчас).toISOString()}, ExaTimeOffset=${чТочноеВремя}`);
+                м_Журнал.Ой(
+                  `[TemporalValidity] Skew detected. Segment=${i} Skew=${чСдвиг}ms SegTime=${new Date(чВремяСегмента).toISOString()} LocalTime=${new Date(чСейчас).toISOString()} ExactTimeOffset=${чТочноеВремя}`
+                );
               }
             }
           }
@@ -6844,32 +6831,34 @@ const м_Список = (() => {
                   // If the ad end time is in the past (plus 1s for jitter), KILL IT.
                   // Previous issue: 15s buffer allowed finished ads to block playback.
                   if (чВремяОкончанияРекламы < (чТекущееВремя + 1000)) {
-                    //console.warn(`[AdBlock] Skipping Expired Ad. Ends: ${new Date(чВремяОкончанияРекламы).toLocaleTimeString()} < Now: ${new Date(чТекущееВремя).toLocaleTimeString()}`);
-                    console.log(`[AdBlock] Skipping Expired Ad. Ends: ${new Date(чВремяОкончанияРекламы).toLocaleTimeString()} < Now: ${new Date(чТекущееВремя).toLocaleTimeString()}`);
+                    м_Журнал.Окак(
+                      `[AdBlock] Skipping expired ad. Ends=${new Date(чВремяОкончанияРекламы).toISOString()} Now=${new Date(чТекущееВремя).toISOString()}`
+                    );
                     break; // EXIT this case immediately
                   }
 
                   // RULE 2: FUTURE PROTECTION.
                   // If ad starts >60s in the future, ignore it to prevent pre-mature freezing.
                   if (чВремяНачалаРекламы > (чТекущееВремя + 60000)) {
-                    //console.warn(`[AdBlock] Skipping Future Ad. Starts: ${new Date(чВремяНачалаРекламы).toLocaleTimeString()}`);
-                    console.log(`[AdBlock] Skipping Future Ad. Starts: ${new Date(чВремяНачалаРекламы).toLocaleTimeString()}`);
+                    м_Журнал.Окак(
+                      `[AdBlock] Skipping future ad. Starts=${new Date(чВремяНачалаРекламы).toISOString()}`
+                    );
                     break; // EXIT this case immediately
                   }
                 }
               }
-            } catch (e) {
-              console.error("[AdBlock] Filter Error:", e);
+            } catch (пИсключение) {
+              м_Журнал.Ой(
+                `[AdBlock] Filter error: ${ПеревестиИсключениеВСтроку(пИсключение)}`
+              );
             }
 
             try {
               switch (амАтрибуты.get("CLASS")) {
                 case "twitch-stitched-ad":
-                  // --- 12/13/2025 ADDED DEBUGGING CODE ---
-                  // сЗначениеТега contains the raw string value of the ad tag, including all attributes.
-                  //console.warn("AD TAG DETECTED. RAW DATA BELOW:"); // debugging added
-                  console.log("AD TAG DETECTED. RAW DATA BELOW:"); // debugging added
-                  console.log("Raw Tag Value:", сЗначениеТега); // log to console
+                  // The raw attribute string of the ad tag, kept whole because the
+                  // shape of these tags is what the ad-freeze work turns on.
+                  м_Журнал.Вот(`[AdBlock] Ad tag detected: ${сЗначениеТега}`);
 
                   // Extract Ad Type (e.g., standard, midroll)
                   сТипРекламы = амАтрибуты.get("X-TV-TWITCH-AD-ROLL-TYPE");
@@ -7143,15 +7132,8 @@ const м_Список = (() => {
     );
   }
   function задатьСостояниеРекламы(лИдетРеклама) {
-    // --- INSERT DEBUG LOGGING HERE ---
     if (_лИдетРеклама !== лИдетРеклама) {
-      //console.warn(`[AdBlock] State Change! AdInProgress changed to: ${лИдетРеклама}.`);
-      console.log(`[AdBlock] State Change! AdInProgress changed to: ${лИдетРеклама}.`);
-      console.trace(); // This will print the stack trace to show EXACTLY what logic triggered it
-    }
-    // ---------------------------------
-
-    if (_лИдетРеклама !== лИдетРеклама) {
+      м_Журнал.Окак(`[AdBlock] Ad in progress: ${лИдетРеклама}`);
       _лИдетРеклама = лИдетРеклама;
       if (лИдетРеклама) {
         _оСпискиБезРекламы.запустить();
