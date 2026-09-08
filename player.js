@@ -551,51 +551,59 @@ const м_Отладка = (() => {
         оСобытие.preventDefault();
         window.location.reload(true);
       });
-      let оЗапрос, оДанные, чКод;
+      /**
+       * The report is written to a local file. It used to be POSTed to a personal
+       * shared-hosting box over plain HTTP; that upload is gone, along with the
+       * XMLHttpRequest, the progress bar and the status-code handling that served it.
+       *
+       * The identifiers the Twitch playback token carries — the viewer's public IP
+       * address, their account id and their device id — are stripped on the way out.
+       * Dropping the two token fields is not enough: the token is echoed into the log
+       * as well, so the whole report is walked and every occurrence is replaced.
+       */
+      // The token is echoed into the log inside another JSON string, where its
+      // quotes are backslash-escaped, so both forms have to match.
+      const РВ_ЛИЧНЫЕ_ДАННЫЕ =
+        /\\?"(user_ip|user_id|device_id)\\?"\s*:\s*(?:\\?"(?:[^"\\]|\\.)*?\\?"|-?\d+|null)/g;
+
+      function ВычиститьЛичныеДанные(пЗначение) {
+        if (typeof пЗначение == "string") {
+          return пЗначение.replace(РВ_ЛИЧНЫЕ_ДАННЫЕ, '"$1":"[removed]"');
+        }
+        if (Array.isArray(пЗначение)) {
+          return пЗначение.map(ВычиститьЛичныеДанные);
+        }
+        if (ЭтоОбъект(пЗначение)) {
+          const оВычищено = {};
+          for (const сКлюч of Object.keys(пЗначение)) {
+            оВычищено[сКлюч] = ВычиститьЛичныеДанные(пЗначение[сКлюч]);
+          }
+          return оВычищено;
+        }
+        return пЗначение;
+      }
+
       оДокумент.addEventListener("submit", (оСобытие) => {
         оСобытие.preventDefault();
-        if (оСобытие.target.id === "отладка-идетотправка") {
-          чКод = 200;
-          оЗапрос.abort();
-          return;
+
+        const СНЯТО = "[removed: playback token]";
+        const оОтчетДляФайла = ВычиститьЛичныеДанные(
+          Object.assign({}, оОтчет, {
+            ТокенТрансляции: СНЯТО,
+            ТокенТрансляцииБезРекламы: СНЯТО,
+          })
+        );
+
+        const узСообщение = узФорма.elements["отладка-сообщение"];
+        if (узСообщение && узСообщение.value) {
+          оОтчетДляФайла.Сообщение = узСообщение.value;
         }
-        оДокумент.getElementById("отладка-ходотправки").value = 0;
-        ПоказатьФорму(оДокумент, "отладка-идетотправка", false);
-        чКод = 0;
-        if (!оЗапрос) {
-          оЗапрос = new XMLHttpRequest();
-          оЗапрос.upload.addEventListener("progress", (оСобытие) => {
-            оДокумент.getElementById("отладка-ходотправки").value =
-              оСобытие.loaded / оСобытие.total;
-          });
-          оЗапрос.addEventListener("load", () => {
-            чКод = оЗапрос.status;
-          });
-          оЗапрос.addEventListener("loadend", () => {
-            if (чКод >= 200 && чКод <= 299) {
-              window.location.reload(true);
-            } else if (чКод === 474) {
-              показатьФорму("отладка-браузерустарел", true);
-            } else if (чКод >= 400 && чКод <= 499) {
-              ПоказатьФорму(оДокумент, "отладка-версияустарела", true);
-            } else {
-              ПоказатьФорму(оДокумент, "отладка-сбойотправки", true);
-            }
-          });
-          оДанные = new FormData(узФорма);
-          if (буфОтправить) {
-            оДанные.append(
-              "отладка-транспортныйпоток-0",
-              new Blob([буфОтправить], {
-                type: "video/mp2t",
-              })
-            );
-          }
-        }
-        // CORRECT AND SECURE
-        //оЗапрос.open('POST', 'http://r90354g8.beget.tech/tw5/report3.php');
-        // оЗапрос.open("POST", "http://www.google.com"); // Comment out or delete
-        // оЗапрос.send(оДанные);                      // Comment out or delete
+
+        ЗаписатьТекстВЛокальныйФайл(
+          JSON.stringify(оОтчетДляФайла, null, "\t"),
+          "application/json",
+          `tw5-report-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
+        );
       });
     });
   }

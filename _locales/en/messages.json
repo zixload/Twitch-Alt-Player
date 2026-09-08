@@ -1479,5 +1479,21 @@
 	"A0902":
 	{
 		"message": "Leave the alternate player and open this channel on twitch.tv"
+	},
+	"F1911":
+	{
+		"message": "Save report to a file"
+	},
+	"F1912":
+	{
+		"message": "Save a report about the <cite>Alternate Player for Twitch.tv</cite> extension"
+	},
+	"F1913":
+	{
+		"message": "Save an error report about the <cite>Alternate Player for Twitch.tv</cite> extension"
+	},
+	"F1914":
+	{
+		"message": "The report is written to a file on this computer. Nothing is sent anywhere. The Twitch playback tokens are left out of it, because they carry your public IP address, your Twitch user id and your device id."
 	}
 }
