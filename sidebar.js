@@ -205,6 +205,7 @@ const m_Sidebar = (() => {
 					profileImageURL(width: $avatarWidth)
 					stream {
 						id
+						title
 						viewersCount
 						game { displayName }
 					}
@@ -230,6 +231,7 @@ const m_Sidebar = (() => {
 		edges {
 			node {
 				id
+				title
 				viewersCount
 				game { displayName }
 				broadcaster {
@@ -254,6 +256,7 @@ const m_Sidebar = (() => {
 			displayName: oNode.displayName || oNode.login || '',
 			avatar: oNode.profileImageURL || '',
 			live: oStream !== null,
+			title: oStream ? oStream.title || '' : '',
 			viewers: oStream && typeof oStream.viewersCount === 'number' ? oStream.viewersCount : 0,
 			game: oStream && oStream.game ? oStream.game.displayName || '' : ''
 		};
@@ -309,6 +312,7 @@ const m_Sidebar = (() => {
 				.map(oEdge => {
 					const oItem = toItem(oEdge.node.broadcaster);
 					oItem.live = true;
+					oItem.title = oEdge.node.title || '';
 					oItem.viewers = oEdge.node.viewersCount || 0;
 					oItem.game = oEdge.node.game ? oEdge.node.game.displayName || '' : '';
 					return oItem;
@@ -327,7 +331,9 @@ const m_Sidebar = (() => {
 		const elRow = document.createElement('a');
 		elRow.className = 'alt-sb-row' + (oItem.live ? '' : ' alt-sb-offline');
 		elRow.href = getPlayerAddress(oItem.login);
-		elRow.title = oItem.displayName + (oItem.game ? ' — ' + oItem.game : '');
+		elRow.title = [oItem.displayName, oItem.title, oItem.game]
+			.filter(s => s !== '')
+			.join('\n');
 		if (oItem.login.toLowerCase() === _sCurrentChannel) {
 			elRow.classList.add('alt-sb-current');
 		}
@@ -351,6 +357,13 @@ const m_Sidebar = (() => {
 		elName.className = 'alt-sb-name';
 		elName.textContent = oItem.displayName;
 		elMeta.appendChild(elName);
+
+		if (oItem.live && oItem.title !== '') {
+			const elStreamTitle = document.createElement('span');
+			elStreamTitle.className = 'alt-sb-stream-title';
+			elStreamTitle.textContent = oItem.title;
+			elMeta.appendChild(elStreamTitle);
+		}
 
 		const elGame = document.createElement('span');
 		elGame.className = 'alt-sb-game';

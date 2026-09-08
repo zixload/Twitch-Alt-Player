@@ -173,8 +173,8 @@
 	display: flex;
 	align-items: center;
 	gap: .625rem;
-	height: 2.875rem;
-	padding: 0 .75rem 0 .875rem;
+	min-height: 2.875rem;
+	padding: .3125rem .75rem .3125rem .875rem;
 	cursor: pointer;
 	text-decoration: none;
 	color: inherit;
@@ -265,9 +265,19 @@
 	text-overflow: ellipsis;
 }
 
-.alt-sb-game {
+/* The stream title, the line that says what is actually happening right now. */
+.alt-sb-stream-title {
 	overflow: hidden;
 	font-size: .75rem;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: rgb(var(--sb-ink));
+	opacity: .82;
+}
+
+.alt-sb-game {
+	overflow: hidden;
+	font-size: .6875rem;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	color: rgb(var(--sb-ink-dim));
