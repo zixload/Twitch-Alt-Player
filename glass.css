@@ -22,8 +22,8 @@
 	--gl-ink-dim: 158, 160, 170;
 	--gl-field: 26, 26, 32;
 
-	/* Panels sit over video, so they stay lighter than free-floating windows. */
-	--gl-panel-alpha: calc(var(--чНепрозрачность, .75) * .55);
+	/* Panels sit over video, so they stay far lighter than free-floating windows. */
+	--gl-panel-alpha: calc(var(--чНепрозрачность, .75) * .26);
 	--gl-window-alpha: calc(var(--чНепрозрачностьОкна, .85) * .74);
 
 	scrollbar-color: rgba(var(--gl-line), .2) transparent;
@@ -35,7 +35,7 @@
 	background:
 		linear-gradient(to right,
 			rgba(var(--сЦветГрадиента), 0) 0%,
-			rgba(var(--сЦветГрадиента), .1) 50%,
+			rgba(var(--сЦветГрадиента), .05) 50%,
 			rgba(var(--сЦветГрадиента), 0) 100%),
 		rgba(var(--сЦветФона), var(--gl-panel-alpha));
 	backdrop-filter: var(--gl-blur);

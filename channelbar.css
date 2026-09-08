@@ -1,0 +1,263 @@
+@charset "utf-8";
+
+/*
+	Channel bar under the video, mirroring what twitch.tv shows below its player:
+	avatar, channel name, stream title, viewer count, and the follow control — plus
+	a way out of the alternate player that is not "click the title in the top bar".
+
+	The data is not fetched again: channelbar.js mirrors the nodes the player has
+	already filled in, so this file only has to lay them out.
+*/
+
+/*
+	The video area gets a column wrapper so the bar can sit under it while the chat
+	stays a full-height sibling to the right, the way the Twitch layout works.
+*/
+#alt-stage {
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+#alt-stage>#проигрыватель {
+	flex: 1;
+	min-height: 0;
+}
+
+/* Fullscreen covers the video only; the bar has no place there. */
+#проигрывательичат:fullscreen #alt-channelbar,
+#проигрывательичат:-webkit-full-screen #alt-channelbar {
+	display: none;
+}
+
+/* ------------------------------------------------------------- moved out of the way */
+
+/*
+	These now live in the bar below the video. They stay in the DOM because the
+	player keeps writing to them — channelbar.js reads them, and the stream title
+	still carries the channel URL the "leave" button navigates to.
+*/
+#верхняяпанель #названиетрансляции,
+#верхняяпанель #категориятрансляции,
+#верхняяпанель [data-i18n="F0501"],
+#верхняяпанель [data-i18n="F0502^A0503"],
+#верхняяпанель #количествозрителей {
+	display: none !important;
+}
+
+/* Broadcast uptime in the bottom bar. */
+#позиция {
+	display: none !important;
+}
+
+/* ------------------------------------------------------------------------ the bar */
+
+#alt-channelbar {
+	--cb-ink: 240, 240, 244;
+	--cb-ink-dim: 154, 156, 166;
+	--cb-line: 255, 255, 255;
+	--cb-accent: var(--сЦветВыделения, 168, 128, 255);
+	--cb-live: 236, 62, 62;
+
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	padding: .625rem .875rem;
+	font: 400 .8125rem/1.3 "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+	color: rgb(var(--cb-ink));
+	background: rgba(var(--сЦветФона, 16, 16, 21), .55);
+	backdrop-filter: blur(1.25rem) saturate(150%);
+	-webkit-backdrop-filter: blur(1.25rem) saturate(150%);
+	box-shadow: inset 0 .0625rem 0 rgba(var(--cb-line), .07);
+	white-space: nowrap;
+}
+
+#alt-channelbar[hidden] {
+	display: none !important;
+}
+
+/* -------------------------------------------------------------------- avatar */
+
+.alt-cb-avatar {
+	flex: none;
+	width: 2.75rem;
+	height: 2.75rem;
+	position: relative;
+	display: block;
+	border-radius: 50%;
+	text-decoration: none;
+}
+
+.alt-cb-avatar>img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	border-radius: 50%;
+	object-fit: cover;
+	background: rgba(var(--cb-line), .1);
+}
+
+/* Live ring, drawn only while the channel is actually streaming. */
+#alt-channelbar.alt-cb-islive .alt-cb-avatar>img {
+	box-shadow: 0 0 0 .125rem rgb(var(--cb-live));
+}
+
+.alt-cb-live {
+	position: absolute;
+	left: 50%;
+	bottom: -.375rem;
+	transform: translateX(-50%);
+	border-radius: .1875rem;
+	padding: 0 .25rem;
+	font-size: .625rem;
+	font-weight: 700;
+	letter-spacing: .04em;
+	line-height: 1.15rem;
+	color: #fff;
+	background: rgb(var(--cb-live));
+}
+
+.alt-cb-live[hidden] {
+	display: none !important;
+}
+
+/* ---------------------------------------------------------------------- text */
+
+.alt-cb-meta {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: .0625rem;
+}
+
+.alt-cb-name {
+	overflow: hidden;
+	font-size: .9375rem;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	text-decoration: none;
+	color: rgb(var(--cb-ink));
+}
+
+.alt-cb-name:hover {
+	color: rgb(var(--cb-accent));
+}
+
+.alt-cb-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: rgb(var(--cb-ink));
+}
+
+.alt-cb-viewers {
+	display: flex;
+	align-items: center;
+	gap: .3125rem;
+	font-size: .75rem;
+	font-variant-numeric: tabular-nums;
+	color: rgb(var(--cb-ink-dim));
+}
+
+.alt-cb-viewers:empty {
+	display: none;
+}
+
+.alt-cb-viewers::before {
+	content: "";
+	width: .5rem;
+	height: .5rem;
+	flex: none;
+	border-radius: 50%;
+	background: rgb(var(--cb-live));
+}
+
+#alt-channelbar:not(.alt-cb-islive) .alt-cb-viewers::before {
+	display: none;
+}
+
+/* ------------------------------------------------------------------- actions */
+
+.alt-cb-actions {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
+.alt-cb-button {
+	display: flex;
+	align-items: center;
+	gap: .375rem;
+	height: 2rem;
+	border: .0625rem solid rgba(var(--cb-line), .14);
+	border-radius: .5rem;
+	padding: 0 .75rem;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	color: rgb(var(--cb-ink));
+	background: rgba(var(--cb-line), .08);
+	transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.alt-cb-button:hover {
+	border-color: rgba(var(--cb-line), .26);
+	background: rgba(var(--cb-line), .14);
+}
+
+.alt-cb-button>svg {
+	width: 1rem;
+	height: 1rem;
+	flex: none;
+	pointer-events: none;
+}
+
+.alt-cb-button[hidden] {
+	display: none !important;
+}
+
+/* Following: filled, so the state is readable at a glance. */
+.alt-cb-follow.alt-cb-following {
+	border-color: transparent;
+	color: #111;
+	background: rgb(var(--cb-accent));
+}
+
+.alt-cb-follow.alt-cb-following:hover {
+	background: rgb(var(--cb-live));
+	color: #fff;
+}
+
+.alt-cb-follow.alt-cb-busy {
+	opacity: .5;
+	pointer-events: none;
+}
+
+.alt-cb-leave:hover {
+	border-color: rgba(var(--cb-accent), .6);
+	color: rgb(var(--cb-accent));
+}
+
+/* ------------------------------------------------------------------ narrow */
+
+@media (max-width: 46rem) {
+	.alt-cb-title {
+		display: none;
+	}
+}
+
+@media (max-width: 34rem) {
+	#alt-channelbar {
+		display: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.alt-cb-button {
+		transition: none;
+	}
+}

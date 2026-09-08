@@ -10,9 +10,11 @@
 <script src=common.js defer></script>
 <script src=player.js defer></script>
 <script src=sidebar.js defer></script>
+<script src=channelbar.js defer></script>
 <link rel=stylesheet href=common.css>
 <link rel=stylesheet href=player.css>
 <link rel=stylesheet href=sidebar.css>
+<link rel=stylesheet href=channelbar.css>
 <link rel=stylesheet href=glass.css>
 <body hidden>
 	<aside id=alt-sidebar hidden>
@@ -40,6 +42,7 @@
 	</aside>
 	<div id=проигрывательичат>
 	<!-- <div id=playerandchat> -->
+		<div id=alt-stage>
 		<div id=проигрыватель>
 		<!-- <div id=player> -->
 			<video id=глаз playsinline tabindex=-1></video>
@@ -1150,6 +1153,27 @@ Possible causes of buffer overflow:
 					</div>
 				</div>
 			</div>
+		</div>
+		<div id=alt-channelbar hidden>
+			<a id=alt-cb-avatar class=alt-cb-avatar rel="noopener noreferrer">
+				<img id=alt-cb-avatar-img alt="" decoding=async>
+				<span id=alt-cb-live class=alt-cb-live hidden data-i18n=J0146></span>
+			</a>
+			<div class=alt-cb-meta>
+				<a id=alt-cb-name class=alt-cb-name rel="noopener noreferrer"></a>
+				<div id=alt-cb-title class=alt-cb-title></div>
+				<div id=alt-cb-viewers class=alt-cb-viewers></div>
+			</div>
+			<div class=alt-cb-actions>
+				<button id=alt-cb-follow type=button class="alt-cb-button alt-cb-follow" hidden></button>
+				<button id=alt-cb-leave type=button class="alt-cb-button alt-cb-leave" data-i18n=^A0902>
+					<svg xmlns=http://www.w3.org/2000/svg viewBox="0 0 24 24">
+						<path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5v-2H5V5h5zM17 7l-1.4 1.4L18.2 11H9v2h9.2l-2.6 2.6L17 17l5-5z"/>
+					</svg>
+					<span data-i18n=F1910></span>
+				</button>
+			</div>
+		</div>
 		</div>
 		<div id=размерчата data-тащилка=размерчата data-i18n=^A0532></div>
 		<!-- <div id=chatsize data-dragger=chatsize data-i18n=^A0532></div> -->

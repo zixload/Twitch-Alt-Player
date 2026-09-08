@@ -1471,5 +1471,13 @@
 	"A0901":
 	{
 		"message": "Expand the sidebar"
+	},
+	"F1910":
+	{
+		"message": "Back to Twitch"
+	},
+	"A0902":
+	{
+		"message": "Leave the alternate player and open this channel on twitch.tv"
 	}
 }
