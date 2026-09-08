@@ -200,7 +200,16 @@ See **Translation Plan** section below for the full execution plan.
    replace it with plain `new Uint8Array()` without understanding GC implications on long sessions.
 7. **gql_injection.js page context** — this script runs in the Twitch page context (not extension
    context) to intercept the GQL token. Changes here affect token capture for follows/bonus claims.
-8. **Russian event-message names** — `background.js` listens for Cyrillic message names
+8. **Two container paths** — Twitch serves MPEG-TS on most channels and fMP4 (CMAF) on a
+   growing minority. TS segments go through `worker.js` to be demuxed and remuxed into fMP4;
+   fMP4 segments skip the worker entirely and are appended to the SourceBuffer as they are,
+   using the `#EXT-X-MAP` initialisation segment (see `m_InitSegment`) and the `CODECS`
+   attribute from the master playlist. `#EXT-X-MAP` is **not** encryption — only `#EXT-X-KEY`
+   with a `METHOD` other than `NONE` is, and that is what raises `J0219`. On the fMP4 path
+   the statistics overlay cannot show the values the TS demuxer derives (compression
+   parameters, per-segment frame rate, remux time); it reports the playlist's own values
+   instead. Restoring the rest means parsing the mp4 boxes.
+9. **Russian event-message names** — `background.js` listens for Cyrillic message names
    (e.g., `ВставитьСторонниеРасширения`, `ЭтотКаналУжеОткрыт`). These must match exactly between
    sender and listener. When translating, update **both** sides simultaneously.
 9. **Zombie Ads bug (open)** — expired `#EXT-X-DATERANGE` ad metadata is not filtered; this

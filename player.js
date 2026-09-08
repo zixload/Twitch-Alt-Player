@@ -1971,6 +1971,25 @@ const м_Статистика = (() => {
   function ПолученПреобразованныйСегмент(оСегмент) {
     const лОкноОткрыто = ОкноОткрыто();
     const оДанные = оСегмент.пДанные;
+    if (оДанные.bPassthrough) {
+      // fMP4 arrives already muxed, so none of the values the MPEG-TS demuxer
+      // derives exist here. Report what the playlist itself declares and leave the
+      // rest blank rather than printing NaN.
+      if (оСегмент.лРазрыв && лОкноОткрыто) {
+        Узел("statistics-videocompression").textContent = оДанные.лЕстьВидео
+          ? оДанные.sCodecsDescription || "fMP4"
+          : "—";
+        Узел("статистика-разрешениевидео").textContent =
+          оДанные.sResolution || "—";
+        Узел("статистика-частотакадров").textContent = "";
+        Узел("статистика-сжатиезвука").textContent = оДанные.лЕстьЗвук
+          ? "fMP4"
+          : "—";
+        Узел("статистика-битрейтзвука").textContent = "";
+        Узел("статистика-преобразованза").textContent = "—";
+      }
+      return;
+    }
     if (оДанные.hasOwnProperty("мбМедиасегмент")) {
       if (оСегмент.лРазрыв) {
         if (оДанные.лЕстьВидео) {
@@ -6634,6 +6653,8 @@ const м_Список = (() => {
       чВремя = NaN;
       сДатаВремени = null; // [NEW] Track Program Date Time
     }
+    // URI of the #EXT-X-MAP initialisation segment. Empty for MPEG-TS playlists.
+    let sInitSegmentUrl = "";
     const рвТегИлиАдрес = /^#EXT([^:\r\n]+)(?::(.*))?$|^[^#\r\n].*$/gm;
     рвТегИлиАдрес.lastIndex = 7;
     for (
@@ -6732,15 +6753,33 @@ const м_Список = (() => {
             сДатаВремени = сЗначениеТега; // [NEW] Capture the value
             break;
 
-          case "-X-KEY":
-          case "-X-MAP":
+          // #EXT-X-MAP is not encryption. It names the initialisation segment of an
+          // fMP4 (CMAF) playlist, the container Twitch is migrating channels to.
+          // Only #EXT-X-KEY means the media itself is encrypted.
+          case "-X-MAP": {
             Проверить(!лЭтоСписокВариантов);
-            м_Отладка.ЗавершитьРаботуИПоказатьСообщение(
-              "J0219",
-              "J0731",
-              м_Twitch.ПолучитьАдресКанала(true)
-            );
+            const amMapAttributes = РазобратьСписокАтрибутов(сЗначениеТега);
+            const sMapUri = amMapAttributes.get("URI");
+            Проверить(ЭтоНепустаяСтрока(sMapUri));
+            // A byte range would mean the init segment shares a file with the media
+            // segments. Twitch does not do that, and honouring it needs range requests.
+            Проверить(!amMapAttributes.has("BYTERANGE"));
+            sInitSegmentUrl = ResolveRelativeUrl(sMapUri, сАбсолютныйАдресСписка);
             break;
+          }
+
+          case "-X-KEY": {
+            Проверить(!лЭтоСписокВариантов);
+            const amKeyAttributes = РазобратьСписокАтрибутов(сЗначениеТега);
+            if (amKeyAttributes.get("METHOD") !== "NONE") {
+              м_Отладка.ЗавершитьРаботуИПоказатьСообщение(
+                "J0219",
+                "J0731",
+                м_Twitch.ПолучитьАдресКанала(true)
+              );
+            }
+            break;
+          }
 
           case "-X-BYTERANGE":
           case "-X-GAP":
@@ -6925,6 +6964,10 @@ const м_Список = (() => {
               !амАтрибуты.has("CLOSED-CAPTIONS")
             );
             оНовыйВариант.сИдентификатор = амАтрибуты.get("VIDEO") || "";
+            // Needed to build the SourceBuffer MIME type for fMP4 playlists, where no
+            // demuxer runs to derive the codec string from the elementary streams.
+            оНовыйВариант.sCodecs = амАтрибуты.get("CODECS") || "";
+            оНовыйВариант.sResolution = амАтрибуты.get("RESOLUTION") || "";
             break;
           }
 
@@ -7032,6 +7075,7 @@ const м_Список = (() => {
         сИдРолика5,
         сИдРолика6,
         моСегменты,
+        sInitSegmentUrl,
       };
       м_Журнал.Вот(
         `[Список] Разобран список сегментов TargetDuration=${nTargetDuration} ПорядковыйНомер=${чПорядковыйНомер} КонецСписка=${лКонецСписка} КоличествоСегментов=${моСегменты.length} РекламныхСегментов=${кРекламныхСегментов}`
@@ -7271,6 +7315,13 @@ const м_Список = (() => {
           оСегмент.лРазрыв || _лДобавитьРазрыв
         )
       );
+      // fMP4 segments carry their own initialisation segment and codec string, and
+      // bypass the MPEG-TS transcoder entirely. See m_InitSegment.
+      if (оНовыеСегменты.sInitSegmentUrl) {
+        оДобавлено.sInitSegmentUrl = оНовыеСегменты.sInitSegmentUrl;
+        оДобавлено.sCodecs = оВыбранныйВариант.sCodecs || "";
+        оДобавлено.sResolution = оВыбранныйВариант.sResolution || "";
+      }
       м_Журнал[оДобавлено.лРазрыв ? "Окак" : "Вот"](
         `[Список] Добавлен сегмент ${оДобавлено.чНомер} ПорядковыйНомер=${чПорядковыйНомер} Время=${оСегмент.чВремя} Длительность=${оДобавлено.чДлительность} Разрыв=${оДобавлено.лРазрыв}`
       );
@@ -7406,8 +7457,86 @@ const м_Список = (() => {
   };
 })();
 
+/**
+ * Cache of #EXT-X-MAP initialisation segments.
+ *
+ * An fMP4 (CMAF) playlist ships its `moov` box separately from the media segments,
+ * and every run of segments needs it appended to the SourceBuffer first. Twitch
+ * reuses one URI for a whole broadcast, so a single download serves the session.
+ *
+ * A failure here is not fatal: the segment is simply not ready yet, the transcoder
+ * leaves its media segments queued, and the next call retries the download.
+ */
+const m_InitSegment = (() => {
+  const REQUEST_TIMEOUT = 20000;
+
+  /** @type {!Map<string, {data: ?Uint8Array}>} */
+  const _amCache = new Map();
+
+  /**
+   * Returns the initialisation segment for a URI, starting its download the first
+   * time it is asked for.
+   *
+   * @param {string} sUrl
+   * @returns {?Uint8Array} The bytes, or null while the download is still running.
+   */
+  function Get(sUrl) {
+    Проверить(ЭтоНепустаяСтрока(sUrl));
+    const oCached = _amCache.get(sUrl);
+    if (oCached !== void 0) {
+      return oCached.data;
+    }
+
+    const oEntry = { data: null };
+    _amCache.set(sUrl, oEntry);
+    м_Журнал.Окак(`[InitSegment] Downloading ${sUrl}`);
+    try {
+      м_Загрузчик
+        .Загрузить(
+          new ОтменаОбещания(),
+          "GET",
+          sUrl,
+          REQUEST_TIMEOUT,
+          null,
+          null,
+          "initialisation segment",
+          false,
+          0
+        )
+        .then((буфДанные) => {
+          oEntry.data = new Uint8Array(буфДанные);
+          м_Журнал.Окак(
+            `[InitSegment] Downloaded ${oEntry.data.length} bytes`
+          );
+          // Media segments were parked waiting for this; let them through.
+          м_Преобразователь.ПреобразоватьСледующийСегмент();
+        })
+        .catch((пПричина) => {
+          // Drop the entry so the next segment retries rather than stalling forever.
+          _amCache.delete(sUrl);
+          м_Журнал.Ой(
+            `[InitSegment] Download failed: ${ПеревестиИсключениеВСтроку(пПричина)}`
+          );
+        });
+    } catch (пИсключение) {
+      _amCache.delete(sUrl);
+      м_Журнал.Ой(
+        `[InitSegment] Could not start download: ${ПеревестиИсключениеВСтроку(
+          пИсключение
+        )}`
+      );
+    }
+    return null;
+  }
+
+  return { Get };
+})();
+
 const м_Преобразователь = (() => {
   let _оРабочийПоток = null;
+  // Media segments handed to the worker and not yet returned. fMP4 passthrough
+  // waits for this to reach zero so converted segments cannot overtake them.
+  let _nWorkerJobs = 0;
   let _чПоследнийЗагруженный = -1;
   function ПреобразоватьСледующийСегмент() {
     let чУдалить,
@@ -7441,6 +7570,31 @@ const м_Преобразователь = (() => {
         if (оСегмент.пДанные === СОСТОЯНИЕ_НАЧАЛО_ТРАНСЛЯЦИИ) {
           СоздатьРабочийПоток();
         }
+      } else if (
+        оСегмент.sInitSegmentUrl &&
+        typeof оСегмент.пДанные != "number"
+      ) {
+        // fMP4 passthrough. The bytes are already a fragmented MP4, which is exactly
+        // what the worker would have produced from MPEG-TS, so there is nothing to
+        // demux. Convert in place: the segment keeps its position in the queue and
+        // therefore its position in the stream.
+        if (_nWorkerJobs !== 0) {
+          // A transport-stream segment is still in the worker. Emitting now would
+          // put this one ahead of it in the queue.
+          break;
+        }
+        const mbInitSegment = m_InitSegment.Get(оСегмент.sInitSegmentUrl);
+        if (mbInitSegment === null) {
+          // Still downloading. m_InitSegment calls us back when it lands.
+          break;
+        }
+        м_Статистика.ПолученИсходныйСегмент();
+        м_Журнал.Вот(
+          `[Transcoder] Segment ${оСегмент.чНомер} is fMP4, no conversion needed`
+        );
+        оСегмент.пДанные = BuildPassthroughData(оСегмент, mbInitSegment);
+        оСегмент.чОбработка = ОБРАБОТКА_ПРЕОБРАЗОВАН;
+        м_Статистика.ПолученПреобразованныйСегмент(оСегмент);
       } else {
         if (typeof оСегмент.пДанные == "number") {
           м_Журнал.Вот(
@@ -7451,6 +7605,7 @@ const м_Преобразователь = (() => {
           м_Отладка.СохранитьТранспортныйПоток(оСегмент);
           м_Статистика.ПолученИсходныйСегмент();
           м_Журнал.Вот(`[Преобразование] Отсылаю сегмент ${оСегмент.чНомер}`);
+          ++_nWorkerJobs;
           _оРабочийПоток.postMessage(оСегмент, [оСегмент.пДанные]);
         }
         if (++кУдалить == 1) {
@@ -7463,6 +7618,34 @@ const м_Преобразователь = (() => {
     }
     м_Проигрыватель.ДобавитьСледующийСегмент();
   }
+  /**
+   * Wraps an already-fragmented MP4 segment in the shape the player expects back
+   * from the worker, so nothing downstream needs to know where the bytes came from.
+   *
+   * @param {!Сегмент} оСегмент A downloaded segment whose пДанные is the raw ArrayBuffer.
+   * @param {!Uint8Array} mbInitSegment The cached #EXT-X-MAP initialisation segment.
+   * @returns {!Object}
+   */
+  function BuildPassthroughData(оСегмент, mbInitSegment) {
+    const sCodecs = оСегмент.sCodecs;
+    const оДанные = {
+      bPassthrough: true,
+      мбМедиасегмент: new Uint8Array(оСегмент.пДанные),
+      лЕстьВидео: /avc1|avc3|hvc1|hev1|av01|vp09/.test(sCodecs),
+      лЕстьЗвук: /mp4a|ac-3|ec-3|opus|fLaC/.test(sCodecs),
+      чПреобразованЗа: 0,
+    };
+    if (оСегмент.лРазрыв) {
+      // The player appends this before the media segment and later hands it to the
+      // recycler, which neuters the buffer — so every discontinuity gets its own copy.
+      оДанные.мбСегментИнициализации = mbInitSegment.slice();
+      оДанные.сКодеки = `video/mp4;codecs="${sCodecs}"`;
+      оДанные.sCodecsDescription = sCodecs;
+      оДанные.sResolution = оСегмент.sResolution;
+    }
+    return оДанные;
+  }
+
   const ОбработатьОкончаниеПреобразования = ДобавитьОбработчикИсключений(
     (оСобытие) => {
       const мДанные = оСобытие.data;
@@ -7470,6 +7653,9 @@ const м_Преобразователь = (() => {
       switch (мДанные[0]) {
         case 1:
           Проверить(мДанные.length === 2 && ЭтоОбъект(мДанные[1]));
+          if (_nWorkerJobs !== 0) {
+            --_nWorkerJobs;
+          }
           const оСегмент = new Сегмент(
             ОБРАБОТКА_ПРЕОБРАЗОВАН,
             мДанные[1].пДанные,
@@ -7543,6 +7729,7 @@ const м_Преобразователь = (() => {
   }
   function СоздатьРабочийПоток() {
     м_Журнал.Вот("[Преобразование] Создаю рабочий поток");
+    _nWorkerJobs = 0;
     _оРабочийПоток = new Worker("/worker.js");
     _оРабочийПоток.addEventListener(
       "message",
@@ -7560,6 +7747,7 @@ const м_Преобразователь = (() => {
       м_Журнал.Вот("[Преобразование] Убиваю рабочий поток");
       _оРабочийПоток.terminate();
       _оРабочийПоток = null;
+      _nWorkerJobs = 0;
     }
   }
   return {
