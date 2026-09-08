@@ -200,18 +200,55 @@ kbd,
 
 /* --------------------------------------------------------- player controls */
 
+/*
+	Panel buttons — play/pause, mute, chat, notifications, settings, clip, PiP,
+	fullscreen. No chip, pill or ring behind them: a row of icons over video reads
+	better bare. The icons carry the interaction themselves — slightly held back at
+	rest, full theme accent and a small lift on hover, pressed in on click — with a
+	drop shadow standing in for the text-shadow SVG cannot use, so they stay legible
+	over a bright frame.
+*/
 .кнопка {
-	border-radius: 50%;
-	transition: background-color .15s ease;
+	border-radius: 0;
+	background: 0 0 !important;
 }
 
-.можнотыкать:not(:disabled):not(select):hover {
+.панель .кнопка>svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	filter: drop-shadow(0 .0625rem .125rem rgba(0, 0, 0, .55));
+	transition: transform .15s ease, opacity .15s ease;
+}
+
+.панель .кнопка:not(:disabled)>svg {
+	opacity: .85;
+}
+
+.панель .кнопка:not(:disabled):hover>svg {
+	opacity: 1;
+	transform: scale(1.09);
+}
+
+.панель .кнопка:enabled:active>svg {
+	transform: scale(.92);
+}
+
+/*
+	Playback speed, the one non-icon control in the bar: match the dark fields. A
+	pill radius is wrong here — at "1" the box is narrow enough that it renders as
+	a circle, which is the very thing the bare icon row avoids.
+*/
+#скорость {
+	border: .0625rem solid rgba(var(--gl-line), .14);
 	border-radius: var(--gl-radius-small);
-	background: rgba(var(--gl-line), .1);
+	color: rgb(var(--gl-ink));
+	background: rgba(var(--gl-field), .8);
 }
 
-.кнопка:not(:disabled):hover {
-	background: rgba(var(--gl-line), .12) !important;
+#скорость:not(:disabled):hover {
+	border-color: rgba(var(--gl-line), .3);
+	color: rgb(var(--сЦветВыделения));
+	background-image: none;
 }
 
 .типтрансляции {
@@ -238,6 +275,7 @@ kbd,
 
 #громкость::-webkit-slider-thumb {
 	border-radius: 50%;
+	background: currentColor;
 	box-shadow: 0 .0625rem .1875rem rgba(0, 0, 0, .5);
 }
 
@@ -311,10 +349,15 @@ kbd,
 
 @media (prefers-reduced-motion: reduce) {
 	.заголовокнастроек,
-	.кнопка,
+	.панель .кнопка>svg,
 	input[type=color],
 	button,
 	select {
 		transition: none;
+	}
+
+	.панель .кнопка:not(:disabled):hover>svg,
+	.панель .кнопка:enabled:active>svg {
+		transform: none;
 	}
 }
