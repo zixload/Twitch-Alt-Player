@@ -35,15 +35,13 @@
 /* ------------------------------------------------------------- moved out of the way */
 
 /*
-	These now live in the bar below the video. They stay in the DOM because the
-	player keeps writing to them — channelbar.js reads them, and the stream title
-	still carries the channel URL the "leave" button navigates to.
+	The top panel is gone: title, category, viewer count and the channel-info button
+	all live in the bar under the video now. It stays in the DOM rather than being
+	deleted because the player keeps writing to it — channelbar.js reads those nodes,
+	the stream title still carries the channel URL the "leave" button navigates to,
+	and the info button in the bar delegates its click to the one inside it.
 */
-#верхняяпанель #названиетрансляции,
-#верхняяпанель #категориятрансляции,
-#верхняяпанель [data-i18n="F0501"],
-#верхняяпанель [data-i18n="F0502^A0503"],
-#верхняяпанель #количествозрителей {
+#верхняяпанель {
 	display: none !important;
 }
 
@@ -214,6 +212,18 @@
 	height: 1rem;
 	flex: none;
 	pointer-events: none;
+}
+
+/* Icon-only button: square rather than a pill with nothing in it. */
+.alt-cb-icon {
+	padding: 0;
+	width: 2rem;
+	justify-content: center;
+}
+
+.alt-cb-icon>svg {
+	width: 1.125rem;
+	height: 1.125rem;
 }
 
 .alt-cb-button[hidden] {

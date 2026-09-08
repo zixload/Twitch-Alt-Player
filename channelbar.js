@@ -24,6 +24,9 @@ const m_ChannelBar = (() => {
 		unsubscribe: 'зритель-отписаться'
 	};
 
+	/** The player's own channel-info button, still inside the (hidden) top panel. */
+	const INFO_BUTTON_SELECTOR = '#верхняяпанель [data-окно-переключить="канал"]';
+
 	/** `data-подписка` values, from the ПОДПИСКА_* constants in player.js. */
 	const NOT_FOLLOWING = '0';
 	const UPDATING_CLASS = 'обновляется';
@@ -151,6 +154,18 @@ const m_ChannelBar = (() => {
 		}
 	}
 
+	/**
+	 * The window-toggle handler listens for a click event raised inside the player,
+	 * and this bar sits outside it, so the click is forwarded to the original button
+	 * rather than duplicating the toggle logic.
+	 */
+	function onInfoClick() {
+		const elProxy = document.querySelector(INFO_BUTTON_SELECTOR);
+		if (elProxy !== null) {
+			elProxy.click();
+		}
+	}
+
 	function onLeaveClick() {
 		const elTitleLink = get('title');
 		const sUrl = elTitleLink && elTitleLink.href ? elTitleLink.href : '';
@@ -177,6 +192,10 @@ const m_ChannelBar = (() => {
 		const elFollow = document.getElementById('alt-cb-follow');
 		if (elFollow) {
 			elFollow.addEventListener('click', onFollowClick);
+		}
+		const elInfo = document.getElementById('alt-cb-info');
+		if (elInfo) {
+			elInfo.addEventListener('click', onInfoClick);
 		}
 		const elLeave = document.getElementById('alt-cb-leave');
 		if (elLeave) {
