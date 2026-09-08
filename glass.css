@@ -208,15 +208,21 @@ kbd,
 	drop shadow standing in for the text-shadow SVG cannot use, so they stay legible
 	over a bright frame.
 */
+/*
+	Icon buttons opt out of the dark-field treatment the form widgets get above:
+	that rule's 1px border would otherwise outline every icon in the bar, which
+	reads as a row of boxes with rules between them.
+*/
 .кнопка {
+	border: 0;
 	border-radius: 0;
 	background: 0 0 !important;
 }
 
 .панель .кнопка>svg {
-	width: 1.5rem;
-	height: 1.5rem;
-	filter: drop-shadow(0 .0625rem .125rem rgba(0, 0, 0, .55));
+	width: 1.25rem;
+	height: 1.25rem;
+	filter: drop-shadow(0 .0625rem .125rem rgba(0, 0, 0, .5));
 	transition: transform .15s ease, opacity .15s ease;
 }
 
@@ -226,7 +232,7 @@ kbd,
 
 .панель .кнопка:not(:disabled):hover>svg {
 	opacity: 1;
-	transform: scale(1.09);
+	transform: scale(1.08);
 }
 
 .панель .кнопка:enabled:active>svg {
