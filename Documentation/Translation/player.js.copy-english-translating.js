@@ -1,3 +1,17 @@
+/* ===========================================================================
+ * THIS FILE IS NOT LOADED BY THE EXTENSION.
+ *
+ * manifest.json and player.html load `player.js`, and only `player.js`. This is a
+ * reference copy kept for the Russian-to-English translation work; it has drifted
+ * from the live file and does not receive fixes.
+ *
+ * Editing this file changes nothing at runtime. If you are here because a search
+ * matched, go and make the change in `player.js` instead.
+ *
+ * Kept on purpose — CLAUDE.md forbids deleting it.
+ * Banner added 2026-09-08.
+ * =========================================================================== */
+
 "use strict";
 
 // This is a copy of the main player.js file as it looked @12/13/2025

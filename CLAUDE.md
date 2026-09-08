@@ -58,6 +58,9 @@ Twitch's native video player with a custom implementation featuring:
 | `sidebar.js` | Player UI | Left navigation sidebar — followed / live channels fetched from GraphQL. Self-contained: reads the auth cookie itself and never calls into `м_Twitch`, so a failure here cannot take the player down |
 | `sidebar.css` | Styles | Sidebar styling, plus the `body` flex rule that seats the sidebar beside `#проигрывательичат` |
 | `glass.css` | Styles | Glass skin, loaded after `player.css` — colour, radius, blur and typography only, never geometry the scripts measure |
+| `player-english-translating-test.js` | Reference | **Not loaded.** Drifted copy of `player.js` kept for translation work |
+| `Documentation/Translation/player.js.copy-english-translating.js` | Reference | **Not loaded.** Static copy, older still |
+| `Documentation/archive/` | History | Reports from earlier sessions, with verified statuses in its `INDEX.md` |
 | `common.js` | Shared Util | Shared helpers: i18n wrapper, storage, DOM utilities |
 | `worker.js` | Web Worker | MPEG-TS demuxer → MP4 muxer, runs off main thread |
 | `wasm.wasm` | Binary | Compiled WebAssembly runtime for segment transcoding |
@@ -179,11 +182,21 @@ All user-facing strings are externalized. **Never hardcode UI text.**
 
 ## Active Task: Russian → English UI Text Replacement
 
-The statistics overlay (opened with the **S** key) currently displays Russian text when the
-browser locale is Russian. The goal is to ensure English strings are the canonical display for
-English-locale users and to audit the player for any hardcoded Russian strings that bypass i18n.
+The statistics overlay (opened with the **S** key) still shows Russian. Two parts, with
+different states — both re-verified against the code on 2026-09-08:
 
-See **Translation Plan** section below for the full execution plan.
+- **Element IDs: done.** All 58 IDs that `player.js` looks up resolve in `player.html` or
+  `report.html`, the 17 statistics-overlay IDs included. The crash the archived reports
+  investigated is fixed.
+- **Tooltips: not done**, despite `Documentation/archive/HANDOFF.md` marking them complete.
+  11 of the 22 active `title=` attributes in `player.html` still contain Russian, and so do
+  several visible text nodes. The tooltips are multi-line: the first line of each was
+  translated and the rest left in Cyrillic inside the same attribute, which is why the
+  original verification script reported zero.
+
+Also outstanding: identifiers were never actually renamed. The earlier "translation" added a
+commented English echo under each line instead, which is why `player.js` is roughly twice the
+size it needs to be. See **Translation Plan** below.
 
 ---
 
@@ -356,6 +369,11 @@ Configure the remote URL with your personal access token (stored securely, not i
 - **Read before editing.** `player.js` is ~8,000 lines. Always read the relevant section first.
 - **Stay within module boundaries.** Each IIFE module has a clear responsibility. Do not
   move logic between modules without understanding the message-passing contracts.
+- **`player.js` is the only player source the extension loads.** `manifest.json` and
+  `player.html` reference it and nothing else. Two reference copies exist and have drifted
+  from it — `player-english-translating-test.js` and
+  `Documentation/Translation/player.js.copy-english-translating.js`. Both carry a header
+  banner saying so. Editing either changes nothing at runtime.
 - **Do not delete `player-english-translating-test.js`** — it is the active translation
   reference/test file.
 - **Do not edit `wasm.wasm` as text.** It is a compiled binary.
