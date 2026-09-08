@@ -194,9 +194,10 @@ different states — both re-verified against the code on 2026-09-08:
   translated and the rest left in Cyrillic inside the same attribute, which is why the
   original verification script reported zero.
 
-Also outstanding: identifiers were never actually renamed. The earlier "translation" added a
-commented English echo under each line instead, which is why `player.js` is roughly twice the
-size it needs to be. See **Translation Plan** below.
+Also outstanding: identifiers were never actually renamed. Measured on 2026-09-08, `player.js`
+is 9419 lines, of which 5448 contain Cyrillic, across 1722 distinct Cyrillic identifiers. The
+commented English echo the earlier "translation" added covers only 157 lines, so the file is not
+bloated by it — the debt is the identifiers themselves, not the size. See **Translation Plan** below.
 
 ---
 
