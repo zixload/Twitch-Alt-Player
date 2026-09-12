@@ -8,7 +8,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // This must return true to indicate that sendResponse will be called asynchronously.
         chrome.management.getAll().then(extensions => {
             const response = { sThirdPartyExtensions: '' };
-            // const response = { sThirdPartyExtensions: '' };
             for (const ext of extensions) {
                 if (ext.enabled) {
                     switch (ext.id) {
@@ -17,13 +16,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         case 'deofbbdfofnmppcjbhjibgodpcdchjii': // Opera
                         case 'icllegkipkooaicfmdfaloehobmglglb': // Edge
                             response.sThirdPartyExtensions += 'BTTV ';
-                            // response.sThirdPartyExtensions += 'BTTV ';
                             break;
                         // FrankerFaceZ IDs
                         case 'fadndhdgpmmaapbmfcknlfgcflmmmieb': // Chrome
                         case 'djkpepcignmpfblhbfpmlhoindhndkdj': // Opera
                             response.sThirdPartyExtensions += 'FFZ ';
-                            // response.sThirdPartyExtensions += 'FFZ ';
                             break;
                     }
                 }
@@ -33,7 +30,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             } catch (e) {
                 // This can happen if the original tab was closed. Ignore the error.
                 console.log("Could not send response for 'InsertThirdPartyExtensions', tab may have closed.", e);
-                // console.log("Could not send response for 'InsertThirdPartyExtensions', tab may have closed.", e);
             }
         });
         return true; 
@@ -53,7 +49,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const duplicate = tabs.find(tab => 
                 tab.id !== sender.tab.id && 
                 new URL(tab.url).searchParams.get('channel') === message.sChannel
-                // new URL(tab.url).searchParams.get('channel') === message.sChannel
             );
 
             if (duplicate) {

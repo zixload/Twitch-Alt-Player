@@ -89,76 +89,53 @@
  */
 "use strict";
 const EXTENSION_VERSION = chrome.runtime.getManifest().version;
-// const EXTENSION_VERSION = chrome.runtime.getManifest().version;
 
 const LOAD_METADATA_NO_LONGER_THAN = 15e3;
-// const LOAD_METADATA_NO_LONGER_THAN = 15e3;
 
 const LOAD_VARIANT_LIST_NO_LONGER_THAN = 15e3;
-// const LOAD_VARIANT_LIST_NO_LONGER_THAN = 15e3;
 
 const LOAD_SEGMENT_LIST_NO_LONGER_THAN = 6e3;
-// const LOAD_SEGMENT_LIST_NO_LONGER_THAN = 6e3;
 
 const PROCESSING_AWAITING_DOWNLOAD = 1;
-// const PROCESSING_AWAITING_DOWNLOAD = 1;
 
 const PROCESSING_DOWNLOADING = 2;
-// const PROCESSING_DOWNLOADING = 2;
 
 const PROCESSING_DOWNLOADED = 3;
-// const PROCESSING_DOWNLOADED = 3;
 
 const PROCESSING_CONVERTED = 4;
-// const PROCESSING_CONVERTED = 4;
 
 const STATE_START = 1;
-// const STATE_START = 1;
 
 const STATE_BROADCAST_START = 2;
-// const STATE_BROADCAST_START = 2;
 
 const STATE_BROADCAST_END = 3;
-// const STATE_BROADCAST_END = 3;
 
 const STATE_LOADING = 4;
-// const STATE_LOADING = 4;
 
 const STATE_PLAYBACK_START = 5;
-// const STATE_PLAYBACK_START = 5;
 
 const STATE_PLAYING = 6;
-// const STATE_PLAYING = 6;
 
 const STATE_STOP = 7;
-// const STATE_STOP = 7;
 
 const STATE_REPEAT = 8;
-// const STATE_REPEAT = 8;
 
 const STATE_VARIANT_CHANGE = 9;
-// const STATE_VARIANT_CHANGE = 9;
 
 const SUBSCRIPTION_UPDATING = -1;
-// const SUBSCRIPTION_UPDATING = -1;
 
 const SUBSCRIPTION_UNAVAILABLE = 0;
-// const SUBSCRIPTION_UNAVAILABLE = 0;
 
 const SUBSCRIPTION_NOT_SUBSCRIBED = 1;
-// const SUBSCRIPTION_NOT_SUBSCRIBED = 1;
 
 const SUBSCRIPTION_DO_NOT_NOTIFY = 2;
-// const SUBSCRIPTION_DO_NOT_NOTIFY = 2;
 
 const SUBSCRIPTION_NOTIFY = 3;
-// const SUBSCRIPTION_NOTIFY = 3;
 
 const RESPONSE_CODE = "Server returned code ";
 // const RESPONSE_CODE = 'Server returned code ';
 
 let g_nExactTime = NaN;
-// let g_nExactTime = NaN;
 
 if (!navigator.clipboard) {
   navigator.clipboard = {};
@@ -177,28 +154,20 @@ if (!navigator.clipboard.writeText) {
         nodeText.type = "text";
         // nodeText.type = 'text';
         nodeText.readOnly = true;
-        // nodeText.readOnly = true;
         nodeText.value = sText;
-        // nodeText.value = sText;
         nodeText.style.position = "fixed";
         // nodeText.style.position = 'fixed';
         nodeText.style.left = "-100500px";
         // nodeText.style.left = '-100500px';
         document.body.appendChild(nodeText);
-        // document.body.appendChild(nodeText);
         nodeText.select();
-        // nodeText.select();
         const bSuccess = document.execCommand("copy");
         // const bSuccess = document.execCommand('copy');
         nodeText.remove();
-        // nodeText.remove();
         if (bSuccess) {
-          // if (bSuccess) {
           fResolve();
-          // fResolve();
         } else {
           fReject();
-          // fReject();
         }
       })
     );
@@ -208,11 +177,9 @@ if (!navigator.clipboard.writeText) {
 function GetText(sCode, sSubstitution) {
   // function Text(sCode, sSubstitution) {
   return m_i18n.GetMessage(sCode, sSubstitution);
-  // return m_i18n.GetMessage(sCode, sSubstitution);
 }
 
 function Round(nValue, nPrecision) {
-  // function Round(nValue, nPrecision) {
   Check(
     typeof nValue == "number" &&
     Number.isInteger(nPrecision) &&
@@ -221,9 +188,7 @@ function Round(nValue, nPrecision) {
   );
   // Check(typeof nValue == 'number' && Number.isInteger(nPrecision) && nPrecision >= 0 && nPrecision <= 20);
   if (nPrecision === 0) {
-    // if (nPrecision === 0) {
     return Math.round(nValue);
-    // return Math.round(nValue);
   }
   const h = Math.pow(10, nPrecision);
   // const n = Math.pow(10, nPrecision);
@@ -232,7 +197,6 @@ function Round(nValue, nPrecision) {
 }
 
 function Clamp(nValue, nMin, nMax) {
-  // function Clamp(nValue, nMin, nMax) {
   Check(
     Number.isFinite(nValue) &&
     Number.isFinite(nMin) &&
@@ -241,26 +205,18 @@ function Clamp(nValue, nMin, nMax) {
   );
   // Check(Number.isFinite(nValue) && Number.isFinite(nMin) && Number.isFinite(nMax) && nMin <= nMax);
   return Math.min(Math.max(nValue, nMin), nMax);
-  // return Math.min(Math.max(nValue, nMin), nMax);
 }
 
 function chain(pObject, ...msProperties) {
-  // function chain(pObject, ...msProperties) {
   Check(msProperties.length !== 0);
-  // Check(msProperties.length !== 0);
   for (const sProperty of msProperties) {
-    // for (const sProperty of msProperties) {
     if (!IsObject(pObject)) {
-      // if (!IsObject(pObject)) {
       return null;
     }
     Check(IsNonEmptyString(sProperty));
-    // Check(IsNonEmptyString(sProperty));
     pObject = pObject[sProperty];
-    // pObject = pObject[sProperty];
   }
   return pObject;
-  // return pObject;
 }
 
 function ResolveRelativeUrl(sRelativeUrl, sAbsoluteBaseUrl) {
@@ -268,10 +224,8 @@ function ResolveRelativeUrl(sRelativeUrl, sAbsoluteBaseUrl) {
 }
 
 function ChangeDocumentTitle(sTitle) {
-  // function ChangeDocumentTitle(sTitle) {
   history.replaceState(null, "");
   document.title = sTitle;
-  // document.title = sTitle;
 }
 
 function checkExtensionPermissions() {

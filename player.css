@@ -7,7 +7,6 @@ input,
 button,
 select,
 .radio-icon,
-/* .radio-icon, */
 .checkbox-icon {
 /* .checkbox-icon */
 	-webkit-appearance: none;
@@ -65,7 +64,6 @@ select {
 	margin-left: 1em
 }
 .radio-icon,
-/* .radio-icon, */
 .checkbox-icon {
 /* .checkbox-icon */
 	display: inline-block;
@@ -1111,7 +1109,6 @@ input:not(:checked)+.settingsheading+.groupofsettings {
 /* .unread>svg */
 	transform-origin: 50% 10%;
 	animation: 12.5s linear .5s infinite unread
-	/* animation: 12.5s linear .5s infinite unread */
 }
 .autohide:not([data-состояние="3"]):not([data-состояние="7"]):not([data-окно-открыто]):not(.speedpick):not(.novideo) .unread>svg {
 /* .autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-open]):not(.speedchoice):not(.novideo) .unread>svg */

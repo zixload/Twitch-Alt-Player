@@ -8,11 +8,9 @@
     // Function from content.js: перехватитьФункции()
     // Function from content.js: interceptFunctions()
     let _bDoNotIntercept = false;
-    // let _bDoNotIntercept = false;
     window.addEventListener('tw5-неперехватывать', () => {
     // window.addEventListener('tw5-donotintercept', () => {
         _bDoNotIntercept = true;
-        // _bDoNotIntercept = true;
     });
     const oTitleDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
     Object.defineProperty(document, 'title', {
@@ -23,7 +21,6 @@
         },
         set(title) {
             if (_bDoNotIntercept) {
-            // if (_bDoNotIntercept) {
                 oTitleDescriptor.set.call(this, title);
             } else if (this.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
             // } else if (this.documentElement.hasAttribute('data-tw5-redirect')) {} else {
@@ -36,15 +33,12 @@
     const fPushState = history.pushState;
     history.pushState = function (state, title) {
         if (_bDoNotIntercept) {
-        // if (_bDoNotIntercept) {
             fPushState.apply(this, arguments);
         } else if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
         // } else if (document.documentElement.hasAttribute('data-tw5-redirect')) {} else {
             const sWas = location.pathname;
-            // const sWas = location.pathname;
             fPushState.apply(this, arguments);
             if (sWas !== location.pathname) {
-            // if (sWas !== location.pathname) {
                 oTitleDescriptor.set.call(document, 'Twitch');
                 window.dispatchEvent(new CustomEvent('tw5-pushstate'));
             }
@@ -55,16 +49,11 @@
     // Function from content.js: allowChatToWork()
     const fGetItem = Storage.prototype.getItem;
     Storage.prototype.getItem = function (sName) {
-    // Storage.prototype.getItem = function (sName) {
         let sValue = fGetItem.apply(this, arguments);
-        // let sValue = fGetItem.apply(this, arguments);
         if (sName === 'TwitchCache:Layout' && sValue) {
-        // if (sName === 'TwitchCache:Layout' && sValue) {
             sValue = sValue.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
-            // sValue = sValue.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
         }
         return sValue;
-        // return sValue;
     };
 
 })();

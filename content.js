@@ -1,43 +1,32 @@
 "use strict";
 
 const STORE_CHANNEL_STATE = 2e4;
-// const STORE_CHANNEL_STATE = 2e4;
 
 let g_oParsedAddress = null;
-// let g_oParsedAddress = null;
 
 let g_sAddressSettingMethod = "";
 // let g_sAddressSettingMethod = '';
 
 let g_nLastCheck = 0;
-// let g_nLastCheck = 0;
 
 let g_oRequest = null;
-// let g_oRequest = null;
 
 let g_sChannelCode = "";
 // let g_sChannelCode = '';
 
 let g_bIsStreaming = false;
-// let g_bIsStreaming = false;
 
 const m_Debug = {
-  // const m_Debug = {
   FinishWorkAndShowMessage: finishWork,
-  // FinishWorkAndShowMessage: finishWork,
   CaughtException: finishWork,
   // CaughtException: finishWork
 };
 
 function finishWork(pExceptionOrMessageCode) {
-  // function finishWork(pExceptionOrMessageCode) {
   if (!g_bWorkFinished) {
-    // if (!g_bWorkFinished) {
     console.error(pExceptionOrMessageCode);
-    // console.error(pExceptionOrMessageCode);
     try {
       g_bWorkFinished = true;
-      // g_bWorkFinished = true;
       m_Log.Окак("[content.js] Работа ended");
       // m_Log.Wow('[content.js] Work finished');
     } catch (_) {}
@@ -46,32 +35,25 @@ function finishWork(pExceptionOrMessageCode) {
 }
 
 function setPageAddress(sAddress, bReplace = false) {
-  // function setPageAddress(sAddress, bReplace = false) {
   location[bReplace ? "replace" : "assign"](sAddress);
   // location[bReplace ? 'replace' : 'assign'](sAddress);
 }
 
 function insertOnPage() {
-  // function insertOnPage() {
   const nodeScript = document.createElement("script");
   // const nodeScript = document.createElement('script');
   // MV3-compliant: Injects the script by URL instead of using textContent.
   nodeScript.src = chrome.runtime.getURL("content_injection.js");
   // nodeScript.src = chrome.runtime.getURL('content_injection.js');
   (document.head || document.documentElement).appendChild(nodeScript);
-  // (document.head || document.documentElement).appendChild(nodeScript);
   nodeScript.remove();
-  // nodeScript.remove();
 }
 
 function thisAddressCanBeRedirected(oAddress) {
-  // function thisAddressCanBeRedirected(oAddress) {
   return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
-  // return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
 }
 
 function getNonRedirectableAddress(oAddress) {
-  // function getNonRedirectableAddress(oAddress) {
   return `${oAddress.protocol}//${oAddress.host}${oAddress.pathname}${
     oAddress.search.length > 1
       ? `${oAddress.search}&${DO_NOT_REDIRECT_ADDRESS}`
@@ -81,9 +63,7 @@ function getNonRedirectableAddress(oAddress) {
 }
 
 function disableAutoRedirectForThisPage() {
-  // function disableAutoRedirectForThisPage() {
   if (thisAddressCanBeRedirected(location)) {
-    // if (thisAddressCanBeRedirected(location)) {
     history.replaceState(
       history.state,
       "",
@@ -113,15 +93,12 @@ parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([
 // parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([ 'directory', 'embed', 'friends', 'inventory', 'login', 'logout', 'manager', 'messages', 'payments', 'popout', 'search', 'settings', 'signup', 'subscriptions', 'team' ]);
 
 function parseAddress(oAddress) {
-  // function parseAddress(oAddress) {
   let bMobileVersion = false;
-  // let bMobileVersion = false;
   let sPage = "UNKNOWN";
   // let sPage = 'UNKNOWN';
   let sChannelCode = "";
   // let sChannelCode = '';
   let bCanRedirect = false;
-  // let bCanRedirect = false;
   if (
     oAddress.protocol === "https:" &&
     (oAddress.host === "www.twitch.tv" || oAddress.host === "m.twitch.tv")
@@ -132,15 +109,11 @@ function parseAddress(oAddress) {
     const msParts = oAddress.pathname.split("/");
     // const msParts = oAddress.pathname.split('/');
     if (msParts.length <= 3 && msParts[1] && !msParts[2]) {
-      // if (msParts.length <= 3 && msParts[1] && !msParts[2]) {
       if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(msParts[1])) {
-        // if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(msParts[1])) {
         sPage = "POSSIBLY_LIVE_BROADCAST";
         // sPage = 'POSSIBLY_LIVE_STREAM';
         sChannelCode = decodeURIComponent(msParts[1]);
-        // sChannelCode = decodeURIComponent(msParts[1]);
         bCanRedirect = thisAddressCanBeRedirected(oAddress);
-        // bCanRedirect = thisAddressCanBeRedirected(oAddress);
       }
     } else if (
       (msParts[1] === "embed" || msParts[1] === "popout") &&
@@ -151,7 +124,6 @@ function parseAddress(oAddress) {
       sPage = "CHANNEL_CHAT";
       // sPage = 'CHANNEL_CHAT';
       sChannelCode = decodeURIComponent(msParts[2]);
-      // sChannelCode = decodeURIComponent(msParts[2]);
     }
   }
   m_Log.Окак(
@@ -160,18 +132,14 @@ function parseAddress(oAddress) {
   // m_Log.Wow(`[content.js] Address parsed: Page=${sPage} ChannelCode=${sChannelCode} CanRedirect=${bCanRedirect}`);
   return {
     bMobileVersion,
-    // bMobileVersion,
     sPage,
-    // sPage,
     sChannelCode,
-    // sChannelCode,
     bCanRedirect,
     // bCanRedirect
   };
 }
 
 function requestChannelState(oParsedAddress) {
-  // function requestChannelState(oParsedAddress) {
   if (
     !oParsedAddress.bCanRedirect ||
     !m_Settings.Get("bAutoRedirectAllowed")
@@ -188,34 +156,24 @@ function requestChannelState(oParsedAddress) {
     return;
   }
   if (g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode) {
-    // if (g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode) {
     return;
   }
   cancelRequest();
-  // cancelRequest();
   g_sChannelCode = oParsedAddress.sChannelCode;
-  // g_sChannelCode = oParsedAddress.sChannelCode;
   g_nLastCheck = -1;
-  // g_nLastCheck = -1;
   sendRequest();
-  // sendRequest();
 }
 
 function pageAddressChanged(sMethod) {
-  // function pageAddressChanged(sMethod) {
   g_oParsedAddress = parseAddress(location);
-  // g_oParsedAddress = parseAddress(location);
   g_sAddressSettingMethod = sMethod;
-  // g_sAddressSettingMethod = sMethod;
   if (
     !g_oParsedAddress.bCanRedirect ||
     !m_Settings.Get("bAutoRedirectAllowed")
   ) {
     // if (!g_oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
     if (g_nLastCheck === -2) {
-      // if (g_nLastCheck === -2) {
       g_nLastCheck = -1;
-      // g_nLastCheck = -1;
     }
     return;
   }
@@ -226,45 +184,32 @@ function pageAddressChanged(sMethod) {
   ) {
     // if (!g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode && performance.now() - g_nLastCheck < STORE_CHANNEL_STATE) {
     if (g_bIsStreaming) {
-      // if (g_bIsStreaming) {
       redirectToOurPlayer(g_sChannelCode);
-      // redirectToOurPlayer(g_sChannelCode);
     }
     return;
   }
   if (g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode) {
-    // if (g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode) {
     g_nLastCheck = -2;
-    // g_nLastCheck = -2;
     return;
   }
   cancelRequest();
-  // cancelRequest();
   g_sChannelCode = g_oParsedAddress.sChannelCode;
-  // g_sChannelCode = g_oParsedAddress.sChannelCode;
   g_nLastCheck = -2;
-  // g_nLastCheck = -2;
   sendRequest();
-  // sendRequest();
 }
 
 function cancelRequest() {
-  // function cancelRequest() {
   if (g_oRequest) {
-    // if (g_oRequest) {
     m_Log.Окак("[content.js] Отменяю незавершенный запрос");
     // m_Log.Wow('[content.js] Canceling pending request');
     g_oRequest.abort();
-    // g_oRequest.abort();
   }
 }
 
 function sendRequest() {
-  // function sendRequest() {
   m_Log.Окак(`[content.js] Посылаю запрос для канала ${g_sChannelCode}`);
   // m_Log.Wow(`[content.js] Sending request for channel ${g_sChannelCode}`);
   g_oRequest = new XMLHttpRequest();
-  // g_oRequest = new XMLHttpRequest();
   g_oRequest.addEventListener("loadend", processResponse);
   // g_oRequest.addEventListener('loadend', processResponse);
   g_oRequest.open("POST", "https://gql.twitch.tv/gql#origin=twilight");
@@ -272,7 +217,6 @@ function sendRequest() {
   g_oRequest.responseType = "json";
   // g_oRequest.responseType = 'json';
   g_oRequest.timeout = 15e3;
-  // g_oRequest.timeout = 15e3;
   g_oRequest.setRequestHeader("Accept-Language", "en-US");
   // g_oRequest.setRequestHeader('Accept-Language', 'en-US');
   g_oRequest.setRequestHeader("Client-ID", "kimne78kx3ncx6brgo4mv6wki5h1ko");
@@ -280,14 +224,12 @@ function sendRequest() {
   g_oRequest.setRequestHeader("Content-Type", "text/plain; charset=UTF-8");
   // g_oRequest.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
   if (sendRequest._msDeviceId === void 0) {
-    // if (sendRequest._msDeviceId === void 0) {
     sendRequest._msDeviceId = document.cookie.match(
       /(?:^|;[ \t]?)unique_id=([^;]+)/
     );
     // sendRequest._msDeviceId = document.cookie.match(/(?:^|;[ \t]?)unique_id=([^;]+)/);
   }
   if (sendRequest._msDeviceId) {
-    // if (sendRequest._msDeviceId) {
     g_oRequest.setRequestHeader(
       "X-Device-ID",
       sendRequest._msDeviceId[1]
@@ -321,7 +263,6 @@ function sendRequest() {
 function processResponse({ target: oRequest }) {
   // function processResponse({target: oRequest}) {
   g_oRequest = null;
-  // g_oRequest = null;
   if (
     oRequest.status >= 200 &&
     oRequest.status < 300 &&
@@ -329,9 +270,7 @@ function processResponse({ target: oRequest }) {
   ) {
     // if (oRequest.status >= 200 && oRequest.status < 300 && IsObject(oRequest.response)) {
     const bRedirect = g_nLastCheck === -2;
-    // const bRedirect = g_nLastCheck === -2;
     g_nLastCheck = performance.now();
-    // g_nLastCheck = performance.now();
     let bBroadcastEndedOrEncoded = true,
       bCoWatching = false;
     // let bStreamFinishedOrEncoded = true, bWatchParty = false;
@@ -347,32 +286,23 @@ function processResponse({ target: oRequest }) {
       !bBroadcastEndedOrEncoded && !bCoWatching;
     // g_bIsStreaming = !bStreamFinishedOrEncoded && !bWatchParty;
     if (g_bIsStreaming && bRedirect) {
-      // if (g_bIsStreaming && bRedirect) {
       redirectToOurPlayer(g_sChannelCode);
-      // redirectToOurPlayer(g_sChannelCode);
     }
   } else {
     g_nLastCheck = 0;
-    // g_nLastCheck = 0;
   }
 }
 
 function launchOurPlayer(sChannelCode) {
-  // function launchOurPlayer(sChannelCode) {
   const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  // const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
   m_Log.Окак(`[content.js] Перехожу на страницу ${sPlayerAddress}`);
   // m_Log.Wow(`[content.js] Navigating to page ${sPlayerAddress}`);
   disableAutoRedirectForThisPage();
-  // disableAutoRedirectForThisPage();
   setPageAddress(sPlayerAddress);
-  // setPageAddress(sPlayerAddress);
 }
 
 function redirectToOurPlayer(sChannelCode) {
-  // function redirectToOurPlayer(sChannelCode) {
   const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  // const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
   m_Log.Окак(
     `[content.js] Меняю адрес страницы с ${location.href} на ${sPlayerAddress}`
   );
@@ -383,13 +313,10 @@ function redirectToOurPlayer(sChannelCode) {
   );
   // document.documentElement.setAttribute('data-tw5-redirect', sPlayerAddress);
   setPageAddress(sPlayerAddress, true);
-  // setPageAddress(sPlayerAddress, true);
 }
 
 function handlePointerDownAndClick(oEvent) {
-  // function handlePointerDownAndClick(oEvent) {
   if (g_oParsedAddress) {
-    // if (g_oParsedAddress) {
     const nodeLink = oEvent.target.closest("a[href]");
     // const nodeLink = oEvent.target.closest('a[href]');
     if (
@@ -407,19 +334,15 @@ function handlePointerDownAndClick(oEvent) {
       );
       // m_Log.Wow(`[content.js] Event ${oEvent.type} occurred on link ${nodeLink.href}`);
       requestChannelState(parseAddress(nodeLink));
-      // requestChannelState(parseAddress(nodeLink));
     }
   }
 }
 
 function handlePopState(oEvent) {
-  // function handlePopState(oEvent) {
   if (g_oParsedAddress) {
-    // if (g_oParsedAddress) {
     m_Log.Окак(`[content.js] Произошло событие popstate ${location.href}`);
     // m_Log.Wow(`[content.js] popstate event occurred ${location.href}`);
     if (getBrowserEngineVersion() < 67) {
-      // if (getBrowserEngineVersion() < 67) {
       document.title = "Twitch";
     }
     pageAddressChanged("POPSTATE");
@@ -429,13 +352,11 @@ function handlePopState(oEvent) {
       m_Log.Окак("[content.js] Скрываю событие popstate");
       // m_Log.Wow('[content.js] Hiding popstate event');
       oEvent.stopImmediatePropagation();
-      // oEvent.stopImmediatePropagation();
     }
   }
 }
 
 function handlePushState(oEvent) {
-  // function handlePushState(oEvent) {
   m_Log.Окак(
     `[content.js] Произошло событие tw5-pushstate ${location.href}`
   );
@@ -445,16 +366,13 @@ function handlePushState(oEvent) {
 }
 
 function handleLaunchOurPlayer(oEvent) {
-  // function handleLaunchOurPlayer(oEvent) {
   oEvent.preventDefault();
-  // oEvent.preventDefault();
   if (
     oEvent.button === LEFT_BUTTON &&
     g_oParsedAddress.sPage === "POSSIBLY_LIVE_BROADCAST"
   ) {
     // if (oEvent.button === LEFT_BUTTON && g_oParsedAddress.sPage === 'POSSIBLY_LIVE_STREAM') {
     launchOurPlayer(g_oParsedAddress.sChannelCode);
-    // launchOurPlayer(g_oParsedAddress.sChannelCode);
   } else {
     m_Log.Окак(
       `[content.js] Не запускать player Кнопка=${oEvent.button} Страница=${g_oParsedAddress.sPage}`
@@ -464,9 +382,7 @@ function handleLaunchOurPlayer(oEvent) {
 }
 
 function handleToggleAutoRedirect(oEvent) {
-  // function handleToggleAutoRedirect(oEvent) {
   oEvent.preventDefault();
-  // oEvent.preventDefault();
   const b = !m_Settings.Get("bAutoRedirectAllowed");
   // const b = !m_Settings.Get('bAutoRedirectAllowed');
   m_Log.Окак(`[content.js] Автоперенаправление разрешено: ${b}`);
@@ -474,13 +390,10 @@ function handleToggleAutoRedirect(oEvent) {
   m_Settings.Change("bAutoRedirectAllowed", b);
   // m_Settings.Change('bAutoRedirectAllowed', b);
   updateOurButton();
-  // updateOurButton();
 }
 
 function handleCloseHelp(oEvent) {
-  // function handleCloseHelp(oEvent) {
   oEvent.preventDefault();
-  // oEvent.preventDefault();
   m_Log.Окак("[content.js] Закрываю справку");
   // m_Log.Wow('[content.js] Closing help');
   oEvent.currentTarget.classList.remove("tw5-справка");
@@ -503,13 +416,11 @@ function handleCloseHelp(oEvent) {
 }
 
 function getOurButton() {
-  // function getOurButton() {
   return document.getElementById("tw5-автоперенаправление");
   // return document.getElementById('tw5-autoredirect');
 }
 
 function updateOurButton() {
-  // function updateOurButton() {
   getOurButton().classList.toggle(
     "tw5-запрещено",
     !m_Settings.Get("bAutoRedirectAllowed")
@@ -518,15 +429,12 @@ function updateOurButton() {
 }
 
 function insertOurButton() {
-  // function insertOurButton() {
   if (g_oParsedAddress.bMobileVersion) {
-    // if (g_oParsedAddress.bMobileVersion) {
     const nodeToInsert = document.querySelector(
       ".top-nav__menu > div:last-child > div:first-child"
     );
     // const nodeToInsert = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
     if (!nodeToInsert) {
-      // if (!nodeToInsert) {
       return false;
     }
     m_Log.Окак("[content.js] Вставляю нашу кнопку для мобильного сайта");
@@ -594,7 +502,6 @@ function insertOurButton() {
     );
     // const nodeToInsert = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
     if (!nodeToInsert) {
-      // if (!nodeToInsert) {
       return false;
     }
     m_Log.Окак("[content.js] Вставляю нашу кнопку");
@@ -703,7 +610,6 @@ function insertOurButton() {
     );
   }
   const nodeButton = getOurButton();
-  // const nodeButton = getOurButton();
   nodeButton.addEventListener("click", handleLaunchOurPlayer);
   // nodeButton.addEventListener('click', handleLaunchOurPlayer);
   nodeButton.addEventListener(
@@ -733,26 +639,19 @@ function insertOurButton() {
     );
   }
   updateOurButton();
-  // updateOurButton();
   return true;
 }
 
 function insertOurButtonIfNeeded() {
-  // function insertOurButtonIfNeeded() {
   return Boolean(getOurButton()) || insertOurButton();
-  // return Boolean(getOurButton()) || insertOurButton();
 }
 
 function insertOurButtonFirstTime() {
-  // function insertOurButtonFirstTime() {
   insertOurButton();
-  // insertOurButton();
   if (g_oParsedAddress.bMobileVersion) {
-    // if (g_oParsedAddress.bMobileVersion) {
     new MutationObserver((moRecords) => {
       // new MutationObserver(moRecords => {
       insertOurButtonIfNeeded();
-      // insertOurButtonIfNeeded();
     }).observe(document.head || document.documentElement, {
       childList: true,
       subtree: true,
@@ -767,12 +666,10 @@ function insertOurButtonFirstTime() {
 }
 
 function waitForDom() {
-  // function waitForDom() {
   return new Promise((fResolve) => {
     // return new Promise(fResolve => {
     if (document.readyState !== "loading") {
       fResolve();
-      // fResolve();
     } else {
       document.addEventListener(
         "DOMContentLoaded",
@@ -784,7 +681,6 @@ function waitForDom() {
           );
           // document.removeEventListener('DOMContentLoaded', HandleDomLoad);
           fResolve();
-          // fResolve();
         }
       );
     }
@@ -792,26 +688,22 @@ function waitForDom() {
 }
 
 function waitForPageLoad() {
-  // function waitForPageLoad() {
   return new Promise((fResolve) => {
     // return new Promise(fResolve => {
     if (document.readyState === "complete") {
       fResolve();
-      // fResolve();
     } else {
       window.addEventListener("load", function HandlePageLoad() {
         // window.addEventListener('load', function HandlePageLoad() {
         window.removeEventListener("load", HandlePageLoad);
         // window.removeEventListener('load', HandlePageLoad);
         fResolve();
-        // fResolve();
       });
     }
   });
 }
 
 function insertThirdPartyExtensions() {
-  // function insertThirdPartyExtensions() {
   chrome.runtime.sendMessage(
     {
       sQuery: "InsertThirdPartyExtensions",
@@ -835,7 +727,6 @@ function insertThirdPartyExtensions() {
       if (oMessage.sThirdPartyExtensions.includes("BTTV ")) {
         // if (oMessage.sThirdPartyExtensions.includes('BTTV ')) {
         waitForPageLoad().then(() => {
-          // waitForPageLoad().then(() => {
 
           //! BetterTTV browser extension
           //! https://betterttv.com/
@@ -849,7 +740,6 @@ function insertThirdPartyExtensions() {
       if (oMessage.sThirdPartyExtensions.includes("FFZ ")) {
         // if (oMessage.sThirdPartyExtensions.includes('FFZ ')) {
         waitForDom().then(() => {
-          // waitForDom().then(() => {
 
           //! FrankerFaceZ browser extension
           //! https://www.frankerfacez.com/
@@ -865,7 +755,6 @@ function insertThirdPartyExtensions() {
 }
 
 function changeChatStyle() {
-  // function changeChatStyle() {
   const nodeStyle = document.createElement("link");
   // const nodeStyle = document.createElement('link');
   nodeStyle.rel = "stylesheet";
@@ -875,17 +764,14 @@ function changeChatStyle() {
   nodeStyle.className = "tw5-js-удалить";
   // nodeStyle.className = 'tw5-js-remove';
   (document.head || document.documentElement).appendChild(nodeStyle);
-  // (document.head || document.documentElement).appendChild(nodeStyle);
 }
 
 function changeChatBehavior() {
-  // function changeChatBehavior() {
   window.addEventListener(
     "click",
     (oEvent) => {
       // window.addEventListener('click', oEvent => {
       if (oEvent.button !== LEFT_BUTTON) {
-        // if (oEvent.button !== LEFT_BUTTON) {
         return;
       }
       const nodeLink = oEvent.target.closest(
@@ -893,7 +779,6 @@ function changeChatBehavior() {
       );
       // const nodeLink = oEvent.target.closest('a[href^="http:"],a[href^="https:"],a[href]:not([href=""]):not([href^="#"]):not([href*=":"]):not([href$="/not-a-location"])');
       if (!nodeLink) {
-        // if (!nodeLink) {
         return;
       }
       m_Log.Окак(
@@ -905,7 +790,6 @@ function changeChatBehavior() {
       nodeLink.target = "_blank";
       // nodeLink.target = '_blank';
       oEvent.stopImmediatePropagation();
-      // oEvent.stopImmediatePropagation();
     },
     true
   );
@@ -914,29 +798,23 @@ function changeChatBehavior() {
     const sel = document.getElementsByClassName("channel-leaderboard");
     // const sel = document.getElementsByClassName('channel-leaderboard');
     if (sel.length !== 0) {
-      // if (sel.length !== 0) {
       sel[0].parentElement.parentElement.classList.add(
         "tw5-parent-channel-leaderboard"
       );
       // sel[0].parentElement.parentElement.classList.add('tw5-parent-channel-leaderboard');
       oObserver.disconnect();
-      // oObserver.disconnect();
     }
   });
   oObserver.observe(document.body || document.documentElement, {
-    // oObserver.observe(document.body || document.documentElement, {
     childList: true,
     subtree: true,
   });
   setTimeout(() => oObserver.disconnect(), 6e4);
-  // setTimeout(() => oObserver.disconnect(), 6e4);
 }
 
 function removeOldVersionTails() {}
-// function removeOldVersionTails() {}
 
 AddExceptionHandler(() => {
-  // AddExceptionHandler(() => {
   m_Log.Окак(
     `[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`
   );
@@ -944,23 +822,17 @@ AddExceptionHandler(() => {
   if (parseAddress(location).sPage === "CHANNEL_CHAT") {
     // if (parseAddress(location).sPage === 'CHANNEL_CHAT') {
     insertOnPage();
-    // insertOnPage();
     if (window.top !== window) {
       insertThirdPartyExtensions();
-      // insertThirdPartyExtensions();
       changeChatStyle();
-      // changeChatStyle();
       changeChatBehavior();
-      // changeChatBehavior();
     }
     return;
   }
   removeOldVersionTails();
-  // removeOldVersionTails();
   const sEvent = window.PointerEvent ? "pointerdown" : "mousedown";
   // const sEvent = window.PointerEvent ? 'pointerdown' : 'mousedown';
   window.addEventListener(sEvent, handlePointerDownAndClick, true);
-  // window.addEventListener(sEvent, handlePointerDownAndClick, true);
   window.addEventListener("click", handlePointerDownAndClick, true);
   // window.addEventListener('click', handlePointerDownAndClick, true);
   window.addEventListener("popstate", handlePopState);
@@ -974,9 +846,7 @@ AddExceptionHandler(() => {
       window.addEventListener("tw5-pushstate", handlePushState);
       // window.addEventListener('tw5-pushstate', handlePushState);
       insertOnPage();
-      // insertOnPage();
       insertOurButtonFirstTime();
-      // insertOurButtonFirstTime();
     })
     .catch(m_Debug.CaughtException);
   // }).catch(m_Debug.CaughtException);
