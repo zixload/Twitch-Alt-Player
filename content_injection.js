@@ -56,14 +56,14 @@
     const fGetItem = Storage.prototype.getItem;
     Storage.prototype.getItem = function (sName) {
     // Storage.prototype.getItem = function (sName) {
-        let сЗначение = fGetItem.apply(this, arguments);
+        let sValue = fGetItem.apply(this, arguments);
         // let sValue = fGetItem.apply(this, arguments);
-        if (sName === 'TwitchCache:Layout' && сЗначение) {
+        if (sName === 'TwitchCache:Layout' && sValue) {
         // if (sName === 'TwitchCache:Layout' && sValue) {
-            сЗначение = сЗначение.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
+            sValue = sValue.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
             // sValue = sValue.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
         }
-        return сЗначение;
+        return sValue;
         // return sValue;
     };
 

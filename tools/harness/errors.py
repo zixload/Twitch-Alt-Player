@@ -92,6 +92,8 @@ async def main():
 
     out = io.open(OUT, 'w', encoding='utf-8')
     erreurs = 0
+    # **worker.js n'est pas toujours sollicite** : voir le bilan en fin de fichier.
+    vu_worker = []
     try:
         ver = None
         for _ in range(30):
@@ -142,7 +144,22 @@ async def main():
             await send(pws, 13, 'Page.navigate', {'url': url})
 
             fin = time.time() + SECONDS
+            prochain_guet = 0.0
             while time.time() < fin:
+                # **Guetter le fil de transcodage pendant l'essai, pas apres.** Le lecteur le cree
+                # et le termine au fil des segments : chercher une seule fois a la fin revient a
+                # tirer a pile ou face, ce qui a d'abord donne « oui » puis « non » sur la meme
+                # chaine. Des qu'il parait, on note son adresse.
+                if time.time() > prochain_guet:
+                    prochain_guet = time.time() + 2
+                    try:
+                        for t in http('/json/list'):
+                            u = t.get('url') or ''
+                            if u.endswith('/worker.js') and t.get('webSocketDebuggerUrl'):
+                                vu_worker.append(t)
+                                break
+                    except Exception:
+                        pass
                 try:
                     raw = await asyncio.wait_for(pws.recv(), timeout=max(0.5, fin - time.time()))
                 except asyncio.TimeoutError:
@@ -174,6 +191,45 @@ async def main():
                             erreurs += 1
 
         out.write(u"\n" + u"=" * 60 + u"\n")
+        # Les lignes de journal du transcodeur ne remontent pas a la console : leur niveau est
+        # filtre. La cible « worker » du navigateur, elle, existe des que le fil est cree, et
+        # le lecteur ne le cree que pour transcoder du MPEG-TS. C'est donc elle qu'on regarde.
+        # **Ce signal ne vaut que dans un sens.** Le fil est cree et termine au fil des segments,
+        # et Chrome ne liste pas les fils dedies de facon fiable : le meme essai sur la meme
+        # chaine a rendu « oui » puis « non ». Un oui prouve que worker.js a tourne ; un non ne
+        # prouve rien, ni dans un sens ni dans l'autre.
+        fils = vu_worker or [t for t in http('/json/list')
+                             if (t.get('url') or '').endswith('/worker.js')]
+        if fils:
+            out.write(u"worker.js exerce : OUI, fil de transcodage vu tourner\n")
+        else:
+            out.write(u"worker.js exerce : INDETERMINE — fil non apercu, ce qui ne veut pas dire\n"
+                      u"  qu'il n'a pas tourne. Soit la chaine diffuse du fMP4 et emprunte le\n"
+                      u"  passe-plat, soit le fil a simplement echappe au releve.\n")
+        if fils:
+            # Le fil existe, mais travaille-t-il ? On le lui demande. Interroger ses variables
+            # par leur nouveau nom prouve deux choses d'un coup : que le renommage est bien en
+            # vigueur dans le code qui tourne, et que le transcodeur a recu de la matiere.
+            try:
+                async with websockets.connect(fils[0]['webSocketDebuggerUrl'],
+                                              max_size=None, ping_interval=None) as wws:
+                    await send(wws, 90, 'Runtime.enable')
+                    await send(wws, 91, 'Runtime.evaluate', {
+                        'expression': "JSON.stringify({assembleur: typeof _oAssembler,"
+                                      " tas: _mbHeap ? _mbHeap.length : 0,"
+                                      " pisteVideo: typeof _trVideo,"
+                                      " semplesVideo: _trVideo ? _trVideo.GetSampleCount() : -1})",
+                        'returnByValue': True})
+                    fin2 = time.time() + 10
+                    while time.time() < fin2:
+                        got = json.loads(await asyncio.wait_for(wws.recv(),
+                                                                timeout=max(0.5, fin2 - time.time())))
+                        if got.get('id') == 91:
+                            v = got.get('result', {}).get('result', {}).get('value')
+                            out.write(u"  etat interne du transcodeur : %s\n" % unicode_safe(v))
+                            break
+            except Exception as e:
+                out.write(u"  etat interne illisible : %s\n" % e)
         out.write(u"erreurs relevees : %d\n" % erreurs)
         return 0
     finally:

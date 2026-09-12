@@ -1411,7 +1411,7 @@ const m_Statistics = (() => {
       this._nPrecision = nPrecision;
       this._Очистить();
     }
-    Освободить() {
+    Free() {
       this._узТаблица.textContent = "";
       this._узТаблица = null;
     }
@@ -1739,19 +1739,19 @@ const m_Statistics = (() => {
       return;
     }
     ShowElement("статистика", false);
-    _oUpdateInterval.Освободить();
+    _oUpdateInterval.Free();
     _oUpdateInterval = null;
-    _oSegmentsAdded.Освободить();
+    _oSegmentsAdded.Free();
     _oSegmentsAdded = null;
-    _oSecondsAdded.Освободить();
+    _oSecondsAdded.Free();
     _oSecondsAdded = null;
-    _oSegmentThickness.Освободить();
+    _oSegmentThickness.Free();
     _oSegmentThickness = null;
-    _oChannelThickness.Освободить();
+    _oChannelThickness.Free();
     _oChannelThickness = null;
-    _oResponseWait.Освободить();
+    _oResponseWait.Free();
     _oResponseWait = null;
-    _oUnwatched.Освободить();
+    _oUnwatched.Free();
     _oUnwatched = null;
     for (let node of document.querySelectorAll("[data-очистить]")) {
       node.textContent = "";
@@ -4301,8 +4301,8 @@ const м_Управление = (() => {
       Check(oMetadata.сАватар);
       GetNode("канал-аватар").src = oMetadata.сАватар;
     }
-    if (oMetadata.сОписание !== void 0) {
-      GetNode("канал-описание").textContent = oMetadata.сОписание || "";
+    if (oMetadata.sDescription !== void 0) {
+      GetNode("канал-описание").textContent = oMetadata.sDescription || "";
     }
     if (oMetadata.sLanguageCode !== void 0) {
       const node = GetNode("канал-язык");
@@ -4352,9 +4352,9 @@ const м_Управление = (() => {
         nodeLink.href = оСсылка.sAddress;
         nodeLink.rel = "noopener noreferrer";
         nodeLink.target = "_blank";
-        if (оСсылка.сОписание) {
+        if (оСсылка.sDescription) {
           nodeLink.className = "канал-ссылка";
-          nodeLink.title = оСсылка.сОписание;
+          nodeLink.title = оСсылка.sDescription;
         }
         nodeLink.textContent = оСсылка.sName;
         оФрагмент.appendChild(nodeLink);
@@ -6834,19 +6834,19 @@ const м_Список = (() => {
           case "-X-MEDIA": {
             Check(лЭтоСписокВариантов);
             const амАтрибуты = РазобратьСписокАтрибутов(сЗначениеТега);
-            const сТип = амАтрибуты.get("TYPE");
-            Check(сТип);
+            const sType = амАтрибуты.get("TYPE");
+            Check(sType);
             Check(
-              (сТип !== "VIDEO" && сТип !== "AUDIO") || !амАтрибуты.has("URI")
+              (sType !== "VIDEO" && sType !== "AUDIO") || !амАтрибуты.has("URI")
             );
-            if (сТип === "VIDEO") {
+            if (sType === "VIDEO") {
               const сГруппа = амАтрибуты.get("GROUP-ID");
               const sName = амАтрибуты.get("NAME");
               Check(сГруппа && sName);
               Check(!mapRenditionGroups.has(сГруппа));
               mapRenditionGroups.set(сГруппа, sName);
             } else {
-              m_Log.Ой(`[Список] Найден #EXT-X-MEDIA TYPE=${сТип}`);
+              m_Log.Ой(`[Список] Найден #EXT-X-MEDIA TYPE=${sType}`);
             }
             break;
           }
@@ -7012,19 +7012,19 @@ const м_Список = (() => {
     return амАтрибуты;
   }
   function РазобратьЦелоеПоложительноеЧисло(сИсходныйТекст) {
-    const чРезультат = parseFloat(сИсходныйТекст);
-    Check(Number.isSafeInteger(чРезультат) && чРезультат >= 0);
-    return чРезультат;
+    const nResult = parseFloat(сИсходныйТекст);
+    Check(Number.isSafeInteger(nResult) && nResult >= 0);
+    return nResult;
   }
   function РазобратьПоложительноеЧисло(сИсходныйТекст) {
-    const чРезультат = parseFloat(сИсходныйТекст);
-    Check(Number.isFinite(чРезультат) && чРезультат >= 0);
-    return чРезультат;
+    const nResult = parseFloat(сИсходныйТекст);
+    Check(Number.isFinite(nResult) && nResult >= 0);
+    return nResult;
   }
   function РазобратьЛюбоеЧисло(сИсходныйТекст) {
-    const чРезультат = parseFloat(сИсходныйТекст);
-    Check(Number.isFinite(чРезультат));
-    return чРезультат;
+    const nResult = parseFloat(сИсходныйТекст);
+    Check(Number.isFinite(nResult));
+    return nResult;
   }
   function разобратьEXTINF(сИсходныйТекст) {
     let чЗапятая = сИсходныйТекст.indexOf(",");
@@ -8946,7 +8946,7 @@ const м_Twitch = (() => {
         m_Events.SendEvent("twitch-полученыметаданныеканала", {
           sName: oUser.displayName || _сКодКанала,
           сАватар: oUser.profileImageURL || "player.svg#svg-missingavatar",
-          сОписание: oUser.description,
+          sDescription: oUser.description,
           sLanguageCode: sLanguageCode && sLanguageCode !== "OTHER" ? sLanguageCode : null,
           кПодписчиков: chain(oUser.followers, "totalCount"),
           чКаналСоздан: Date.parse(oUser.createdAt),
