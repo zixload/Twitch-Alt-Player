@@ -447,4 +447,38 @@ correctifs de `fscheck`/`probe2`/`settingscheck` : `553a02d`.
 `HEAD` a donc avancé de quatre commits depuis `8576a1a` ; le lot de 142 noms d'A est resté intact,
 non indexé. **Reprise pour A : lancer `py -3.14 tools/harness/verify.py` sur l'arbre tel quel —
 il passait à 23 h 07 avec le lot en place — puis corriger les défauts de 8.1 et 8.5.**
-Cette section 8 n'est pas versionnée, comme le reste de ce fichier.
+Ce fichier est versionné dans `nettoyage` depuis `6b19491`, et exclu de `public`.
+
+### 8.10 — Passation de B, 23 h 45 (B arrive en fin de quota)
+
+**Fait par B depuis 23 h 20, commité :**
+- `a88d587` : glossaire de traduction supprimé (décision de Luca, audit en 8.8).
+- `admeasure.py` réécrit (8.9) — A l'a embarqué dans `6b19491`, sans dommage.
+- Ce commit : cas 8 de `crosscheck-selftest.js` retravaillé. La correction d'A (viser
+  `scrollindicator-`) détectait bien la casse, mais le cas ne montrait plus sa leçon : sans pendante
+  à réparer, le total montait (6 → 7). Le cas répare désormais lui-même une pendante du moment, et
+  **exige** nom cassé vu + total inchangé ; s'il n'y a plus rien à réparer, il sort INVALIDE au lieu
+  de passer. Auto-test : 8/8, cas 8 à 6 → 6.
+- `public` : dernier report `a88d587` (commit unique `6c11966`). Rien de poussé.
+
+**Pour A, dans l'ordre :**
+1. **Ne pas toucher aux fichiers de B sans le dire ici** (`crosscheck-selftest.js` a été modifié par A
+   en `aa59680`). Signaler le besoin dans ce fichier ; B le traite à sa reprise.
+2. Une fois le lot en cours (clés de réglages, `settings-map.json`, `wordapply.js`) vert et commité :
+   `py -3.14 tools/harness/verify.py`. Il doit signaler `colourcheck` **réparé** dans les réglages.
+   Alors seulement : `verify.py --accepter`, et commiter les deux références avec le lot.
+   Ne pas lancer `--accepter` sur un arbre en cours de modification.
+3. Défauts encore ouverts, fichiers d'A : `optional_permissions: ["contentSettings"]` dans le
+   manifeste (8.5), `data-clear` → `data-очистить` sur `statistics-server` (8.5), code mort
+   `g_bIgnoreAdSegments` (8.8), CoolCmd dans `manifest.json` et `_locales` (8.6).
+4. Suite prévue : 43 clés de réglages + migration, puis retrait des commentaires anglais en double.
+   Quand un lot renomme un élément que le harnais cite, ajouter le nouveau nom à côté de l'ancien
+   dans le script concerné (8.7).
+
+**Référence de performance : pas encore obtenue.** La mesure de 20 min lancée à 23 h 28 sur une
+copie figée de `a88d587` a tourné pendant que A lançait ses essais (2 navigateurs d'essai relevés) :
+elle sortira « MESURE NON PROPRE » et n'enregistrera rien. À refaire **quand aucun autre essai ne
+tourne** (8.9) ; A ne doit pas lancer `verify.py` pendant ces 20 minutes.
+
+**Reste pour B à sa reprise :** référence de performance propre ; reporter `nettoyage` → `public`
+(procédure 8.6, depuis `a88d587`) ; mettre à jour `fscheck`/`probe2` quand A renomme `data-состояние`.

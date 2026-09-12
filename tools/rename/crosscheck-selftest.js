@@ -10,9 +10,11 @@
 	Case 1 reproduces the outage the first version missed: the markup renamed, the template
 	literal querying it not.
 
-	**Compare the lists, never the totals.** Case 8 fixes the one dangling prefix the tree carries
-	and breaks another: the total stays equal while a lookup has just broken. The rename
-	procedure must diff the --json lists, which is what this test does.
+	**Compare the lists, never the totals.** Case 8 repairs a reference that is dangling today and
+	breaks a prefix lookup in the same pass: the total stays equal while a lookup has just broken.
+	The case requires both — the broken name reported, and the total unchanged — so the lesson it
+	demonstrates cannot quietly stop being demonstrated. The rename procedure must diff the --json
+	lists, which is what this test and verify.py do.
 
 	Usage: node crosscheck-selftest.js      (exit 0 when every case is caught)
 */
@@ -45,12 +47,19 @@ const CASES = [
 		le balisage sans voir que player.js le construit par prefixe, GetNode(`scrollindicator-${elScroll.id}`) :
 		GetNode rendait null et le bouton de verification des couleurs ne repondait plus.
 
-		La reparation etant desormais dans la source, ce cas n'a plus qu'un temps : casser le
-		balisage, et verifier que le prefixe orphelin est bien signale. Le total de pendantes ne
-		bouge pas -- c'est la comparaison nom par nom qui l'attrape, pas le compte.
+		**La meme passe repare une autre pendante.** Tant que l'arbre portait le prefixe casse, le
+		cas le reparait d'un cote et le cassait de l'autre, et le total ne bougeait pas. La
+		reparation passee dans la source, le cas ne faisait plus que casser : le total montait, et la
+		demonstration du masquage avait disparu sans que rien ne le signale. Le cas choisit donc
+		lui-meme une pendante du moment et la repare, pour que le total reste egal par construction.
 	*/
-	["prefixe d'id construit par gabarit (total inchange)", 'scrollindicator-',
-		[['player.html', /id=scrollindicator-newstext\b/g, 'id=scrollhint-newstext']]],
+	["prefixe d'id casse, masque par une reparation (total inchange)", 'scrollindicator-',
+		(base) => {
+			const edits = [['player.html', /id=scrollindicator-newstext\b/g, 'id=scrollhint-newstext']];
+			const cls = (base.extension.class || [])[0];
+			if (cls) edits.push(['player.html', /$/, '\n<i class=' + cls + '></i>\n']);
+			return edits;
+		}, { totalInchange: true }],
 ];
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'crosscheck-selftest-'));
@@ -69,7 +78,7 @@ const dangling = (dir) => {
 	const json = path.join(dir, 'cc.json');
 	execFileSync(process.execPath, [CHECK, '--root', dir, '--out', path.join(dir, 'cc.txt'), '--json', json], { stdio: 'ignore' });
 	const r = JSON.parse(fs.readFileSync(json, 'utf8'));
-	return { total: r.total, names: new Set(Object.values(r.extension).flat()) };
+	return { total: r.total, extension: r.extension, names: new Set(Object.values(r.extension).flat()) };
 };
 
 let failures = 0;
@@ -77,8 +86,15 @@ try {
 	const base = dangling(snapshot('base'));
 	console.log('reference : ' + base.total + ' pendante(s)');
 	console.log('');
-	CASES.forEach(([label, expected, edits], i) => {
+	CASES.forEach(([label, expected, editsOrFn, opts = {}], i) => {
 		const dir = snapshot('case' + (i + 1));
+		const edits = typeof editsOrFn === 'function' ? editsOrFn(base) : editsOrFn;
+		if (opts.totalInchange && edits.length < 2) {
+			// Plus aucune pendante a reparer : le masquage ne peut pas etre montre, et on le dit.
+			console.log('  INVALIDE  ' + label + ' — aucune pendante a reparer dans l\'arbre, le total ne peut pas rester egal');
+			failures++;
+			return;
+		}
 		for (const [file, re, to] of edits) {
 			const p = path.join(dir, file);
 			const before = fs.readFileSync(p, 'utf8');
@@ -93,7 +109,8 @@ try {
 		}
 		const res = dangling(dir);
 		const appeared = [...res.names].filter((n) => !base.names.has(n));
-		const ok = appeared.includes(expected);
+		// Le cas du masquage exige les deux : le nom casse vu, ET le total inchange.
+		const ok = appeared.includes(expected) && (!opts.totalInchange || res.total === base.total);
 		if (!ok) failures++;
 		console.log('  ' + (ok ? 'VU      ' : 'RATE    ') + '  ' + String(i + 1) + '. ' + label.padEnd(52)
 			+ base.total + ' -> ' + res.total + (ok ? '' : '   attendu : ' + expected + ', apparu : ' + (appeared.join(' ') || 'rien')));
