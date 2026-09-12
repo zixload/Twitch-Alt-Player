@@ -34,8 +34,9 @@ surveille donc g_bWorkFinished apres chaque controle, et recharge le lecteur des
 (g_bWorkFinished est deja vrai), et chaque controle paraitrait muet. Le script le detecte et
 s'arrete en ECHEC plutot que de rendre un verdict sans valeur.
 
-Usage: py -3.14 settingscheck.py <chrome|vivaldi> [chaine] [--voir] [--ext <dossier>]
-  --ext  charge l'extension depuis un autre dossier (une copie mutee, pour prouver l'echec)
+Usage: py -3.14 settingscheck.py <chrome|vivaldi> [chaine] [--voir] [--ext <dossier>] [--json <fichier>]
+  --ext   charge l'extension depuis un autre dossier (une copie mutee, pour prouver l'echec)
+  --json  ecrit aussi le verdict de chaque controle, pour verify.py
 """
 import asyncio
 import io
@@ -63,9 +64,10 @@ def option(flag):
 
 VOIR = '--voir' in sys.argv
 EXT_OPT = option('--ext')
+JSON_OUT = option('--json')
 # **Derive du chemin du script, jamais code en dur.** Voir probe2.py.
 EXT = os.path.abspath(EXT_OPT or os.path.join(HERE, '..', '..'))
-ARGS = [a for a in sys.argv[1:] if not a.startswith('--') and a != EXT_OPT]
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--') and a not in (EXT_OPT, JSON_OUT)]
 WHICH = ARGS[0] if ARGS else 'chrome'
 CHANNEL = ARGS[1] if len(ARGS) > 1 else 'zerator'
 
@@ -625,6 +627,18 @@ async def main():
                     w(u'              %s' % d)
 
             essayes = sum(v for k, v in counts.items() if k != u'non essaye')
+            if JSON_OUT:
+                with io.open(JSON_OUT, 'w', encoding='utf-8') as jf:
+                    json.dump({
+                        'chaine': CHANNEL,
+                        'essayes': essayes,
+                        'comptes': counts,
+                        'controles': [{'i': i, 'nom': ident[0], 'quoi': ident[1], 'verdict': verdict,
+                                       'details': details}
+                                      for i, ident, verdict, details in sorted(lignes, key=lambda x: x[0])
+                                      if ident is not None],
+                        'interruptions': [u' ; '.join(details) for _, ident, _, details in lignes if ident is None],
+                    }, jf, ensure_ascii=False, indent=1)
             w(u'')
             w(u'=' * 64)
             for k in (u'repond', u'MUET', u'ERREUR', u'COUVERT', u'non essaye'):

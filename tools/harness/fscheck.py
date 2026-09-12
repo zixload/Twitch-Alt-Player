@@ -46,14 +46,37 @@ OUT = os.path.join(HERE, 'fscheck-out.txt')
 ECRAN2 = ['--window-position=1960,40', '--window-size=1600,950']
 
 
-PLAYER = u'\u043f\u0440\u043e\u0438\u0433\u0440\u044b\u0432\u0430\u0442\u0435\u043b\u044c\u0438\u0447\u0430\u0442'
+# **Deux noms par element : celui d'avant le renommage, celui d'apres.** Le renommage avance lot
+# par lot, et des noms figes ici ont fait echouer l'essai sur un arbre sain ("bouton absent",
+# "lecteur : None") des qu'un lot a traduit ces trois noms. Le premier nom present gagne ;
+# aucun present fait echouer l'essai, jamais passer.
+PLAYER_IDS = [u'\u043f\u0440\u043e\u0438\u0433\u0440\u044b\u0432\u0430\u0442\u0435\u043b\u044c\u0438\u0447\u0430\u0442',
+              u'playerandchat']
+CHAT_TOGGLE_IDS = [u'\u043f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0447\u0430\u0442', u'togglechat']
+CHAT_HIDDEN_CLASSES = [u'\u0441\u043a\u0440\u044b\u0442\u044c\u0447\u0430\u0442', u'hidechat']
+
+NAMES_JS = u"""
+  const byId = (ids) => ids.map((i) => document.getElementById(i)).find(Boolean) || null;
+  const PLAYER_IDS = %s, CHAT_TOGGLE_IDS = %s, CHAT_HIDDEN = %s;
+  const chatHidden = () => CHAT_HIDDEN.some((c) => document.body.classList.contains(c));
+""" % (json.dumps(PLAYER_IDS), json.dumps(CHAT_TOGGLE_IDS), json.dumps(CHAT_HIDDEN_CLASSES))
+
+# Clique le bouton du chat par le vrai chemin du lecteur.
+CLICK_CHAT = (u"(() => {" + NAMES_JS
+              + u" const b = byId(CHAT_TOGGLE_IDS); if (!b) return 'bouton absent'; b.click();"
+              u" return chatHidden() ? 'encore masque' : 'chat affiche'; })()")
+
+# Le plein ecran exige un geste utilisateur, que CDP simule (userGesture).
+FULLSCREEN = (u"(() => {" + NAMES_JS
+              + u" const p = byId(PLAYER_IDS); if (!p) return Promise.resolve('lecteur absent');"
+              u" return p.requestFullscreen().then(() => 'ok', (e) => 'refus: ' + e.name); })()")
 
 # Ce qu'on mesure. elementFromPoint est l'arbitre : il rend ce qui est peint et testable au
-# point donne, donc il distingue « la barre existe dans le DOM » de « la barre couvre la video ».
+# point donne, donc il distingue "la barre existe dans le DOM" de "la barre couvre la video".
 MEASURE = u'''
-(() => {
+(() => {''' + NAMES_JS + u'''
   const sb = document.getElementById('alt-sidebar');
-  const pc = document.getElementById('%s');
+  const pc = byId(PLAYER_IDS);
   const v  = document.querySelector('video');
   const box = (el) => {
     if (!el) return null;
@@ -79,10 +102,10 @@ MEASURE = u'''
     sidebarZ: cs ? cs.zIndex : null,
     sidebar: box(sb), playerchat: box(pc), video: box(v),
     hitAtSidebarCentre: hit,
-    chatHidden: document.body.classList.contains('\\u0441\\u043a\\u0440\\u044b\\u0442\\u044c\\u0447\\u0430\\u0442')
+    chatHidden: chatHidden()
   });
 })()
-''' % PLAYER
+'''
 
 
 def stop(proc):
@@ -210,14 +233,7 @@ async def main():
             # tourner trois etats (decharge, masque, panneau), d'ou la boucle.
             for essai in range(4):
                 got = await rpc(pws, c.next(), 'Runtime.evaluate',
-                                {'expression':
-                                 u"(() => { const b = document.getElementById("
-                                 u"'\\u043f\\u0435\\u0440\\u0435\\u043a\\u043b\\u044e\\u0447"
-                                 u"\\u0438\\u0442\\u044c\\u0447\\u0430\\u0442');"
-                                 u" if (!b) return 'bouton absent'; b.click();"
-                                 u" return document.body.classList.contains("
-                                 u"'\\u0441\\u043a\\u0440\\u044b\\u0442\\u044c\\u0447\\u0430\\u0442')"
-                                 u" ? 'encore masque' : 'chat affiche'; })()",
+                                {'expression': CLICK_CHAT,
                                  'returnByValue': True, 'userGesture': True})
                 etat = got.get('result', {}).get('result', {}).get('value')
                 out.write(u"  clic sur le bouton chat (%d) -> %s\n" % (essai + 1, etat))
@@ -229,9 +245,7 @@ async def main():
 
             # Le plein ecran exige un geste utilisateur : CDP sait en simuler un.
             got = await rpc(pws, c.next(), 'Runtime.evaluate',
-                            {'expression':
-                             u"document.getElementById('%s').requestFullscreen()"
-                             u".then(() => 'ok', e => 'refus: ' + e.name)" % PLAYER,
+                            {'expression': FULLSCREEN,
                              'awaitPromise': True, 'returnByValue': True,
                              'userGesture': True})
             verdict = got.get('result', {}).get('result', {}).get('value')
@@ -245,14 +259,7 @@ async def main():
             # donc c'est ce second clic, fait pendant le plein ecran, qui est le vrai cas.
             for essai in range(4):
                 got = await rpc(pws, c.next(), 'Runtime.evaluate',
-                                {'expression':
-                                 u"(() => { const b = document.getElementById("
-                                 u"'\\u043f\\u0435\\u0440\\u0435\\u043a\\u043b\\u044e\\u0447"
-                                 u"\\u0438\\u0442\\u044c\\u0447\\u0430\\u0442');"
-                                 u" if (!b) return 'bouton absent'; b.click();"
-                                 u" return document.body.classList.contains("
-                                 u"'\\u0441\\u043a\\u0440\\u044b\\u0442\\u044c\\u0447\\u0430\\u0442')"
-                                 u" ? 'encore masque' : 'chat affiche'; })()",
+                                {'expression': CLICK_CHAT,
                                  'returnByValue': True, 'userGesture': True})
                 etat = got.get('result', {}).get('result', {}).get('value')
                 out.write(u"  clic sur le bouton chat EN PLEIN ECRAN (%d) -> %s\n"

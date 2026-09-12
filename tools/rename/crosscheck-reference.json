@@ -1,0 +1,20 @@
+{
+ "extension": {
+  "id": [],
+  "class": [
+   "debug-browseroutdated",
+   "debug-error",
+   "debug-feedback",
+   "debug-sendfailed",
+   "debug-versionoutdated",
+   "support"
+  ],
+  "name": [],
+  "attr": [],
+  "id*": [
+   "индикаторпрокрутки-"
+  ],
+  "class*": [],
+  "name*": []
+ }
+}

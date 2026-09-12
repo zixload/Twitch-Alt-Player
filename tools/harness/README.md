@@ -38,6 +38,26 @@ l'extension**, et parce qu'ils encodent des connaissances qui coûtent cher à r
 Ils dépendent de `websockets` et, pour les captures, de `Pillow`. Sur cette machine, seul
 `py -3.14` a `websockets` : `python` pointe sur un 3.12 qui ne l'a pas.
 
+## verify.py : toutes les vérifications d'un lot, dans l'ordre
+
+    py -3.14 tools/harness/verify.py --statique      # 7 s : syntaxe, contrôle croisé, auto-test
+    py -3.14 tools/harness/verify.py                 # ~3 min : les mêmes, puis le navigateur
+    py -3.14 tools/harness/verify.py --accepter      # enregistre l'état comme référence
+
+Huit étapes, arrêt au premier échec : syntaxe des scripts chargés et des JSON, contrôle croisé,
+auto-test du contrôle, chaîne en direct, console, lecture, plein écran, réglages.
+
+**Des références, pas des seuils.** Le contrôle croisé et les réglages sont comparés, nom par nom
+et contrôle par contrôle, à `tools/rename/crosscheck-reference.json` et
+`settingscheck-reference.json`. Un défaut nouveau fait échouer ; un défaut connu est rappelé à
+chaque passage ; un défaut disparu est signalé. `--accepter` enregistre l'état du passage : à ne
+lancer qu'après avoir lu ce qu'il rapporte. Les références se commitent avec le lot qui les change.
+
+Chaque étape est jugée sur un fait, jamais sur l'absence de message : `probe2` doit sortir en 0
+**et** écrire « OK : la lecture a eu lieu » — ses échecs de mise en place sortaient en 0 ; la
+chaîne est d'abord vérifiée en direct, par l'aperçu public qui redirige vers une image 404 quand
+elle ne l'est pas.
+
 ## settingscheck.py : un bouton muet ne se voit qu'en le cliquant
 
     py -3.14 settingscheck.py chrome <chaîne en direct>

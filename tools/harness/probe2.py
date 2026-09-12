@@ -72,8 +72,8 @@ PROBE = r'''
   try { q = v && v.getVideoPlaybackQuality(); } catch (e) {}
   return JSON.stringify({
     title: document.title,
-    state: document.body.getAttribute('data-\u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435'),
-    ad: document.body.classList.contains('\u0440\u0435\u043a\u043b\u0430\u043c\u0430'),
+    state: document.body.getAttribute('data-\u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435') ?? document.body.getAttribute('data-state'),
+    ad: ['\u0440\u0435\u043a\u043b\u0430\u043c\u0430', 'advert'].some((c) => document.body.classList.contains(c)),
     hasVideo: !!v,
     ct: v ? +v.currentTime.toFixed(2) : null,
     rs: v ? v.readyState : null,
@@ -109,9 +109,11 @@ async def main():
                 break
             except Exception:
                 pass
+        # **Un echec de mise en place est un echec.** Ces trois sorties rendaient None, donc
+        # sys.exit(0) : un navigateur qui ne demarre pas passait pour une lecture reussie.
         if not ver:
-            print('no DevTools endpoint')
-            return
+            print('ECHEC : no DevTools endpoint')
+            return 1
         print('%s: %s / UA %s' % (WHICH, ver.get('Browser'),
                                   ver.get('User-Agent', '').split('Chrome/')[-1][:12]))
 
@@ -119,8 +121,8 @@ async def main():
                                       max_size=None, ping_interval=None) as bws:
             r = await rpc(bws, 1, 'Extensions.loadUnpacked', {'path': EXT})
             if 'result' not in r:
-                print('loadUnpacked ->', str(r)[:400])
-                return
+                print('ECHEC : loadUnpacked ->', str(r)[:400])
+                return 1
             ext_id = r['result']['id']
         url = 'chrome-extension://%s/player.html?channel=%s' % (ext_id, CHANNEL)
 
@@ -135,8 +137,8 @@ async def main():
                 break
             time.sleep(1)
         if not page:
-            print('no page target')
-            return
+            print('ECHEC : no page target')
+            return 1
 
         async with websockets.connect(page['webSocketDebuggerUrl'],
                                       max_size=None, ping_interval=None) as pws:

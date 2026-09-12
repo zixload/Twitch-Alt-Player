@@ -1,0 +1,6 @@
+{
+ "defauts": {
+  "audiodevices-access (button)": "MUET : aucun reglage, aucune classe, aucun attribut n'a change",
+  "colourcheck (button)": "ERREUR : TypeError: Cannot read properties of null (reading 'nodeType')  <- common.js:220:18 GetNode <- player.js:2277:17 updateScrollIndicator <- player.js:2273:5 Object.configureScrollIndicator <- player.js:3134:14 AddNewsItems"
+ }
+}
