@@ -8,7 +8,7 @@
 	"icons": {
 	  "128": "manifest.png"
 	},
-	"author": "Alexander Choporov (CoolCmd)",
+	"author": "zix, d'apres Alexander Choporov (CoolCmd)",
 	"default_locale": "en",
 	"incognito": "split",
 	"permissions": [
@@ -18,6 +18,9 @@
 	  "system.memory",
 	  "system.cpu",
 	  "declarativeNetRequest"
+	],
+	"optional_permissions": [
+	  "contentSettings"
 	],
 	"host_permissions": [
 	  "*://*.twitch.tv/*",

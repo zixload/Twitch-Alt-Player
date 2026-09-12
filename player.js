@@ -148,8 +148,6 @@ const SUBSCRIPTION_UNAVAILABLE = 0;
 const SUBSCRIPTION_NOT_SUBSCRIBED = 1;
 // const SUBSCRIPTION_NOT_SUBSCRIBED = 1;
 
-let g_bIgnoreAdSegments = false;
-
 const SUBSCRIPTION_DO_NOT_NOTIFY = 2;
 // const SUBSCRIPTION_DO_NOT_NOTIFY = 2;
 
@@ -1753,7 +1751,7 @@ const m_Statistics = (() => {
     _oResponseWait = null;
     _oUnwatched.Free();
     _oUnwatched = null;
-    for (let node of document.querySelectorAll("[data-очистить]")) {
+    for (let node of document.querySelectorAll("[data-clear]")) {
       node.textContent = "";
     }
     clearInterval(_nTimer);
@@ -6056,9 +6054,9 @@ const m_Playlist = (() => {
     constructor(bWithoutAds) {
       this._bNoAds = bWithoutAds;
       this._oPromiseCancel = null;
-      this.очистить();
+      this.clear();
     }
-    очистить() {
+    clear() {
       this.oVariantList = null;
       this.oSegmentList = null;
       this.oSelectedVariant = null;
@@ -6433,11 +6431,11 @@ const m_Playlist = (() => {
      * Method: stop (остановить)
      * Stops the playlist update loop and clears all internal state.
      * This calls the parent `stop` to cancel any pending promises/timers,
-     * and then `clean` (очистить) to wipe segment and variant processing data.
+     * and then `clean` (clear) to wipe segment and variant processing data.
      */
     stop() {
       super.stop();
-      this.очистить();
+      this.clear();
     }
 
     /**
@@ -6605,23 +6603,7 @@ const m_Playlist = (() => {
               parseEXTINF(sTagValue);
             oNewSegment.nDuration = nDuration;
 
-            // --- ZOMBIE SEGMENT OVERRIDE START ---
-            // If the DATERANGE parser identified a Zombie Ad and set the global flag,
-            // we force this segment to be treated as CONTENT (False), not AD.
-            // This prevents the player from switching to the dead backup stream.
-            if (typeof g_bIgnoreAdSegments !== 'undefined' && g_bIgnoreAdSegments) {
-              oNewSegment.bAd = false;
-              // If we encounter a standard 'live' segment, the zombie block is likely over.
-              // Reset the flag to resume normal ad detection protection.
-              if (sSegmentName === "live") {
-                g_bIgnoreAdSegments = false;
-              }
-            } else {
-              // Standard behavior
-              oNewSegment.bAd = m_Twitch.isAdSegment(sSegmentName);
-            }
-            // --- ZOMBIE SEGMENT OVERRIDE END ---
-
+            oNewSegment.bAd = m_Twitch.isAdSegment(sSegmentName);
 
             if (oNewSegment.bAd) {
               nTime = NaN;
@@ -7339,7 +7321,7 @@ const m_Playlist = (() => {
       );
       m_Events.SendEvent("playlist-broadcastvariantselected", [null, null]);
     }
-    _oListsWithAds.очистить();
+    _oListsWithAds.clear();
     setAdState(false);
   }
   function ChangeBroadcastVariant(nSelectedVariant) {
