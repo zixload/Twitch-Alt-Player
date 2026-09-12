@@ -2357,6 +2357,12 @@ const м_ПолноэкранныйРежим = (() => {
     const лВключен = Включен();
     м_Журнал.Окак(`[ПолноэкранныйРежим] Режим включен: ${лВключен}`);
     ИзменитьКнопку("переключитьполноэкранный", лВключен);
+    // Tell the stylesheets we are fullscreen. The sidebar is a sibling of the fullscreen
+    // element, so in principle the browser stops painting it — but its `backdrop-filter`
+    // promotes it to its own composited layer, and that layer survives on top of the video.
+    // This is the one place that knows the real state, so it also covers entering fullscreen
+    // first and only then showing the chat.
+    document.body.classList.toggle("alt-fullscreen", лВключен);
     return лВключен;
   }
   function Включить() {

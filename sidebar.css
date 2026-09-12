@@ -392,10 +392,21 @@
 }
 
 /*
-	The sidebar is a sibling of the fullscreen element, so the browser hides it
-	automatically in fullscreen. Hide it too when the player is opened as a
-	popup-sized window, where there is no room for it.
+	The sidebar is a sibling of the fullscreen element, so in principle the browser
+	stops painting it in fullscreen. Do not trust that: the `backdrop-filter` above
+	promotes the sidebar to its own composited layer, and that layer survives on top
+	of the fullscreen video as a strip of followed channels in the corner. Measured
+	in fullscreen, the sidebar still holds a 248x1080 box at (0,0) — the box is what
+	the stale layer is made of, so take it out of layout rather than hoping it is
+	covered. `player.js` sets `alt-fullscreen` on the body from the single function
+	that knows the real state, which also covers showing the chat once already in
+	fullscreen.
 */
+body.alt-fullscreen #alt-sidebar {
+	display: none;
+}
+
+/* No room for it when the player is opened as a popup-sized window. */
 @media (max-width: 40rem) {
 	#alt-sidebar {
 		display: none;
