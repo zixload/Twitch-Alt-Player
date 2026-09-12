@@ -35,7 +35,7 @@ const MIN_SETTING_VALUE = Number.MIN_SAFE_INTEGER + 1e3;
 const MAX_SETTING_VALUE = Number.MAX_SAFE_INTEGER - 1e3;
 // const MAX_SETTING_VALUE = Number.MAX_SAFE_INTEGER - 1e3;
 
-const АВТОНАСТРОЙКА = Number.MIN_SAFE_INTEGER;
+const AUTO_SETTING = Number.MIN_SAFE_INTEGER;
 // const AUTO_ADJUSTMENT = Number.MIN_SAFE_INTEGER;
 
 const MIN_VOLUME = 1;
@@ -704,7 +704,7 @@ const m_Settings = (() => {
 				}
 			} else if (typeof pValue == 'number') {
 			// } else if (typeof pValue == 'number') {
-				if (pValue === АВТОНАСТРОЙКА) {
+				if (pValue === AUTO_SETTING) {
 				// if (pValue === AUTO_TUNE) {
 					if (this.sAutoTune === '') {
 					// if (this.sAutoTune === '') {
@@ -1039,7 +1039,7 @@ const m_Settings = (() => {
 		}
 		m_Log.Вот(`[Настройки] Отобраны настройки для экспорта: ${m_Log.O(oExport)}`);
 		// m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
-		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Текст('J0133'));
+		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', GetText('J0133'));
 		// WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Text('J0133'));
 	}
 	function Import(oFromFile) {
@@ -1210,12 +1210,12 @@ const m_Settings = (() => {
 		// const sSelect = _oSettings[oMetadata.sSelected].pCurrent;
 		for (let sName of oMetadata.amData.keys()) {
 		// for (let sName of oMetadata.amData.keys()) {
-			nodeList.add(new Option(Текст(sName), sName, sName === sSelect, sName === sSelect));
+			nodeList.add(new Option(GetText(sName), sName, sName === sSelect, sName === sSelect));
 			// nodeList.add(new Option(Text(sName), sName, sName === sSelect, sName === sSelect));
 		}
 		if (_oSettings[oMetadata.sFilled].pCurrent) {
 		// if (_oSettings[oMetadata.sFilled].pCurrent) {
-			nodeList.add(new Option(Текст(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
+			nodeList.add(new Option(GetText(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
 			// nodeList.add(new Option(Text(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
 		}
 		Check(nodeList.value);

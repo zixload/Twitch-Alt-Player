@@ -1,5 +1,14 @@
 {
+  "_comment": "Correctifs des traductions extraites, quand la source a tort. Voir README.md.",
   "Узел": "GetNode",
+  "Текст": "GetText",
+  "Экран": "Display",
+  "Изменить": "Change",
   "для": "sFor",
-  "экспорта": "sExport"
+  "экспорта": "sExport",
+  "Настройки": "Settings",
+  "Результат": "Result",
+  "Размер": "Size",
+  "лАвтоперенаправлениеЗамечено": "bAutoRedirectNoticed",
+  "ы": "idx"
 }

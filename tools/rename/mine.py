@@ -59,22 +59,55 @@ def align(ru, en):
     return pairs
 
 
+def mine_source(path, votes):
+    """La convention du code : une ligne russe, sa traduction en commentaire juste dessous."""
+    lines = io.open(path, encoding='utf-8').read().split('\n')
+    for i in range(len(lines) - 1):
+        ru, nxt = lines[i], lines[i + 1].strip()
+        if not CYR.search(ru) or not nxt.startswith('//'):
+            continue
+        en = nxt[2:].strip()
+        if not en or CYR.search(en):
+            continue
+        got = align(ru.strip(), en)
+        if got:
+            for k, v in got:
+                votes[k][v] += 1
+
+
+# Une ligne du glossaire : | `code russe` | `code anglais` |
+GLOSSAIRE = re.compile(u'^\\s*\\|(.+?)\\|(.+?)\\|\\s*$')
+
+
+def mine_glossaire(path, votes):
+    """Le glossaire du depot, un tableau markdown de deux colonnes.
+
+    Meme travail d'alignement que pour le code, meme garde-fou de structure. La seule difference
+    est la forme du contenant : on retire les barres et les accents graves, et on traite les deux
+    cellules comme la ligne et sa traduction.
+
+    Il porte sur player.js, justement le fichier ou les traductions en commentaire manquent.
+    """
+    for ligne in io.open(path, encoding='utf-8').read().split('\n'):
+        m = GLOSSAIRE.match(ligne)
+        if not m:
+            continue
+        ru, en = (c.strip().strip('`').strip() for c in (m.group(1), m.group(2)))
+        if not ru or not en or not CYR.search(ru) or CYR.search(en):
+            continue
+        got = align(ru, en)
+        if got:
+            for k, v in got:
+                votes[k][v] += 1
+
+
 def mine(paths):
     votes = collections.defaultdict(collections.Counter)
     for path in paths:
-        lines = io.open(path, encoding='utf-8').read().split('\n')
-        for i in range(len(lines) - 1):
-            ru, nxt = lines[i], lines[i + 1].strip()
-            if not CYR.search(ru) or not nxt.startswith('//'):
-                continue
-            en = nxt[2:].strip()
-            if not en or CYR.search(en):
-                continue
-            got = align(ru.strip(), en)
-            if not got:
-                continue
-            for k, v in got:
-                votes[k][v] += 1
+        if path.lower().endswith('.md'):
+            mine_glossaire(path, votes)
+        else:
+            mine_source(path, votes)
     return votes
 
 

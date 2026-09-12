@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const mined = JSON.parse(fs.readFileSync(path.join(__dirname, 'mined-map.json'), 'utf8'));
 const over = JSON.parse(fs.readFileSync(path.join(__dirname, 'overrides.json'), 'utf8'));
+delete over._comment; // note de lecture, pas une correspondance
 const merged = Object.assign({}, mined, over);
 fs.writeFileSync(path.join(__dirname, 'merged-map.json'), JSON.stringify(merged, null, 1), 'utf8');
 console.log('carte fusionnee : %d entrees extraites + %d correctifs = %d',

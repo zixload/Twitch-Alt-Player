@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // if (message.sRequest === 'InsertThirdPartyExtensions') {
         // This must return true to indicate that sendResponse will be called asynchronously.
         chrome.management.getAll().then(extensions => {
-            const response = { сСторонниеРасширения: '' };
+            const response = { sThirdPartyExtensions: '' };
             // const response = { sThirdPartyExtensions: '' };
             for (const ext of extensions) {
                 if (ext.enabled) {
@@ -16,13 +16,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         case 'ajopnjidmegmdimjlfnijceegpefgped': // Chrome
                         case 'deofbbdfofnmppcjbhjibgodpcdchjii': // Opera
                         case 'icllegkipkooaicfmdfaloehobmglglb': // Edge
-                            response.сСторонниеРасширения += 'BTTV ';
+                            response.sThirdPartyExtensions += 'BTTV ';
                             // response.sThirdPartyExtensions += 'BTTV ';
                             break;
                         // FrankerFaceZ IDs
                         case 'fadndhdgpmmaapbmfcknlfgcflmmmieb': // Chrome
                         case 'djkpepcignmpfblhbfpmlhoindhndkdj': // Opera
-                            response.сСторонниеРасширения += 'FFZ ';
+                            response.sThirdPartyExtensions += 'FFZ ';
                             // response.sThirdPartyExtensions += 'FFZ ';
                             break;
                     }
@@ -52,7 +52,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Find a tab that is not the sender and has the same channel.
             const duplicate = tabs.find(tab => 
                 tab.id !== sender.tab.id && 
-                new URL(tab.url).searchParams.get('channel') === message.сКанал
+                new URL(tab.url).searchParams.get('channel') === message.sChannel
                 // new URL(tab.url).searchParams.get('channel') === message.sChannel
             );
 

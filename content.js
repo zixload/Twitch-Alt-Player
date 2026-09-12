@@ -832,7 +832,7 @@ function insertThirdPartyExtensions() {
       // ! installed and enabled in the browser. See handleChatMessage() in player.js. Load those
       //! extensions into <iframe>. Chrome itself cannot load installed extensions into another extension.
       //! See https://bugs.chromium.org/p/chromium/issues/detail?id=599167
-      if (оСообщение.сСторонниеРасширения.includes("BTTV ")) {
+      if (оСообщение.sThirdPartyExtensions.includes("BTTV ")) {
         // if (oMessage.sThirdPartyExtensions.includes('BTTV ')) {
         waitForPageLoad().then(() => {
           // waitForPageLoad().then(() => {
@@ -846,7 +846,7 @@ function insertThirdPartyExtensions() {
           document.head.appendChild(script);
         });
       }
-      if (оСообщение.сСторонниеРасширения.includes("FFZ ")) {
+      if (оСообщение.sThirdPartyExtensions.includes("FFZ ")) {
         // if (oMessage.sThirdPartyExtensions.includes('FFZ ')) {
         waitForDom().then(() => {
           // waitForDom().then(() => {
