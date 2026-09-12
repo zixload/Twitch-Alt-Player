@@ -13,3 +13,5 @@ tip-profile/
 probe2-*/
 fscheck-*/
 fscheck-out.txt
+errors-*/
+errors-out.txt

@@ -1,0 +1,11 @@
+node_modules/
+package-lock.json
+*-report.json
+merged-map.json
+map-clean.json
+mined-map.json
+scan-report.txt
+mined-report.txt
+apply-report.txt
+validate-report.txt
+failed-*.js

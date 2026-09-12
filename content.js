@@ -1,99 +1,99 @@
 "use strict";
 
-const ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА = 2e4;
+const STORE_CHANNEL_STATE = 2e4;
 // const STORE_CHANNEL_STATE = 2e4;
 
-let г_оРазобранныйАдрес = null;
+let g_oParsedAddress = null;
 // let g_oParsedAddress = null;
 
-let г_сСпособЗаданияАдреса = "";
+let g_sAddressSettingMethod = "";
 // let g_sAddressSettingMethod = '';
 
-let г_чПоследняяПроверка = 0;
+let g_nLastCheck = 0;
 // let g_nLastCheck = 0;
 
-let г_оЗапрос = null;
+let g_oRequest = null;
 // let g_oRequest = null;
 
-let г_сКодКанала = "";
+let g_sChannelCode = "";
 // let g_sChannelCode = '';
 
-let г_лИдетТрансляция = false;
+let g_bIsStreaming = false;
 // let g_bIsStreaming = false;
 
-const м_Отладка = {
+const m_Debug = {
   // const m_Debug = {
-  ЗавершитьРаботуИПоказатьСообщение: завершитьРаботу,
+  FinishWorkAndShowMessage: finishWork,
   // FinishWorkAndShowMessage: finishWork,
-  ПойманоИсключение: завершитьРаботу,
+  CaughtException: finishWork,
   // CaughtException: finishWork
 };
 
-function завершитьРаботу(пИсключениеИлиКодСообщения) {
+function finishWork(pExceptionOrMessageCode) {
   // function finishWork(pExceptionOrMessageCode) {
-  if (!г_лРаботаЗавершена) {
+  if (!g_bWorkFinished) {
     // if (!g_bWorkFinished) {
-    console.error(пИсключениеИлиКодСообщения);
+    console.error(pExceptionOrMessageCode);
     // console.error(pExceptionOrMessageCode);
     try {
-      г_лРаботаЗавершена = true;
+      g_bWorkFinished = true;
       // g_bWorkFinished = true;
-      м_Журнал.Окак("[content.js] Работа завершена");
+      m_Log.Окак("[content.js] Работа завершена");
       // m_Log.Wow('[content.js] Work finished');
     } catch (_) {}
   }
   throw void 0;
 }
 
-function задатьАдресСтраницы(сАдрес, лЗаменить = false) {
+function setPageAddress(sAddress, bReplace = false) {
   // function setPageAddress(sAddress, bReplace = false) {
-  location[лЗаменить ? "replace" : "assign"](сАдрес);
+  location[bReplace ? "replace" : "assign"](sAddress);
   // location[bReplace ? 'replace' : 'assign'](sAddress);
 }
 
-function вставитьНаСтраницу() {
+function insertOnPage() {
   // function insertOnPage() {
-  const узСкрипт = document.createElement("script");
+  const nodeScript = document.createElement("script");
   // const nodeScript = document.createElement('script');
   // MV3-compliant: Injects the script by URL instead of using textContent.
-  узСкрипт.src = chrome.runtime.getURL("content_injection.js");
+  nodeScript.src = chrome.runtime.getURL("content_injection.js");
   // nodeScript.src = chrome.runtime.getURL('content_injection.js');
-  (document.head || document.documentElement).appendChild(узСкрипт);
+  (document.head || document.documentElement).appendChild(nodeScript);
   // (document.head || document.documentElement).appendChild(nodeScript);
-  узСкрипт.remove();
+  nodeScript.remove();
   // nodeScript.remove();
 }
 
-function этотАдресМожноПеренаправлять(оАдрес) {
+function thisAddressCanBeRedirected(oAddress) {
   // function thisAddressCanBeRedirected(oAddress) {
-  return !оАдрес.search.includes(АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ);
+  return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
   // return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
 }
 
-function получитьНеперенаправляемыйАдрес(оАдрес) {
+function getNonRedirectableAddress(oAddress) {
   // function getNonRedirectableAddress(oAddress) {
-  return `${оАдрес.protocol}//${оАдрес.host}${оАдрес.pathname}${
-    оАдрес.search.length > 1
-      ? `${оАдрес.search}&${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`
-      : `?${АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ}`
-  }${оАдрес.hash}`;
+  return `${oAddress.protocol}//${oAddress.host}${oAddress.pathname}${
+    oAddress.search.length > 1
+      ? `${oAddress.search}&${DO_NOT_REDIRECT_ADDRESS}`
+      : `?${DO_NOT_REDIRECT_ADDRESS}`
+  }${oAddress.hash}`;
   // return `${oAddress.protocol}//${oAddress.host}${oAddress.pathname}${oAddress.search.length > 1 ? `${oAddress.search}&${DO_NOT_REDIRECT_ADDRESS}` : `?${DO_NOT_REDIRECT_ADDRESS}`}${oAddress.hash}`;
 }
 
-function запретитьАвтоперенаправлениеЭтойСтраницы() {
+function disableAutoRedirectForThisPage() {
   // function disableAutoRedirectForThisPage() {
-  if (этотАдресМожноПеренаправлять(location)) {
+  if (thisAddressCanBeRedirected(location)) {
     // if (thisAddressCanBeRedirected(location)) {
     history.replaceState(
       history.state,
       "",
-      получитьНеперенаправляемыйАдрес(location)
+      getNonRedirectableAddress(location)
     );
     // history.replaceState(history.state, '', getNonRedirectableAddress(location));
   }
 }
 
-разобратьАдрес.ЭТО_НЕ_КОД_КАНАЛА = new Set([
+parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([
   "directory",
   "embed",
   "friends",
@@ -112,191 +112,191 @@ function запретитьАвтоперенаправлениеЭтойСтр�
 ]);
 // parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([ 'directory', 'embed', 'friends', 'inventory', 'login', 'logout', 'manager', 'messages', 'payments', 'popout', 'search', 'settings', 'signup', 'subscriptions', 'team' ]);
 
-function разобратьАдрес(оАдрес) {
+function parseAddress(oAddress) {
   // function parseAddress(oAddress) {
-  let лМобильнаяВерсия = false;
+  let bMobileVersion = false;
   // let bMobileVersion = false;
-  let сСтраница = "НЕИЗВЕСТНАЯ";
+  let sPage = "НЕИЗВЕСТНАЯ";
   // let sPage = 'UNKNOWN';
-  let сКодКанала = "";
+  let sChannelCode = "";
   // let sChannelCode = '';
-  let лМожноПеренаправлять = false;
+  let bCanRedirect = false;
   // let bCanRedirect = false;
   if (
-    оАдрес.protocol === "https:" &&
-    (оАдрес.host === "www.twitch.tv" || оАдрес.host === "m.twitch.tv")
+    oAddress.protocol === "https:" &&
+    (oAddress.host === "www.twitch.tv" || oAddress.host === "m.twitch.tv")
   ) {
     // if (oAddress.protocol === 'https:' && (oAddress.host === 'www.twitch.tv' || oAddress.host === 'm.twitch.tv')) {
-    лМобильнаяВерсия = оАдрес.host === "m.twitch.tv";
+    bMobileVersion = oAddress.host === "m.twitch.tv";
     // bMobileVersion = oAddress.host === 'm.twitch.tv';
-    const мсЧасти = оАдрес.pathname.split("/");
+    const msParts = oAddress.pathname.split("/");
     // const msParts = oAddress.pathname.split('/');
-    if (мсЧасти.length <= 3 && мсЧасти[1] && !мсЧасти[2]) {
+    if (msParts.length <= 3 && msParts[1] && !msParts[2]) {
       // if (msParts.length <= 3 && msParts[1] && !msParts[2]) {
-      if (!разобратьАдрес.ЭТО_НЕ_КОД_КАНАЛА.has(мсЧасти[1])) {
+      if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(msParts[1])) {
         // if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(msParts[1])) {
-        сСтраница = "ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ";
+        sPage = "ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ";
         // sPage = 'POSSIBLY_LIVE_STREAM';
-        сКодКанала = decodeURIComponent(мсЧасти[1]);
+        sChannelCode = decodeURIComponent(msParts[1]);
         // sChannelCode = decodeURIComponent(msParts[1]);
-        лМожноПеренаправлять = этотАдресМожноПеренаправлять(оАдрес);
+        bCanRedirect = thisAddressCanBeRedirected(oAddress);
         // bCanRedirect = thisAddressCanBeRedirected(oAddress);
       }
     } else if (
-      (мсЧасти[1] === "embed" || мсЧасти[1] === "popout") &&
-      мсЧасти[2] &&
-      мсЧасти[3] === "chat"
+      (msParts[1] === "embed" || msParts[1] === "popout") &&
+      msParts[2] &&
+      msParts[3] === "chat"
     ) {
       // } else if ((msParts[1] === 'embed' || msParts[1] === 'popout') && msParts[2] && msParts[3] === 'chat') {
-      сСтраница = "ЧАТ_КАНАЛА";
+      sPage = "ЧАТ_КАНАЛА";
       // sPage = 'CHANNEL_CHAT';
-      сКодКанала = decodeURIComponent(мсЧасти[2]);
+      sChannelCode = decodeURIComponent(msParts[2]);
       // sChannelCode = decodeURIComponent(msParts[2]);
     }
   }
-  м_Журнал.Окак(
-    `[content.js] Адрес разобран: Страница=${сСтраница} КодКанала=${сКодКанала} МожноПеренаправлять=${лМожноПеренаправлять}`
+  m_Log.Окак(
+    `[content.js] Адрес разобран: Страница=${sPage} КодКанала=${sChannelCode} МожноПеренаправлять=${bCanRedirect}`
   );
   // m_Log.Wow(`[content.js] Address parsed: Page=${sPage} ChannelCode=${sChannelCode} CanRedirect=${bCanRedirect}`);
   return {
-    лМобильнаяВерсия,
+    bMobileVersion,
     // bMobileVersion,
-    сСтраница,
+    sPage,
     // sPage,
-    сКодКанала,
+    sChannelCode,
     // sChannelCode,
-    лМожноПеренаправлять,
+    bCanRedirect,
     // bCanRedirect
   };
 }
 
-function запроситьСостояниеКанала(оРазобранныйАдрес) {
+function requestChannelState(oParsedAddress) {
   // function requestChannelState(oParsedAddress) {
   if (
-    !оРазобранныйАдрес.лМожноПеренаправлять ||
-    !м_Настройки.Получить("лАвтоперенаправлениеРазрешено")
+    !oParsedAddress.bCanRedirect ||
+    !m_Settings.Get("лАвтоперенаправлениеРазрешено")
   ) {
     // if (!oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
     return;
   }
   if (
-    !г_оЗапрос &&
-    г_сКодКанала === оРазобранныйАдрес.сКодКанала &&
-    performance.now() - г_чПоследняяПроверка < ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА
+    !g_oRequest &&
+    g_sChannelCode === oParsedAddress.sChannelCode &&
+    performance.now() - g_nLastCheck < STORE_CHANNEL_STATE
   ) {
     // if (!g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode && performance.now() - g_nLastCheck < STORE_CHANNEL_STATE) {
     return;
   }
-  if (г_оЗапрос && г_сКодКанала === оРазобранныйАдрес.сКодКанала) {
+  if (g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode) {
     // if (g_oRequest && g_sChannelCode === oParsedAddress.sChannelCode) {
     return;
   }
-  отменитьЗапрос();
+  cancelRequest();
   // cancelRequest();
-  г_сКодКанала = оРазобранныйАдрес.сКодКанала;
+  g_sChannelCode = oParsedAddress.sChannelCode;
   // g_sChannelCode = oParsedAddress.sChannelCode;
-  г_чПоследняяПроверка = -1;
+  g_nLastCheck = -1;
   // g_nLastCheck = -1;
-  отправитьЗапрос();
+  sendRequest();
   // sendRequest();
 }
 
-function измененАдресСтраницы(сСпособ) {
+function pageAddressChanged(sMethod) {
   // function pageAddressChanged(sMethod) {
-  г_оРазобранныйАдрес = разобратьАдрес(location);
+  g_oParsedAddress = parseAddress(location);
   // g_oParsedAddress = parseAddress(location);
-  г_сСпособЗаданияАдреса = сСпособ;
+  g_sAddressSettingMethod = sMethod;
   // g_sAddressSettingMethod = sMethod;
   if (
-    !г_оРазобранныйАдрес.лМожноПеренаправлять ||
-    !м_Настройки.Получить("лАвтоперенаправлениеРазрешено")
+    !g_oParsedAddress.bCanRedirect ||
+    !m_Settings.Get("лАвтоперенаправлениеРазрешено")
   ) {
     // if (!g_oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
-    if (г_чПоследняяПроверка === -2) {
+    if (g_nLastCheck === -2) {
       // if (g_nLastCheck === -2) {
-      г_чПоследняяПроверка = -1;
+      g_nLastCheck = -1;
       // g_nLastCheck = -1;
     }
     return;
   }
   if (
-    !г_оЗапрос &&
-    г_сКодКанала === г_оРазобранныйАдрес.сКодКанала &&
-    performance.now() - г_чПоследняяПроверка < ХРАНИТЬ_СОСТОЯНИЕ_КАНАЛА
+    !g_oRequest &&
+    g_sChannelCode === g_oParsedAddress.sChannelCode &&
+    performance.now() - g_nLastCheck < STORE_CHANNEL_STATE
   ) {
     // if (!g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode && performance.now() - g_nLastCheck < STORE_CHANNEL_STATE) {
-    if (г_лИдетТрансляция) {
+    if (g_bIsStreaming) {
       // if (g_bIsStreaming) {
-      перенаправитьНаНашПроигрыватель(г_сКодКанала);
+      redirectToOurPlayer(g_sChannelCode);
       // redirectToOurPlayer(g_sChannelCode);
     }
     return;
   }
-  if (г_оЗапрос && г_сКодКанала === г_оРазобранныйАдрес.сКодКанала) {
+  if (g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode) {
     // if (g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode) {
-    г_чПоследняяПроверка = -2;
+    g_nLastCheck = -2;
     // g_nLastCheck = -2;
     return;
   }
-  отменитьЗапрос();
+  cancelRequest();
   // cancelRequest();
-  г_сКодКанала = г_оРазобранныйАдрес.сКодКанала;
+  g_sChannelCode = g_oParsedAddress.sChannelCode;
   // g_sChannelCode = g_oParsedAddress.sChannelCode;
-  г_чПоследняяПроверка = -2;
+  g_nLastCheck = -2;
   // g_nLastCheck = -2;
-  отправитьЗапрос();
+  sendRequest();
   // sendRequest();
 }
 
-function отменитьЗапрос() {
+function cancelRequest() {
   // function cancelRequest() {
-  if (г_оЗапрос) {
+  if (g_oRequest) {
     // if (g_oRequest) {
-    м_Журнал.Окак("[content.js] Отменяю незавершенный запрос");
+    m_Log.Окак("[content.js] Отменяю незавершенный запрос");
     // m_Log.Wow('[content.js] Canceling pending request');
-    г_оЗапрос.abort();
+    g_oRequest.abort();
     // g_oRequest.abort();
   }
 }
 
-function отправитьЗапрос() {
+function sendRequest() {
   // function sendRequest() {
-  м_Журнал.Окак(`[content.js] Посылаю запрос для канала ${г_сКодКанала}`);
+  m_Log.Окак(`[content.js] Посылаю запрос для канала ${g_sChannelCode}`);
   // m_Log.Wow(`[content.js] Sending request for channel ${g_sChannelCode}`);
-  г_оЗапрос = new XMLHttpRequest();
+  g_oRequest = new XMLHttpRequest();
   // g_oRequest = new XMLHttpRequest();
-  г_оЗапрос.addEventListener("loadend", обработатьОтвет);
+  g_oRequest.addEventListener("loadend", processResponse);
   // g_oRequest.addEventListener('loadend', processResponse);
-  г_оЗапрос.open("POST", "https://gql.twitch.tv/gql#origin=twilight");
+  g_oRequest.open("POST", "https://gql.twitch.tv/gql#origin=twilight");
   // g_oRequest.open('POST', 'https://gql.twitch.tv/gql#origin=twilight');
-  г_оЗапрос.responseType = "json";
+  g_oRequest.responseType = "json";
   // g_oRequest.responseType = 'json';
-  г_оЗапрос.timeout = 15e3;
+  g_oRequest.timeout = 15e3;
   // g_oRequest.timeout = 15e3;
-  г_оЗапрос.setRequestHeader("Accept-Language", "en-US");
+  g_oRequest.setRequestHeader("Accept-Language", "en-US");
   // g_oRequest.setRequestHeader('Accept-Language', 'en-US');
-  г_оЗапрос.setRequestHeader("Client-ID", "kimne78kx3ncx6brgo4mv6wki5h1ko");
+  g_oRequest.setRequestHeader("Client-ID", "kimne78kx3ncx6brgo4mv6wki5h1ko");
   // g_oRequest.setRequestHeader('Client-ID', 'kimne78kx3ncx6brgo4mv6wki5h1ko');
-  г_оЗапрос.setRequestHeader("Content-Type", "text/plain; charset=UTF-8");
+  g_oRequest.setRequestHeader("Content-Type", "text/plain; charset=UTF-8");
   // g_oRequest.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
-  if (отправитьЗапрос._мсИдУстройства === void 0) {
+  if (sendRequest._msDeviceId === void 0) {
     // if (sendRequest._msDeviceId === void 0) {
-    отправитьЗапрос._мсИдУстройства = document.cookie.match(
+    sendRequest._msDeviceId = document.cookie.match(
       /(?:^|;[ \t]?)unique_id=([^;]+)/
     );
     // sendRequest._msDeviceId = document.cookie.match(/(?:^|;[ \t]?)unique_id=([^;]+)/);
   }
-  if (отправитьЗапрос._мсИдУстройства) {
+  if (sendRequest._msDeviceId) {
     // if (sendRequest._msDeviceId) {
-    г_оЗапрос.setRequestHeader(
+    g_oRequest.setRequestHeader(
       "X-Device-ID",
-      отправитьЗапрос._мсИдУстройства[1]
+      sendRequest._msDeviceId[1]
     );
     // g_oRequest.setRequestHeader('X-Device-ID', sendRequest._msDeviceId[1]);
   }
   // g_oRequest.send(createGqlRequestBody(`query($login: String!) {
-  г_оЗапрос.send(
-    создатьТелоЗапросаGql(
+  g_oRequest.send(
+    createGqlRequestBody(
       `query($login: String!) {
 	
 			user(login: $login) {
@@ -311,227 +311,227 @@ function отправитьЗапрос() {
 			}
 		}`,
       {
-        login: г_сКодКанала,
+        login: g_sChannelCode,
         // login: g_sChannelCode
       }
     )
   );
 }
 
-function обработатьОтвет({ target: оЗапрос }) {
+function processResponse({ target: oRequest }) {
   // function processResponse({target: oRequest}) {
-  г_оЗапрос = null;
+  g_oRequest = null;
   // g_oRequest = null;
   if (
-    оЗапрос.status >= 200 &&
-    оЗапрос.status < 300 &&
-    ЭтоОбъект(оЗапрос.response)
+    oRequest.status >= 200 &&
+    oRequest.status < 300 &&
+    IsObject(oRequest.response)
   ) {
     // if (oRequest.status >= 200 && oRequest.status < 300 && IsObject(oRequest.response)) {
-    const лПеренаправить = г_чПоследняяПроверка === -2;
+    const bRedirect = g_nLastCheck === -2;
     // const bRedirect = g_nLastCheck === -2;
-    г_чПоследняяПроверка = performance.now();
+    g_nLastCheck = performance.now();
     // g_nLastCheck = performance.now();
     let лТрансляцияЗавершенаИлиЗакодирована = true,
       лСовместныйПросмотр = false;
     // let bStreamFinishedOrEncoded = true, bWatchParty = false;
     try {
       лТрансляцияЗавершенаИлиЗакодирована =
-        оЗапрос.response.data.user.stream.isEncrypted === true;
+        oRequest.response.data.user.stream.isEncrypted === true;
       // bStreamFinishedOrEncoded = oRequest.response.data.user.stream.isEncrypted === true;
       лСовместныйПросмотр =
-        оЗапрос.response.data.user.watchParty.session.state === "IN_PROGRESS";
+        oRequest.response.data.user.watchParty.session.state === "IN_PROGRESS";
       // bWatchParty = oRequest.response.data.user.watchParty.session.state === 'IN_PROGRESS';
     } catch (_) {}
-    г_лИдетТрансляция =
+    g_bIsStreaming =
       !лТрансляцияЗавершенаИлиЗакодирована && !лСовместныйПросмотр;
     // g_bIsStreaming = !bStreamFinishedOrEncoded && !bWatchParty;
-    if (г_лИдетТрансляция && лПеренаправить) {
+    if (g_bIsStreaming && bRedirect) {
       // if (g_bIsStreaming && bRedirect) {
-      перенаправитьНаНашПроигрыватель(г_сКодКанала);
+      redirectToOurPlayer(g_sChannelCode);
       // redirectToOurPlayer(g_sChannelCode);
     }
   } else {
-    г_чПоследняяПроверка = 0;
+    g_nLastCheck = 0;
     // g_nLastCheck = 0;
   }
 }
 
-function запуститьНашПроигрыватель(сКодКанала) {
+function launchOurPlayer(sChannelCode) {
   // function launchOurPlayer(sChannelCode) {
-  const сАдресПроигрывателя = ПолучитьАдресНашегоПроигрывателя(сКодКанала);
+  const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
   // const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  м_Журнал.Окак(`[content.js] Перехожу на страницу ${сАдресПроигрывателя}`);
+  m_Log.Окак(`[content.js] Перехожу на страницу ${sPlayerAddress}`);
   // m_Log.Wow(`[content.js] Navigating to page ${sPlayerAddress}`);
-  запретитьАвтоперенаправлениеЭтойСтраницы();
+  disableAutoRedirectForThisPage();
   // disableAutoRedirectForThisPage();
-  задатьАдресСтраницы(сАдресПроигрывателя);
+  setPageAddress(sPlayerAddress);
   // setPageAddress(sPlayerAddress);
 }
 
-function перенаправитьНаНашПроигрыватель(сКодКанала) {
+function redirectToOurPlayer(sChannelCode) {
   // function redirectToOurPlayer(sChannelCode) {
-  const сАдресПроигрывателя = ПолучитьАдресНашегоПроигрывателя(сКодКанала);
+  const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
   // const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  м_Журнал.Окак(
-    `[content.js] Меняю адрес страницы с ${location.href} на ${сАдресПроигрывателя}`
+  m_Log.Окак(
+    `[content.js] Меняю адрес страницы с ${location.href} на ${sPlayerAddress}`
   );
   // m_Log.Wow(`[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`);
   document.documentElement.setAttribute(
     "data-tw5-перенаправление",
-    сАдресПроигрывателя
+    sPlayerAddress
   );
   // document.documentElement.setAttribute('data-tw5-redirect', sPlayerAddress);
-  задатьАдресСтраницы(сАдресПроигрывателя, true);
+  setPageAddress(sPlayerAddress, true);
   // setPageAddress(sPlayerAddress, true);
 }
 
-function обработатьPointerDownИClick(оСобытие) {
+function handlePointerDownAndClick(oEvent) {
   // function handlePointerDownAndClick(oEvent) {
-  if (г_оРазобранныйАдрес) {
+  if (g_oParsedAddress) {
     // if (g_oParsedAddress) {
-    const узСсылка = оСобытие.target.closest("a[href]");
+    const nodeLink = oEvent.target.closest("a[href]");
     // const nodeLink = oEvent.target.closest('a[href]');
     if (
-      узСсылка &&
-      оСобытие.isPrimary !== false &&
-      оСобытие.button === ЛЕВАЯ_КНОПКА &&
-      !оСобытие.shiftKey &&
-      !оСобытие.ctrlKey &&
-      !оСобытие.altKey &&
-      !оСобытие.metaKey
+      nodeLink &&
+      oEvent.isPrimary !== false &&
+      oEvent.button === LEFT_BUTTON &&
+      !oEvent.shiftKey &&
+      !oEvent.ctrlKey &&
+      !oEvent.altKey &&
+      !oEvent.metaKey
     ) {
       // if (nodeLink && oEvent.isPrimary !== false && oEvent.button === LEFT_BUTTON && !oEvent.shiftKey && !oEvent.ctrlKey && !oEvent.altKey && !oEvent.metaKey) {
-      м_Журнал.Окак(
-        `[content.js] Произошло событие ${оСобытие.type} у ссылки ${узСсылка.href}`
+      m_Log.Окак(
+        `[content.js] Произошло событие ${oEvent.type} у ссылки ${nodeLink.href}`
       );
       // m_Log.Wow(`[content.js] Event ${oEvent.type} occurred on link ${nodeLink.href}`);
-      запроситьСостояниеКанала(разобратьАдрес(узСсылка));
+      requestChannelState(parseAddress(nodeLink));
       // requestChannelState(parseAddress(nodeLink));
     }
   }
 }
 
-function обработатьPopState(оСобытие) {
+function handlePopState(oEvent) {
   // function handlePopState(oEvent) {
-  if (г_оРазобранныйАдрес) {
+  if (g_oParsedAddress) {
     // if (g_oParsedAddress) {
-    м_Журнал.Окак(`[content.js] Произошло событие popstate ${location.href}`);
+    m_Log.Окак(`[content.js] Произошло событие popstate ${location.href}`);
     // m_Log.Wow(`[content.js] popstate event occurred ${location.href}`);
-    if (получитьВерсиюДвижкаБраузера() < 67) {
+    if (getBrowserEngineVersion() < 67) {
       // if (getBrowserEngineVersion() < 67) {
       document.title = "Twitch";
     }
-    измененАдресСтраницы("POPSTATE");
+    pageAddressChanged("POPSTATE");
     // pageAddressChanged('POPSTATE');
     if (document.documentElement.hasAttribute("data-tw5-перенаправление")) {
       // if (document.documentElement.hasAttribute('data-tw5-redirect')) {
-      м_Журнал.Окак("[content.js] Скрываю событие popstate");
+      m_Log.Окак("[content.js] Скрываю событие popstate");
       // m_Log.Wow('[content.js] Hiding popstate event');
-      оСобытие.stopImmediatePropagation();
+      oEvent.stopImmediatePropagation();
       // oEvent.stopImmediatePropagation();
     }
   }
 }
 
-function обработатьPushState(оСобытие) {
+function handlePushState(oEvent) {
   // function handlePushState(oEvent) {
-  м_Журнал.Окак(
+  m_Log.Окак(
     `[content.js] Произошло событие tw5-pushstate ${location.href}`
   );
   // m_Log.Wow(`[content.js] tw5-pushstate event occurred ${location.href}`);
-  измененАдресСтраницы("PUSHSTATE");
+  pageAddressChanged("PUSHSTATE");
   // pageAddressChanged('PUSHSTATE');
 }
 
-function обработатьЗапускНашегоПроигрывателя(оСобытие) {
+function handleLaunchOurPlayer(oEvent) {
   // function handleLaunchOurPlayer(oEvent) {
-  оСобытие.preventDefault();
+  oEvent.preventDefault();
   // oEvent.preventDefault();
   if (
-    оСобытие.button === ЛЕВАЯ_КНОПКА &&
-    г_оРазобранныйАдрес.сСтраница === "ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ"
+    oEvent.button === LEFT_BUTTON &&
+    g_oParsedAddress.sPage === "ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ"
   ) {
     // if (oEvent.button === LEFT_BUTTON && g_oParsedAddress.sPage === 'POSSIBLY_LIVE_STREAM') {
-    запуститьНашПроигрыватель(г_оРазобранныйАдрес.сКодКанала);
+    launchOurPlayer(g_oParsedAddress.sChannelCode);
     // launchOurPlayer(g_oParsedAddress.sChannelCode);
   } else {
-    м_Журнал.Окак(
-      `[content.js] Не запускать проигрыватель Кнопка=${оСобытие.button} Страница=${г_оРазобранныйАдрес.сСтраница}`
+    m_Log.Окак(
+      `[content.js] Не запускать проигрыватель Кнопка=${oEvent.button} Страница=${g_oParsedAddress.sPage}`
     );
     // m_Log.Wow(`[content.js] Do not launch player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`);
   }
 }
 
-function обработатьПереключениеАвтоперенаправления(оСобытие) {
+function handleToggleAutoRedirect(oEvent) {
   // function handleToggleAutoRedirect(oEvent) {
-  оСобытие.preventDefault();
+  oEvent.preventDefault();
   // oEvent.preventDefault();
-  const л = !м_Настройки.Получить("лАвтоперенаправлениеРазрешено");
+  const л = !m_Settings.Get("лАвтоперенаправлениеРазрешено");
   // const b = !m_Settings.Get('bAutoRedirectAllowed');
-  м_Журнал.Окак(`[content.js] Автоперенаправление разрешено: ${л}`);
+  m_Log.Окак(`[content.js] Автоперенаправление разрешено: ${л}`);
   // m_Log.Wow(`[content.js] Auto-redirect allowed: ${b}`);
-  м_Настройки.Изменить("лАвтоперенаправлениеРазрешено", л);
+  m_Settings.Change("лАвтоперенаправлениеРазрешено", л);
   // m_Settings.Change('bAutoRedirectAllowed', b);
-  обновитьНашуКнопку();
+  updateOurButton();
   // updateOurButton();
 }
 
-function обработатьЗакрытиеСправки(оСобытие) {
+function handleCloseHelp(oEvent) {
   // function handleCloseHelp(oEvent) {
-  оСобытие.preventDefault();
+  oEvent.preventDefault();
   // oEvent.preventDefault();
-  м_Журнал.Окак("[content.js] Закрываю справку");
+  m_Log.Окак("[content.js] Закрываю справку");
   // m_Log.Wow('[content.js] Closing help');
-  оСобытие.currentTarget.classList.remove("tw5-справка");
+  oEvent.currentTarget.classList.remove("tw5-справка");
   // oEvent.currentTarget.classList.remove('tw5-help');
-  оСобытие.currentTarget.removeEventListener(
+  oEvent.currentTarget.removeEventListener(
     "mouseover",
-    обработатьЗакрытиеСправки
+    handleCloseHelp
   );
   // oEvent.currentTarget.removeEventListener('mouseover', handleCloseHelp);
-  оСобытие.currentTarget.removeEventListener(
+  oEvent.currentTarget.removeEventListener(
     "touchstart",
-    обработатьЗакрытиеСправки,
+    handleCloseHelp,
     {
       // oEvent.currentTarget.removeEventListener('touchstart', handleCloseHelp, {
       passive: false,
     }
   );
-  м_Настройки.Изменить("лАвтоперенаправлениеЗамечено", true);
+  m_Settings.Change("лАвтоперенаправлениеЗамечено", true);
   // m_Settings.Change('bAutoRedirectNoticed', true);
 }
 
-function получитьНашуКнопку() {
+function getOurButton() {
   // function getOurButton() {
   return document.getElementById("tw5-автоперенаправление");
   // return document.getElementById('tw5-autoredirect');
 }
 
-function обновитьНашуКнопку() {
+function updateOurButton() {
   // function updateOurButton() {
-  получитьНашуКнопку().classList.toggle(
+  getOurButton().classList.toggle(
     "tw5-запрещено",
-    !м_Настройки.Получить("лАвтоперенаправлениеРазрешено")
+    !m_Settings.Get("лАвтоперенаправлениеРазрешено")
   );
   // getOurButton().classList.toggle('tw5-forbidden', !m_Settings.Get('bAutoRedirectAllowed'));
 }
 
-function вставитьНашуКнопку() {
+function insertOurButton() {
   // function insertOurButton() {
-  if (г_оРазобранныйАдрес.лМобильнаяВерсия) {
+  if (g_oParsedAddress.bMobileVersion) {
     // if (g_oParsedAddress.bMobileVersion) {
-    const узКудаВставлять = document.querySelector(
+    const nodeToInsert = document.querySelector(
       ".top-nav__menu > div:last-child > div:first-child"
     );
     // const nodeToInsert = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
-    if (!узКудаВставлять) {
+    if (!nodeToInsert) {
       // if (!nodeToInsert) {
       return false;
     }
-    м_Журнал.Окак("[content.js] Вставляю нашу кнопку для мобильного сайта");
+    m_Log.Окак("[content.js] Вставляю нашу кнопку для мобильного сайта");
     // m_Log.Wow('[content.js] Inserting our button for mobile site');
-    узКудаВставлять.insertAdjacentHTML(
+    nodeToInsert.insertAdjacentHTML(
       "afterend",
       `
 		<div class="tw5-автоперенаправление tw5-js-удалить">
@@ -589,17 +589,17 @@ function вставитьНашуКнопку() {
 		`
     );
   } else {
-    const узКудаВставлять = document.querySelector(
+    const nodeToInsert = document.querySelector(
       ".top-nav__menu > div:last-child > div:first-child"
     );
     // const nodeToInsert = document.querySelector('.top-nav__menu > div:last-child > div:first-child');
-    if (!узКудаВставлять) {
+    if (!nodeToInsert) {
       // if (!nodeToInsert) {
       return false;
     }
-    м_Журнал.Окак("[content.js] Вставляю нашу кнопку");
+    m_Log.Окак("[content.js] Вставляю нашу кнопку");
     // m_Log.Wow('[content.js] Inserting our button');
-    узКудаВставлять.insertAdjacentHTML(
+    nodeToInsert.insertAdjacentHTML(
       "afterend",
       `
 		<div class="tw5-автоперенаправление tw5-js-удалить">
@@ -613,7 +613,7 @@ function вставитьНашуКнопку() {
 				</svg>
 			</button>
 			<div class="tw5-tooltip">
-				${м_i18n.GetMessage("F0600")}
+				${m_i18n.GetMessage("F0600")}
 			</div>
 			<style>
 				.tw5-автоперенаправление
@@ -702,56 +702,56 @@ function вставитьНашуКнопку() {
 		`
     );
   }
-  const узКнопка = получитьНашуКнопку();
+  const nodeButton = getOurButton();
   // const nodeButton = getOurButton();
-  узКнопка.addEventListener("click", обработатьЗапускНашегоПроигрывателя);
+  nodeButton.addEventListener("click", handleLaunchOurPlayer);
   // nodeButton.addEventListener('click', handleLaunchOurPlayer);
-  узКнопка.addEventListener(
+  nodeButton.addEventListener(
     "contextmenu",
-    обработатьПереключениеАвтоперенаправления
+    handleToggleAutoRedirect
   );
   // nodeButton.addEventListener('contextmenu', handleToggleAutoRedirect);
   if (
-    !г_оРазобранныйАдрес.лМобильнаяВерсия &&
-    !м_Настройки.Получить("лАвтоперенаправлениеЗамечено")
+    !g_oParsedAddress.bMobileVersion &&
+    !m_Settings.Get("лАвтоперенаправлениеЗамечено")
   ) {
     // if (!g_oParsedAddress.bMobileVersion && !m_Settings.Get('bAutoRedirectNoticed')) {
-    узКнопка.parentNode.classList.add("tw5-справка");
+    nodeButton.parentNode.classList.add("tw5-справка");
     // nodeButton.parentNode.classList.add('tw5-help');
-    узКнопка.parentNode.addEventListener(
+    nodeButton.parentNode.addEventListener(
       "mouseover",
-      обработатьЗакрытиеСправки
+      handleCloseHelp
     );
     // nodeButton.parentNode.addEventListener('mouseover', handleCloseHelp);
-    узКнопка.parentNode.addEventListener(
+    nodeButton.parentNode.addEventListener(
       "touchstart",
-      обработатьЗакрытиеСправки,
+      handleCloseHelp,
       {
         // nodeButton.parentNode.addEventListener('touchstart', handleCloseHelp, {
         passive: false,
       }
     );
   }
-  обновитьНашуКнопку();
+  updateOurButton();
   // updateOurButton();
   return true;
 }
 
-function вставитьНашуКнопкуЕслиНужно() {
+function insertOurButtonIfNeeded() {
   // function insertOurButtonIfNeeded() {
-  return Boolean(получитьНашуКнопку()) || вставитьНашуКнопку();
+  return Boolean(getOurButton()) || insertOurButton();
   // return Boolean(getOurButton()) || insertOurButton();
 }
 
-function вставитьНашуКнопкуВПервыйРаз() {
+function insertOurButtonFirstTime() {
   // function insertOurButtonFirstTime() {
-  вставитьНашуКнопку();
+  insertOurButton();
   // insertOurButton();
-  if (г_оРазобранныйАдрес.лМобильнаяВерсия) {
+  if (g_oParsedAddress.bMobileVersion) {
     // if (g_oParsedAddress.bMobileVersion) {
     new MutationObserver((моЗаписи) => {
       // new MutationObserver(moRecords => {
-      вставитьНашуКнопкуЕслиНужно();
+      insertOurButtonIfNeeded();
       // insertOurButtonIfNeeded();
     }).observe(document.head || document.documentElement, {
       childList: true,
@@ -760,18 +760,18 @@ function вставитьНашуКнопкуВПервыйРаз() {
   } else {
     window.addEventListener(
       "tw5-изменензаголовок",
-      вставитьНашуКнопкуЕслиНужно
+      insertOurButtonIfNeeded
     );
     // window.addEventListener('tw5-titlechanged', insertOurButtonIfNeeded);
   }
 }
 
-function ждатьЗагрузкуДомика() {
+function waitForDom() {
   // function waitForDom() {
-  return new Promise((фВыполнить) => {
+  return new Promise((fResolve) => {
     // return new Promise(fResolve => {
     if (document.readyState !== "loading") {
-      фВыполнить();
+      fResolve();
       // fResolve();
     } else {
       document.addEventListener(
@@ -783,7 +783,7 @@ function ждатьЗагрузкуДомика() {
             ОбработатьЗагрузкуДомика
           );
           // document.removeEventListener('DOMContentLoaded', HandleDomLoad);
-          фВыполнить();
+          fResolve();
           // fResolve();
         }
       );
@@ -791,36 +791,36 @@ function ждатьЗагрузкуДомика() {
   });
 }
 
-function ждатьЗагрузкуСтраницы() {
+function waitForPageLoad() {
   // function waitForPageLoad() {
-  return new Promise((фВыполнить) => {
+  return new Promise((fResolve) => {
     // return new Promise(fResolve => {
     if (document.readyState === "complete") {
-      фВыполнить();
+      fResolve();
       // fResolve();
     } else {
       window.addEventListener("load", function ОбработатьЗагрузкуСтраницы() {
         // window.addEventListener('load', function HandlePageLoad() {
         window.removeEventListener("load", ОбработатьЗагрузкуСтраницы);
         // window.removeEventListener('load', HandlePageLoad);
-        фВыполнить();
+        fResolve();
         // fResolve();
       });
     }
   });
 }
 
-function вставитьСторонниеРасширения() {
+function insertThirdPartyExtensions() {
   // function insertThirdPartyExtensions() {
   chrome.runtime.sendMessage(
     {
-      сЗапрос: "ВставитьСторонниеРасширения",
+      sQuery: "ВставитьСторонниеРасширения",
       // sRequest: 'InsertThirdPartyExtensions'
     },
     (оСообщение) => {
       // }, oMessage => {
       if (chrome.runtime.lastError) {
-        м_Журнал.Окак(
+        m_Log.Окак(
           `[content.js] Не удалось послать запрос на вставку сторонних расширений: ${chrome.runtime.lastError.message}`
         );
         // m_Log.Wow(`[content.js] Failed to send request to insert third-party extensions: ${chrome.runtime.lastError.message}`);
@@ -834,7 +834,7 @@ function вставитьСторонниеРасширения() {
       //! See https://bugs.chromium.org/p/chromium/issues/detail?id=599167
       if (оСообщение.сСторонниеРасширения.includes("BTTV ")) {
         // if (oMessage.sThirdPartyExtensions.includes('BTTV ')) {
-        ждатьЗагрузкуСтраницы().then(() => {
+        waitForPageLoad().then(() => {
           // waitForPageLoad().then(() => {
 
           //! BetterTTV browser extension
@@ -848,7 +848,7 @@ function вставитьСторонниеРасширения() {
       }
       if (оСообщение.сСторонниеРасширения.includes("FFZ ")) {
         // if (oMessage.sThirdPartyExtensions.includes('FFZ ')) {
-        ждатьЗагрузкуДомика().then(() => {
+        waitForDom().then(() => {
           // waitForDom().then(() => {
 
           //! FrankerFaceZ browser extension
@@ -864,120 +864,120 @@ function вставитьСторонниеРасширения() {
   );
 }
 
-function изменитьСтильЧата() {
+function changeChatStyle() {
   // function changeChatStyle() {
-  const узСтиль = document.createElement("link");
+  const nodeStyle = document.createElement("link");
   // const nodeStyle = document.createElement('link');
-  узСтиль.rel = "stylesheet";
+  nodeStyle.rel = "stylesheet";
   // nodeStyle.rel = 'stylesheet';
-  узСтиль.href = chrome.runtime.getURL("content.css");
+  nodeStyle.href = chrome.runtime.getURL("content.css");
   // nodeStyle.href = chrome.runtime.getURL('content.css');
-  узСтиль.className = "tw5-js-удалить";
+  nodeStyle.className = "tw5-js-удалить";
   // nodeStyle.className = 'tw5-js-remove';
-  (document.head || document.documentElement).appendChild(узСтиль);
+  (document.head || document.documentElement).appendChild(nodeStyle);
   // (document.head || document.documentElement).appendChild(nodeStyle);
 }
 
-function изменитьПоведениеЧата() {
+function changeChatBehavior() {
   // function changeChatBehavior() {
   window.addEventListener(
     "click",
-    (оСобытие) => {
+    (oEvent) => {
       // window.addEventListener('click', oEvent => {
-      if (оСобытие.button !== ЛЕВАЯ_КНОПКА) {
+      if (oEvent.button !== LEFT_BUTTON) {
         // if (oEvent.button !== LEFT_BUTTON) {
         return;
       }
-      const узСсылка = оСобытие.target.closest(
+      const nodeLink = oEvent.target.closest(
         'a[href^="http:"],a[href^="https:"],a[href]:not([href=""]):not([href^="#"]):not([href*=":"]):not([href$="/not-a-location"])'
       );
       // const nodeLink = oEvent.target.closest('a[href^="http:"],a[href^="https:"],a[href]:not([href=""]):not([href^="#"]):not([href*=":"]):not([href$="/not-a-location"])');
-      if (!узСсылка) {
+      if (!nodeLink) {
         // if (!nodeLink) {
         return;
       }
-      м_Журнал.Окак(
-        `[content.js] Открываю ссылку в новой вкладке: ${узСсылка.getAttribute(
+      m_Log.Окак(
+        `[content.js] Открываю ссылку в новой вкладке: ${nodeLink.getAttribute(
           "href"
         )}`
       );
       // m_Log.Wow(`[content.js] Opening link in new tab: ${nodeLink.getAttribute('href')}`);
-      узСсылка.target = "_blank";
+      nodeLink.target = "_blank";
       // nodeLink.target = '_blank';
-      оСобытие.stopImmediatePropagation();
+      oEvent.stopImmediatePropagation();
       // oEvent.stopImmediatePropagation();
     },
     true
   );
-  const оНаблюдатель = new MutationObserver((моЗаписи) => {
+  const oObserver = new MutationObserver((моЗаписи) => {
     // const oObserver = new MutationObserver(moRecords => {
-    const сэл = document.getElementsByClassName("channel-leaderboard");
+    const sel = document.getElementsByClassName("channel-leaderboard");
     // const sel = document.getElementsByClassName('channel-leaderboard');
-    if (сэл.length !== 0) {
+    if (sel.length !== 0) {
       // if (sel.length !== 0) {
-      сэл[0].parentElement.parentElement.classList.add(
+      sel[0].parentElement.parentElement.classList.add(
         "tw5-parent-channel-leaderboard"
       );
       // sel[0].parentElement.parentElement.classList.add('tw5-parent-channel-leaderboard');
-      оНаблюдатель.disconnect();
+      oObserver.disconnect();
       // oObserver.disconnect();
     }
   });
-  оНаблюдатель.observe(document.body || document.documentElement, {
+  oObserver.observe(document.body || document.documentElement, {
     // oObserver.observe(document.body || document.documentElement, {
     childList: true,
     subtree: true,
   });
-  setTimeout(() => оНаблюдатель.disconnect(), 6e4);
+  setTimeout(() => oObserver.disconnect(), 6e4);
   // setTimeout(() => oObserver.disconnect(), 6e4);
 }
 
-function удалитьХвостыСтаройВерсии() {}
+function removeOldVersionTails() {}
 // function removeOldVersionTails() {}
 
-ДобавитьОбработчикИсключений(() => {
+AddExceptionHandler(() => {
   // AddExceptionHandler(() => {
-  м_Журнал.Окак(
+  m_Log.Окак(
     `[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`
   );
   // m_Log.Wow(`[content.js] Launched ${performance.now().toFixed()}ms ${location.href}`);
-  if (разобратьАдрес(location).сСтраница === "ЧАТ_КАНАЛА") {
+  if (parseAddress(location).sPage === "ЧАТ_КАНАЛА") {
     // if (parseAddress(location).sPage === 'CHANNEL_CHAT') {
-    вставитьНаСтраницу();
+    insertOnPage();
     // insertOnPage();
     if (window.top !== window) {
-      вставитьСторонниеРасширения();
+      insertThirdPartyExtensions();
       // insertThirdPartyExtensions();
-      изменитьСтильЧата();
+      changeChatStyle();
       // changeChatStyle();
-      изменитьПоведениеЧата();
+      changeChatBehavior();
       // changeChatBehavior();
     }
     return;
   }
-  удалитьХвостыСтаройВерсии();
+  removeOldVersionTails();
   // removeOldVersionTails();
-  const сСобытие = window.PointerEvent ? "pointerdown" : "mousedown";
+  const sEvent = window.PointerEvent ? "pointerdown" : "mousedown";
   // const sEvent = window.PointerEvent ? 'pointerdown' : 'mousedown';
-  window.addEventListener(сСобытие, обработатьPointerDownИClick, true);
+  window.addEventListener(sEvent, handlePointerDownAndClick, true);
   // window.addEventListener(sEvent, handlePointerDownAndClick, true);
-  window.addEventListener("click", обработатьPointerDownИClick, true);
+  window.addEventListener("click", handlePointerDownAndClick, true);
   // window.addEventListener('click', handlePointerDownAndClick, true);
-  window.addEventListener("popstate", обработатьPopState);
+  window.addEventListener("popstate", handlePopState);
   // window.addEventListener('popstate', handlePopState);
-  м_Настройки
-    .Восстановить()
+  m_Settings
+    .Restore()
     .then(() => {
       // m_Settings.Restore().then(() => {
-      измененАдресСтраницы("LOAD");
+      pageAddressChanged("LOAD");
       // pageAddressChanged('LOAD');
-      window.addEventListener("tw5-pushstate", обработатьPushState);
+      window.addEventListener("tw5-pushstate", handlePushState);
       // window.addEventListener('tw5-pushstate', handlePushState);
-      вставитьНаСтраницу();
+      insertOnPage();
       // insertOnPage();
-      вставитьНашуКнопкуВПервыйРаз();
+      insertOurButtonFirstTime();
       // insertOurButtonFirstTime();
     })
-    .catch(м_Отладка.ПойманоИсключение);
+    .catch(m_Debug.CaughtException);
   // }).catch(m_Debug.CaughtException);
 })();

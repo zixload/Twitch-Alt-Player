@@ -1,7 +1,7 @@
 'use strict';
 
 {
-	function вставитьНаСтраницу() {
+	function insertOnPage() {
 	// function insertIntoPage() {
 		const скрипт = document.createElement('script');
 		// const script = document.createElement('script');
@@ -14,6 +14,6 @@
 		скрипт.remove();
 		// script.remove();
 	}
-	вставитьНаСтраницу();
+	insertOnPage();
 	// insertIntoPage();
 }

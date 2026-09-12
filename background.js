@@ -3,7 +3,7 @@
 // Listener for `content.js` to get a list of other installed extensions.
 // This allows the player's chat iframe to load support for BetterTTV and FrankerFaceZ.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.сЗапрос === 'ВставитьСторонниеРасширения') {
+    if (message.sQuery === 'ВставитьСторонниеРасширения') {
     // if (message.sRequest === 'InsertThirdPartyExtensions') {
         // This must return true to indicate that sendResponse will be called asynchronously.
         chrome.management.getAll().then(extensions => {
@@ -43,7 +43,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Listener for `player.js` to check if the same channel is already open.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.сЗапрос === 'ЭтотКаналУжеОткрыт') {
+    if (message.sQuery === 'ЭтотКаналУжеОткрыт') {
     // if (message.sRequest === 'IsThisChannelAlreadyOpen') {
         // Query all tabs for one that matches the extension's player URL and channel.
         const playerUrl = `chrome-extension://${chrome.runtime.id}/player.html`;

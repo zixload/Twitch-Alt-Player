@@ -27,8 +27,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EXT = os.path.abspath(os.path.join(HERE, '..', '..'))
 LOCALAPPDATA = os.environ.get('LOCALAPPDATA', '')
 
-WHICH = sys.argv[1] if len(sys.argv) > 1 else 'chrome'
-CHANNEL = sys.argv[2] if len(sys.argv) > 2 else 'caedrel'
+VOIR = '--voir' in sys.argv
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
+WHICH = ARGS[0] if ARGS else 'chrome'
+CHANNEL = ARGS[1] if len(ARGS) > 1 else 'caedrel'
 
 BIN = {
     'chrome': r'C:\Program Files\Google\Chrome\Application\chrome.exe',
@@ -37,6 +39,12 @@ BIN = {
 PORT = {'chrome': 9493, 'vivaldi': 9494}[WHICH]
 PROFILE = os.path.join(HERE, 'fscheck-' + WHICH)
 OUT = os.path.join(HERE, 'fscheck-out.txt')
+
+# **Sur le deuxieme ecran, pas sur celui ou Luca travaille.**
+# Releve de la disposition reelle : DISPLAY1 principal en 0,0 (1920x1080) et DISPLAY2 en
+# 1920,0 (1680x1050). La fenetre se pose donc a 1960,40, soit 40 px a l'interieur du second.
+ECRAN2 = ['--window-position=1960,40', '--window-size=1600,950']
+
 
 PLAYER = u'\u043f\u0440\u043e\u0438\u0433\u0440\u044b\u0432\u0430\u0442\u0435\u043b\u044c\u0438\u0447\u0430\u0442'
 
@@ -137,7 +145,9 @@ async def main():
     proc = subprocess.Popen(
         [BIN, '--no-first-run', '--no-default-browser-check',
          '--user-data-dir=' + PROFILE,
-         '--headless=new',
+         # Sans affichage par defaut pour ne rien faire surgir pendant qu'il regarde ;
+         # passer --voir en argument pour suivre l'essai a l'ecran.
+         ] + (ECRAN2 if VOIR else ['--headless=new']) + [
          '--enable-unsafe-extension-debugging',
          '--remote-debugging-port=%d' % PORT,
          '--remote-allow-origins=*',

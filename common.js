@@ -1,98 +1,98 @@
 'use strict';
 
-const ЭТО_CONTENT_SCRIPT = !document.currentScript;
+const THIS_IS_CONTENT_SCRIPT = !document.currentScript;
 // const THIS_IS_CONTENT_SCRIPT = !document.currentScript;
 
-const АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ = 'twitch5=0';
+const DO_NOT_REDIRECT_ADDRESS = 'twitch5=0';
 // const DO_NOT_REDIRECT_ADDRESS = 'twitch5=0';
 
-const ЛЕВАЯ_КНОПКА = 0;
+const LEFT_BUTTON = 0;
 // const LEFT_BUTTON = 0;
 
-const СРЕДНЯЯ_КНОПКА = 1;
+const MIDDLE_BUTTON = 1;
 // const MIDDLE_BUTTON = 1;
 
-const ПРАВАЯ_КНОПКА = 2;
+const RIGHT_BUTTON = 2;
 // const RIGHT_BUTTON = 2;
 
-const НАЖАТА_ЛЕВАЯ_КНОПКА = 1;
+const LEFT_BUTTON_PRESSED = 1;
 // const LEFT_BUTTON_PRESSED = 1;
 
-const НАЖАТА_ПРАВАЯ_КНОПКА = 2;
+const RIGHT_BUTTON_PRESSED = 2;
 // const RIGHT_BUTTON_PRESSED = 2;
 
-const НАЖАТА_СРЕДНЯЯ_КНОПКА = 4;
+const MIDDLE_BUTTON_PRESSED = 4;
 // const MIDDLE_BUTTON_PRESSED = 4;
 
-const ПАССИВНЫЙ_ОБРАБОТЧИК = {
+const PASSIVE_HANDLER = {
 // const PASSIVE_HANDLER = {
 	passive: true
 };
 
-const МИН_ЗНАЧЕНИЕ_НАСТРОЙКИ = Number.MIN_SAFE_INTEGER + 1e3;
+const MIN_SETTING_VALUE = Number.MIN_SAFE_INTEGER + 1e3;
 // const MIN_SETTING_VALUE = Number.MIN_SAFE_INTEGER + 1e3;
 
-const МАКС_ЗНАЧЕНИЕ_НАСТРОЙКИ = Number.MAX_SAFE_INTEGER - 1e3;
+const MAX_SETTING_VALUE = Number.MAX_SAFE_INTEGER - 1e3;
 // const MAX_SETTING_VALUE = Number.MAX_SAFE_INTEGER - 1e3;
 
 const АВТОНАСТРОЙКА = Number.MIN_SAFE_INTEGER;
 // const AUTO_ADJUSTMENT = Number.MIN_SAFE_INTEGER;
 
-const МИНИМАЛЬНАЯ_ГРОМКОСТЬ = 1;
+const MIN_VOLUME = 1;
 // const MIN_VOLUME = 1;
 
-const МАКСИМАЛЬНАЯ_ГРОМКОСТЬ = 100;
+const MAX_VOLUME = 100;
 // const MAX_VOLUME = 100;
 
-const ШАГ_ПОВЫШЕНИЯ_ГРОМКОСТИ_КЛАВОЙ = 4;
+const VOLUME_INCREASE_STEP_BY_KEY = 4;
 // const VOLUME_INCREASE_STEP_BY_KEY = 4;
 
-const ШАГ_ПОНИЖЕНИЯ_ГРОМКОСТИ_КЛАВОЙ = 2;
+const VOLUME_DECREASE_STEP_BY_KEY = 2;
 // const VOLUME_DECREASE_STEP_BY_KEY = 2;
 
-const ЧАТ_ВЫГРУЖЕН = 0;
+const CHAT_UNLOADED = 0;
 // const CHAT_UNLOADED = 0;
 
-const ЧАТ_СКРЫТ = 1;
+const CHAT_HIDDEN = 1;
 // const CHAT_HIDDEN = 1;
 
-const ЧАТ_ПАНЕЛЬ = 2;
+const CHAT_PANEL = 2;
 // const CHAT_PANEL = 2;
 
-const ВЕРХНЯЯ_СТОРОНА = 1;
+const TOP_SIDE = 1;
 // const TOP_SIDE = 1;
 
-const ПРАВАЯ_СТОРОНА = 2;
+const RIGHT_SIDE = 2;
 // const RIGHT_SIDE = 2;
 
-const НИЖНЯЯ_СТОРОНА = 3;
+const BOTTOM_SIDE = 3;
 // const BOTTOM_SIDE = 3;
 
-const ЛЕВАЯ_СТОРОНА = 4;
+const LEFT_SIDE = 4;
 // const LEFT_SIDE = 4;
 
-const МИН_ДЛИТЕЛЬНОСТЬ_ПОВТОРА = 30;
+const MIN_REPEAT_DURATION = 30;
 // const MIN_REPEAT_DURATION = 30;
 
-const МАКС_ДЛИТЕЛЬНОСТЬ_ПОВТОРА = 300;
+const MAX_REPEAT_DURATION = 300;
 // const MAX_REPEAT_DURATION = 300;
 
-const МИН_РАЗМЕР_БУФЕРА = 1.5;
+const MIN_BUFFER_SIZE = 1.5;
 // const MIN_BUFFER_SIZE = 1.5;
 
-const МАКС_РАЗМЕР_БУФЕРА = 30;
+const MAX_BUFFER_SIZE = 30;
 // const MAX_BUFFER_SIZE = 30;
 
-const МИН_РАСТЯГИВАНИЕ_БУФЕРА = 9;
+const MIN_BUFFER_STRETCH = 9;
 // const MIN_BUFFER_STRETCH = 9;
 
-const МАКС_РАСТЯГИВАНИЕ_БУФЕРА = 30;
+const MAX_BUFFER_STRETCH = 30;
 // const MAX_BUFFER_STRETCH = 30;
 
-const ПЕРЕПОЛНЕНИЕ_БУФЕРА = МАКС_РАЗМЕР_БУФЕРА + МАКС_РАСТЯГИВАНИЕ_БУФЕРА;
+const BUFFER_OVERFLOW = MAX_BUFFER_SIZE + MAX_BUFFER_STRETCH;
 // const BUFFER_OVERFLOW = MAX_BUFFER_SIZE + MAX_BUFFER_STRETCH;
 
-let г_лРаботаЗавершена = false;
+let g_bWorkFinished = false;
 // let g_bWorkFinished = false;
 
 if (!NodeList.prototype[Symbol.iterator]) {
@@ -103,245 +103,245 @@ if (!HTMLCollection.prototype[Symbol.iterator]) {
 	HTMLCollection.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 }
 
-if (!ЭТО_CONTENT_SCRIPT && !window.PointerEvent) {
+if (!THIS_IS_CONTENT_SCRIPT && !window.PointerEvent) {
 // if (!THIS_IS_CONTENT_SCRIPT && !window.PointerEvent) {
-	const узСкрипт = document.createElement('script');
+	const nodeScript = document.createElement('script');
 	// const nodeScript = document.createElement('script');
-	узСкрипт.src = 'pointerevent.js';
+	nodeScript.src = 'pointerevent.js';
 	// nodeScript.src = 'pointerevent.js';
-	document.currentScript.parentNode.appendChild(узСкрипт);
+	document.currentScript.parentNode.appendChild(nodeScript);
 	// document.currentScript.parentNode.appendChild(nodeScript);
 }
 
-const ЗАГЛУШКА = () => {};
+const STUB = () => {};
 // const STUB = () => {};
 
-function Проверить(пУсловие) {
+function Check(pCondition) {
 // function Check(pCondition) {
-	if (!пУсловие) {
+	if (!pCondition) {
 	// if (!pCondition) {
 		throw new Error('Проверка не пройдена');
 		// throw new Error('Check failed');
 	}
 }
 
-function ДобавитьОбработчикИсключений(фФункция) {
+function AddExceptionHandler(fFunction) {
 // function AddExceptionHandler(fFunction) {
 	return function() {
-		if (г_лРаботаЗавершена) {
+		if (g_bWorkFinished) {
 		// if (g_bWorkFinished) {
 			return;
 		}
 		try {
-			return фФункция.apply(this, arguments);
+			return fFunction.apply(this, arguments);
 			// return fFunction.apply(this, arguments);
-		} catch (пИсключение) {
+		} catch (pException) {
 		// } catch (pException) {
-			м_Отладка.ПойманоИсключение(пИсключение);
+			m_Debug.CaughtException(pException);
 			// m_Debug.CaughtException(pException);
 		}
 	};
 }
 
-function ПеревестиИсключениеВСтроку(пИсключение) {
+function ExceptionToString(pException) {
 // function ExceptionToString(pException) {
-	return пИсключение instanceof Error ? пИсключение.stack : `[typeof ${typeof пИсключение}] ${new Error(пИсключение).stack}`;
+	return pException instanceof Error ? pException.stack : `[typeof ${typeof pException}] ${new Error(pException).stack}`;
 	// return pException instanceof Error ? pException.stack : `[typeof ${typeof pException}] ${new Error(pException).stack}`;
 }
 
-function Тип(пЗначение) {
+function Type(pValue) {
 // function Type(pValue) {
-	return пЗначение === null ? 'null' : typeof пЗначение;
+	return pValue === null ? 'null' : typeof pValue;
 	// return pValue === null ? 'null' : typeof pValue;
 }
 
-function ЭтоЧисло(пЗначение) {
+function IsNumber(pValue) {
 // function IsNumber(pValue) {
-	return typeof пЗначение == 'number' && пЗначение == пЗначение;
+	return typeof pValue == 'number' && pValue == pValue;
 	// return typeof pValue == 'number' && pValue == pValue;
 }
 
-function ЭтоОбъект(пЗначение) {
+function IsObject(pValue) {
 // function IsObject(pValue) {
-	return typeof пЗначение == 'object' && пЗначение !== null;
+	return typeof pValue == 'object' && pValue !== null;
 	// return typeof pValue == 'object' && pValue !== null;
 }
 
-function ЭтоНепустаяСтрока(пЗначение) {
+function IsNonEmptyString(pValue) {
 // function IsNonEmptyString(pValue) {
-	return typeof пЗначение == 'string' && пЗначение !== '';
+	return typeof pValue == 'string' && pValue !== '';
 	// return typeof pValue == 'string' && pValue !== '';
 }
 
-function ОграничитьДлинуСтроки(сСтрока, чМаксимальнаяДлина) {
+function LimitStringLength(sString, nMaxLength) {
 // function LimitStringLength(sString, nMaxLength) {
-	return сСтрока.length <= чМаксимальнаяДлина ? сСтрока : `${сСтрока.slice(0, чМаксимальнаяДлина)}---8<---${сСтрока.length - чМаксимальнаяДлина}`;
+	return sString.length <= nMaxLength ? sString : `${sString.slice(0, nMaxLength)}---8<---${sString.length - nMaxLength}`;
 	// return sString.length <= nMaxLength ? sString : `${sString.slice(0, nMaxLength)}---8<---${sString.length - nMaxLength}`;
 }
 
-function получитьВерсиюДвижкаБраузера() {
+function getBrowserEngineVersion() {
 // function getBrowserEngineVersion() {
-	if (!получитьВерсиюДвижкаБраузера._чРезультат) {
+	if (!getBrowserEngineVersion._чРезультат) {
 	// if (!getBrowserEngineVersion._nResult) {
 		if (navigator.userAgentData) {
 			for (const {brand, version} of navigator.userAgentData.brands) {
 				if (brand === 'Chromium' || brand === 'Google Chrome') {
-					получитьВерсиюДвижкаБраузера._чРезультат = Number.parseInt(version, 10);
+					getBrowserEngineVersion._чРезультат = Number.parseInt(version, 10);
 					// getBrowserEngineVersion._nResult = Number.parseInt(version, 10);
 					break;
 				}
 			}
 		}
-		if (!получитьВерсиюДвижкаБраузера._чРезультат) {
+		if (!getBrowserEngineVersion._чРезультат) {
 		// if (!getBrowserEngineVersion._nResult) {
-			получитьВерсиюДвижкаБраузера._чРезультат = Number(/Chrome\/(\d+)/.exec(navigator.userAgent)[1]);
+			getBrowserEngineVersion._чРезультат = Number(/Chrome\/(\d+)/.exec(navigator.userAgent)[1]);
 			// getBrowserEngineVersion._nResult = Number(/Chrome\/(\d+)/.exec(navigator.userAgent)[1]);
 		}
 	}
-	return получитьВерсиюДвижкаБраузера._чРезультат;
+	return getBrowserEngineVersion._чРезультат;
 	// return getBrowserEngineVersion._nResult;
 }
 
-function этоМобильноеУстройство() {
+function isMobileDevice() {
 // function isMobileDevice() {
-	if (!этоМобильноеУстройство.hasOwnProperty('_лРезультат')) {
+	if (!isMobileDevice.hasOwnProperty('_лРезультат')) {
 	// if (!isMobileDevice.hasOwnProperty('_bResult')) {
-		этоМобильноеУстройство._лРезультат = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
+		isMobileDevice._лРезультат = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
 		// isMobileDevice._bResult = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
 	}
-	return этоМобильноеУстройство._лРезультат;
+	return isMobileDevice._лРезультат;
 	// return isMobileDevice._bResult;
 }
 
-function Узел(пЭлемент) {
+function GetNode(pElement) {
 // function Node(pElement) {
-	const элЭлемент = typeof пЭлемент == 'string' ? document.getElementById(пЭлемент) : пЭлемент;
+	const elElement = typeof pElement == 'string' ? document.getElementById(pElement) : pElement;
 	// const elElement = typeof pElement == 'string' ? document.getElementById(pElement) : pElement;
-	Проверить(элЭлемент.nodeType === 1);
+	Check(elElement.nodeType === 1);
 	// Check(elElement.nodeType === 1);
-	return элЭлемент;
+	return elElement;
 	// return elElement;
 }
 
-function создатьТелоЗапросаGql(сЗапрос, оПеременные) {
+function createGqlRequestBody(sQuery, oVariables) {
 // function createGqlRequestBody(sQuery, oVariables) {
-	Проверить(ЭтоНепустаяСтрока(сЗапрос) && ЭтоОбъект(оПеременные));
+	Check(IsNonEmptyString(sQuery) && IsObject(oVariables));
 	// Check(IsNonEmptyString(sQuery) && IsObject(oVariables));
-	return `{"query":${JSON.stringify(сЗапрос)},"variables":${JSON.stringify(оПеременные)}}`;
+	return `{"query":${JSON.stringify(sQuery)},"variables":${JSON.stringify(oVariables)}}`;
 	// return `{"query":${JSON.stringify(sQuery)},"variables":${JSON.stringify(oVariables)}}`;
 }
 
-function объединитьЗапросыGql(мсТелаЗапросов) {
+function combineGqlRequests(msRequestBodies) {
 // function combineGqlRequests(msRequestBodies) {
-	Проверить(мсТелаЗапросов[0][0] === '{');
+	Check(msRequestBodies[0][0] === '{');
 	// Check(msRequestBodies[0][0] === '{');
-	return `[${мсТелаЗапросов.join(',')}]`;
+	return `[${msRequestBodies.join(',')}]`;
 	// return `[${msRequestBodies.join(',')}]`;
 }
 
-function ПолучитьАдресНашегоПроигрывателя(сКодКанала) {
+function GetOurPlayerAddress(sChannelCode) {
 // function GetOurPlayerAddress(sChannelCode) {
-	const сПараметры = '?channel=' + encodeURIComponent(сКодКанала);
+	const sParameters = '?channel=' + encodeURIComponent(sChannelCode);
 	// const sParameters = '?channel=' + encodeURIComponent(sChannelCode);
-	return chrome.runtime.getURL('player.html') + сПараметры;
+	return chrome.runtime.getURL('player.html') + sParameters;
 	// return chrome.runtime.getURL('player.html') + sParameters;
 }
 
-const м_Журнал = (() => {
+const m_Log = (() => {
 // const m_Log = (() => {
-	const МАКС_ДЛИНА_ЗАПИСИ = 1500;
+	const MAX_RECORD_LENGTH = 1500;
 	// const MAX_RECORD_LENGTH = 1500;
-	let _мсЖурнал = null;
+	let _msLog = null;
 	// let _msLog = null;
-	let _чПоследняяЗапись = -1;
+	let _nLastRecord = -1;
 	// let _nLastRecord = -1;
-	function Добавить(сВажность, сЗапись) {
+	function Add(sImportance, sRecord) {
 	// function Add(sImportance, sRecord) {
-		if (_мсЖурнал) {
+		if (_msLog) {
 		// if (_msLog) {
-			Проверить(typeof сВажность == 'string' && typeof сЗапись == 'string');
+			Check(typeof sImportance == 'string' && typeof sRecord == 'string');
 			// Check(typeof sImportance == 'string' && typeof sRecord == 'string');
-			сЗапись = ОграничитьДлинуСтроки(`${сВажность} ${(performance.now() / 1e3).toFixed(3)} ${сЗапись}`, МАКС_ДЛИНА_ЗАПИСИ);
+			sRecord = LimitStringLength(`${sImportance} ${(performance.now() / 1e3).toFixed(3)} ${sRecord}`, MAX_RECORD_LENGTH);
 			// sRecord = LimitStringLength(`${sImportance} ${(performance.now() / 1e3).toFixed(3)} ${sRecord}`, MAX_RECORD_LENGTH);
-			if (++_чПоследняяЗапись === _мсЖурнал.length) {
+			if (++_nLastRecord === _msLog.length) {
 			// if (++_nLastRecord === _msLog.length) {
-				_чПоследняяЗапись = 0;
+				_nLastRecord = 0;
 				// _nLastRecord = 0;
 			}
-			_мсЖурнал[_чПоследняяЗапись] = сЗапись;
+			_msLog[_nLastRecord] = sRecord;
 			// _msLog[_nLastRecord] = sRecord;
 		}
 	}
-	function ПолучитьДанныеДляОтчета() {
+	function GetDataForReport() {
 	// function GetDataForReport() {
-		if (!_мсЖурнал) {
+		if (!_msLog) {
 		// if (!_msLog) {
 			return null;
 		}
-		const чСледующаяЗапись = _чПоследняяЗапись + 1;
+		const nNextRecord = _nLastRecord + 1;
 		// const nNextRecord = _nLastRecord + 1;
-		if (чСледующаяЗапись === _мсЖурнал.length) {
+		if (nNextRecord === _msLog.length) {
 		// if (nNextRecord === _msLog.length) {
-			return _мсЖурнал;
+			return _msLog;
 			// return _msLog;
 		}
-		if (_мсЖурнал[чСледующаяЗапись] === void 0) {
+		if (_msLog[nNextRecord] === void 0) {
 		// if (_msLog[nNextRecord] === void 0) {
-			return _мсЖурнал.slice(0, чСледующаяЗапись);
+			return _msLog.slice(0, nNextRecord);
 			// return _msLog.slice(0, nNextRecord);
 		}
-		return _мсЖурнал.slice(чСледующаяЗапись).concat(_мсЖурнал.slice(0, чСледующаяЗапись));
+		return _msLog.slice(nNextRecord).concat(_msLog.slice(0, nNextRecord));
 		// return _msLog.slice(nNextRecord).concat(_msLog.slice(0, nNextRecord));
 	}
-	function Вот(сЗапись) {
+	function Вот(sRecord) {
 	// function Here(sRecord) {
-		Проверить(arguments.length === 1);
+		Check(arguments.length === 1);
 		// Check(arguments.length === 1);
-		Добавить(' ', сЗапись);
+		Add(' ', sRecord);
 		// Add(' ', sRecord);
 	}
-	function Окак(сЗапись) {
+	function Окак(sRecord) {
 	// function Wow(sRecord) {
-		Проверить(arguments.length === 1);
+		Check(arguments.length === 1);
 		// Check(arguments.length === 1);
-		Добавить('~', сЗапись);
+		Add('~', sRecord);
 		// Add('~', sRecord);
 	}
-	function Ой(сЗапись) {
+	function Ой(sRecord) {
 	// function Oops(sRecord) {
-		Проверить(arguments.length === 1);
+		Check(arguments.length === 1);
 		// Check(arguments.length === 1);
-		Добавить('@', сЗапись);
+		Add('@', sRecord);
 		// Add('@', sRecord);
 	}
-	function O(пОбъект) {
+	function O(pObject) {
 	// function O(pObject) {
-		switch (Тип(пОбъект)) {
+		switch (Type(pObject)) {
 		// switch (Type(pObject)) {
 		  case 'object':
-			return JSON.stringify(пОбъект);
+			return JSON.stringify(pObject);
 			// return JSON.stringify(pObject);
 
 		  case 'function':
-			return `[function ${пОбъект.name}]`;
+			return `[function ${pObject.name}]`;
 			// return `[function ${pObject.name}]`;
 
 		  case 'symbol':
 			return '[symbol]';
 
 		  default:
-			return String(пОбъект);
+			return String(pObject);
 			// return String(pObject);
 		}
 	}
-	function F(чТочность) {
+	function F(nPrecision) {
 	// function F(nPrecision) {
-		return чЗначение => typeof чЗначение == 'number' ? чЗначение.toFixed(чТочность) : 'NaN';
+		return nValue => typeof nValue == 'number' ? nValue.toFixed(nPrecision) : 'NaN';
 		// return nValue => typeof nValue == 'number' ? nValue.toFixed(nPrecision) : 'NaN';
 	}
-	if (!ЭТО_CONTENT_SCRIPT) {
+	if (!THIS_IS_CONTENT_SCRIPT) {
 	// if (!THIS_IS_CONTENT_SCRIPT) {
-		_мсЖурнал = new Array(1500);
+		_msLog = new Array(1500);
 		// _msLog = new Array(1500);
 		Вот(`[Журнал] Журнал запущен ${performance.now().toFixed()}мс`);
 		// Here(`[Log] Log started ${performance.now().toFixed()}ms`);
@@ -358,14 +358,14 @@ const м_Журнал = (() => {
 		F1: F(1),
 		F2: F(2),
 		F3: F(3),
-		ПолучитьДанныеДляОтчета
+		GetDataForReport
 		// GetDataForReport
 	};
 })();
 
-const м_i18n = (() => {
+const m_i18n = (() => {
 // const m_i18n = (() => {
-	const НАЗВАНИЯ_ЯЗЫКОВ = {
+	const LANGUAGE_NAMES = {
 	// const LANGUAGE_NAMES = {
 		AR: 'العربية',
 		ASE: 'American Sign Language',
@@ -408,14 +408,14 @@ const м_i18n = (() => {
 		ZH_CN: '简体中文',
 		ZH_TW: '繁體中文'
 	};
-	const _амФорматироватьЧисло = new Map();
+	const _amFormatNumber = new Map();
 	// const _amFormatNumber = new Map();
-	let _фФорматироватьДату = null;
+	let _fFormatDate = null;
 	// let _fFormatDate = null;
 	function GetMessage(sMessageName, sSubstitution) {
-		Проверить(ЭтоНепустаяСтрока(sMessageName));
+		Check(IsNonEmptyString(sMessageName));
 		// Check(IsNonEmptyString(sMessageName));
-		Проверить(sSubstitution === void 0 || typeof sSubstitution == 'string');
+		Check(sSubstitution === void 0 || typeof sSubstitution == 'string');
 		// Check(sSubstitution === void 0 || typeof sSubstitution == 'string');
 		const sMessageText = chrome.i18n.getMessage(sMessageName, sSubstitution);
 		if (!sMessageText) {
@@ -430,7 +430,7 @@ const м_i18n = (() => {
 		elInsertTo.insertAdjacentHTML(sPosition, GetMessage(sMessageName));
 	}
 	function InsertAdjacentHtmlMessage(vInsertTo, sPosition, sMessageName) {
-		const elInsertTo = Узел(vInsertTo);
+		const elInsertTo = GetNode(vInsertTo);
 		// const elInsertTo = Node(vInsertTo);
 		if (sPosition === 'content') {
 			sPosition = 'beforeend';
@@ -439,11 +439,11 @@ const м_i18n = (() => {
 		FastInsertAdjacentHtmlMessage(elInsertTo, sPosition, sMessageName);
 		return elInsertTo;
 	}
-	function TranslateDocument(оДокумент) {
+	function TranslateDocument(oDocument) {
 	// function TranslateDocument(oDocument) {
-		м_Журнал.Вот('[i18n] Перевод документа');
+		m_Log.Вот('[i18n] Перевод документа');
 		// m_Log.Here('[i18n] Translating document');
-		for (let elTranslate, celTranslate = оДокумент.querySelectorAll('*[data-i18n]'), i = 0; elTranslate = celTranslate[i]; ++i) {
+		for (let elTranslate, celTranslate = oDocument.querySelectorAll('*[data-i18n]'), i = 0; elTranslate = celTranslate[i]; ++i) {
 		// for (let elTranslate, celTranslate = oDocument.querySelectorAll('*[data-i18n]'), i = 0; elTranslate = celTranslate[i]; ++i) {
 			const sNames = elTranslate.getAttribute('data-i18n');
 			const sNamesDelimiter = sNames.indexOf('^');
@@ -455,89 +455,89 @@ const м_i18n = (() => {
 			}
 		}
 	}
-	function ФорматироватьЧисло(пЧисло, кДробныхРазрядов) {
+	function FormatNumber(pNumber, nDecimalPlaces) {
 	// function FormatNumber(pNumber, nDecimalPlaces) {
-		Проверить(кДробныхРазрядов === void 0 || typeof кДробныхРазрядов == 'number' && кДробныхРазрядов >= 0);
+		Check(nDecimalPlaces === void 0 || typeof nDecimalPlaces == 'number' && nDecimalPlaces >= 0);
 		// Check(nDecimalPlaces === void 0 || typeof nDecimalPlaces == 'number' && nDecimalPlaces >= 0);
-		let фФорматировать = _амФорматироватьЧисло.get(кДробныхРазрядов);
+		let fFormat = _amFormatNumber.get(nDecimalPlaces);
 		// let fFormat = _amFormatNumber.get(nDecimalPlaces);
-		if (!фФорматировать) {
+		if (!fFormat) {
 		// if (!fFormat) {
-			фФорматировать = new Intl.NumberFormat([], кДробныхРазрядов === void 0 ? void 0 : {
+			fFormat = new Intl.NumberFormat([], nDecimalPlaces === void 0 ? void 0 : {
 			// fFormat = new Intl.NumberFormat([], nDecimalPlaces === void 0 ? void 0 : {
-				minimumFractionDigits: кДробныхРазрядов,
+				minimumFractionDigits: nDecimalPlaces,
 				// minimumFractionDigits: nDecimalPlaces,
-				maximumFractionDigits: кДробныхРазрядов
+				maximumFractionDigits: nDecimalPlaces
 				// maximumFractionDigits: nDecimalPlaces
 			}).format;
-			_амФорматироватьЧисло.set(кДробныхРазрядов, фФорматировать);
+			_amFormatNumber.set(nDecimalPlaces, fFormat);
 			// _amFormatNumber.set(nDecimalPlaces, fFormat);
 		}
-		return фФорматировать(пЧисло);
+		return fFormat(pNumber);
 		// return fFormat(pNumber);
 	}
-	function ФорматироватьДату(пДата) {
+	function FormatDate(pDate) {
 	// function FormatDate(pDate) {
-		Проверить(Number.isFinite(пДата) || Number.isFinite(пДата.getTime()));
+		Check(Number.isFinite(pDate) || Number.isFinite(pDate.getTime()));
 		// Check(Number.isFinite(pDate) || Number.isFinite(pDate.getTime()));
-		if (!_фФорматироватьДату) {
+		if (!_fFormatDate) {
 		// if (!_fFormatDate) {
-			_фФорматироватьДату = new Intl.DateTimeFormat([], {
+			_fFormatDate = new Intl.DateTimeFormat([], {
 			// _fFormatDate = new Intl.DateTimeFormat([], {
 				timeZone: 'UTC'
 			}).format;
 		}
-		return _фФорматироватьДату(пДата);
+		return _fFormatDate(pDate);
 		// return _fFormatDate(pDate);
 	}
-	function ПеревестиСекундыВСтроку(кСекунды, лНужныСекунды) {
+	function SecondsToString(nSeconds, bNeedSeconds) {
 	// function SecondsToString(nSeconds, bNeedSeconds) {
-		let ч = Math.floor(кСекунды / 60 % 60);
+		let h = Math.floor(nSeconds / 60 % 60);
 		// let h = Math.floor(nSeconds / 60 % 60);
-		let с = Math.floor(кСекунды / 60 / 60) + (ч < 10 ? ' : 0' : ' : ') + ч;
+		let с = Math.floor(nSeconds / 60 / 60) + (h < 10 ? ' : 0' : ' : ') + h;
 		// let s = Math.floor(nSeconds / 60 / 60) + (h < 10 ? ' : 0' : ' : ') + h;
-		if (лНужныСекунды) {
+		if (bNeedSeconds) {
 		// if (bNeedSeconds) {
-			ч = Math.floor(кСекунды % 60);
+			h = Math.floor(nSeconds % 60);
 			// h = Math.floor(nSeconds % 60);
-			с += (ч < 10 ? ' : 0' : ' : ') + ч;
+			с += (h < 10 ? ' : 0' : ' : ') + h;
 			// s += (h < 10 ? ' : 0' : ' : ') + h;
 		}
 		return с;
 		// return s;
 	}
-	function ПолучитьНазваниеЯзыка(сКодЯзыка) {
+	function GetLanguageName(sLanguageCode) {
 	// function GetLanguageName(sLanguageCode) {
-		const сНазваниеЯзыка = НАЗВАНИЯ_ЯЗЫКОВ[сКодЯзыка.toUpperCase()];
+		const sLanguageName = LANGUAGE_NAMES[sLanguageCode.toUpperCase()];
 		// const sLanguageName = LANGUAGE_NAMES[sLanguageCode.toUpperCase()];
-		if (!сНазваниеЯзыка) {
+		if (!sLanguageName) {
 		// if (!sLanguageName) {
-			throw new Error(`Неизвестный код языка: ${сКодЯзыка}`);
+			throw new Error(`Неизвестный код языка: ${sLanguageCode}`);
 			// throw new Error(`Unknown language code: ${sLanguageCode}`);
 		}
-		return сНазваниеЯзыка;
+		return sLanguageName;
 		// return sLanguageName;
 	}
 	return {
 		GetMessage,
 		InsertAdjacentHtmlMessage,
 		TranslateDocument,
-		ФорматироватьЧисло,
+		FormatNumber,
 		// FormatNumber,
-		ФорматироватьДату,
+		FormatDate,
 		// FormatDate,
-		ПеревестиСекундыВСтроку,
+		SecondsToString,
 		// SecondsToString,
-		ПолучитьНазваниеЯзыка
+		GetLanguageName
 		// GetLanguageName
 	};
 })();
 
-const м_Настройки = (() => {
+const m_Settings = (() => {
 // const m_Settings = (() => {
-	const ВЕРСИЯ_НАСТРОЕК = 2;
+	const SETTINGS_VERSION = 2;
 	// const SETTINGS_VERSION = 2;
-	const _амПредустановкиБуферизации = new Map([ [ 'J0126', {
+	const _amBufferingPresets = new Map([ [ 'J0126', {
 	// const _amBufferingPresets = new Map([ [ 'J0126', {
 		кОдновременныхЗагрузок: 1,
 		// nConcurrentDownloads: 1,
@@ -566,7 +566,7 @@ const м_Настройки = (() => {
 		чРастягиваниеБуфера: 30
 		// nBufferStretch: 30
 	} ] ]);
-	const _амПредустановкиОформления = new Map([ [ 'J0122', {
+	const _amAppearancePresets = new Map([ [ 'J0122', {
 	// const _amAppearancePresets = new Map([ [ 'J0122', {
 		сЦветФона: '#282828',
 		// sBackgroundColor: '#282828',
@@ -620,691 +620,691 @@ const м_Настройки = (() => {
 		чПрозрачность: 20
 		// nOpacity: 20
 	} ] ]);
-	const _моМетаданныеПредустановок = [ {
+	const _moPresetMetadata = [ {
 	// const _moPresetMetadata = [ {
-		амДанные: _амПредустановкиБуферизации,
+		amData: _amBufferingPresets,
 		// amData: _amBufferingPresets,
-		сНастраиваемая: 'J0129',
+		sCustomizable: 'J0129',
 		// sCustomizable: 'J0129',
-		сВыбрана: 'сПредустановкаВыбрана_буферизация',
+		sSelected: 'сПредустановкаВыбрана_буферизация',
 		// sSelected: 'sPresetSelected_buffering',
-		сЗаполнена: 'лПредустановкаЗаполнена_буферизация',
+		sFilled: 'лПредустановкаЗаполнена_буферизация',
 		// sFilled: 'bPresetFilled_buffering',
-		сСписок: 'предустановка-буферизация',
+		sList: 'предустановка-буферизация',
 		// sList: 'preset-buffering',
-		сСобытие: 'настройки-измениласьпредустановка-буферизация'
+		sEvent: 'настройки-измениласьпредустановка-буферизация'
 		// sEvent: 'settings-presetChanged-buffering'
 	}, {
-		амДанные: _амПредустановкиОформления,
+		amData: _amAppearancePresets,
 		// amData: _amAppearancePresets,
-		сНастраиваемая: 'J0123',
+		sCustomizable: 'J0123',
 		// sCustomizable: 'J0123',
-		сВыбрана: 'сПредустановкаВыбрана_оформление',
+		sSelected: 'сПредустановкаВыбрана_оформление',
 		// sSelected: 'sPresetSelected_appearance',
-		сЗаполнена: 'лПредустановкаЗаполнена_оформление',
+		sFilled: 'лПредустановкаЗаполнена_оформление',
 		// sFilled: 'bPresetFilled_appearance',
-		сСписок: 'предустановка-оформление',
+		sList: 'предустановка-оформление',
 		// sList: 'preset-appearance',
-		сСобытие: 'настройки-измениласьпредустановка-оформление'
+		sEvent: 'настройки-измениласьпредустановка-оформление'
 		// sEvent: 'settings-presetChanged-appearance'
 	} ];
-	const _мноПостоянныеНастройки = new Set([ 'чВерсияНастроек', 'чСлучайноеЧисло', 'сПредыдущаяВерсия', 'чПоследняяПроверкаОбновленияРасширения', 'лАвтоперенаправлениеЗамечено' ]);
+	const _mnoPermanentSettings = new Set([ 'чВерсияНастроек', 'чСлучайноеЧисло', 'сПредыдущаяВерсия', 'чПоследняяПроверкаОбновленияРасширения', 'лАвтоперенаправлениеЗамечено' ]);
 	// const _mnoPermanentSettings = new Set([ 'nSettingsVersion', 'nRandomNumber', 'sPreviousVersion', 'nLastExtensionUpdateCheck', 'bAutoredirectNoticed' ]);
-	const _мноНеСветить = new Set();
+	const _mnoDoNotShow = new Set();
 	// const _mnoDoNotShow = new Set();
-	class Настройка {
+	class Setting {
 	// class Setting {
-		constructor(пНачальное, мпПеречисление, чМинимальное, чМаксимальное, сАвтонастройка) {
+		constructor(pInitial, mpEnumeration, nMinimum, nMaximum, sAutoTune) {
 		// constructor(pInitial, mpEnumeration, nMinimum, nMaximum, sAutoTune) {
-			this.пТекущее = void 0;
+			this.pCurrent = void 0;
 			// this.pCurrent = void 0;
-			this.пНачальное = пНачальное;
+			this.pInitial = pInitial;
 			// this.pInitial = pInitial;
-			this.мпПеречисление = мпПеречисление;
+			this.mpEnumeration = mpEnumeration;
 			// this.mpEnumeration = mpEnumeration;
-			this.чМинимальное = чМинимальное;
+			this.nMinimum = nMinimum;
 			// this.nMinimum = nMinimum;
-			this.чМаксимальное = чМаксимальное;
+			this.nMaximum = nMaximum;
 			// this.nMaximum = nMaximum;
-			this.сАвтонастройка = сАвтонастройка;
+			this.sAutoTune = sAutoTune;
 			// this.sAutoTune = sAutoTune;
 		}
-		static Создать(пНачальное) {
+		static Create(pInitial) {
 		// static Create(pInitial) {
-			return new this(пНачальное, null, МИН_ЗНАЧЕНИЕ_НАСТРОЙКИ, МАКС_ЗНАЧЕНИЕ_НАСТРОЙКИ, '');
+			return new this(pInitial, null, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
 			// return new this(pInitial, null, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
 		}
-		static СоздатьПеречисление(пНачальное, мпПеречисление) {
+		static CreateEnum(pInitial, mpEnumeration) {
 		// static CreateEnumeration(pInitial, mpEnumeration) {
-			return new this(пНачальное, мпПеречисление, МИН_ЗНАЧЕНИЕ_НАСТРОЙКИ, МАКС_ЗНАЧЕНИЕ_НАСТРОЙКИ, '');
+			return new this(pInitial, mpEnumeration, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
 			// return new this(pInitial, mpEnumeration, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
 		}
-		static СоздатьДиапазон(пНачальное, чМинимальное, чМаксимальное, сАвтонастройка = '') {
+		static CreateRange(pInitial, nMinimum, nMaximum, sAutoTune = '') {
 		// static CreateRange(pInitial, nMinimum, nMaximum, sAutoTune = '') {
-			return new this(пНачальное, null, чМинимальное, чМаксимальное, сАвтонастройка);
+			return new this(pInitial, null, nMinimum, nMaximum, sAutoTune);
 			// return new this(pInitial, null, nMinimum, nMaximum, sAutoTune);
 		}
-		static ПроверитьЗначение(пЗначение) {
+		static CheckValue(pValue) {
 		// static CheckValue(pValue) {
-			Проверить(пЗначение == пЗначение && пЗначение !== Infinity && пЗначение !== -Infinity && пЗначение !== void 0 && typeof пЗначение != 'function' && typeof пЗначение != 'symbol' && typeof пЗначение != 'object');
+			Check(pValue == pValue && pValue !== Infinity && pValue !== -Infinity && pValue !== void 0 && typeof pValue != 'function' && typeof pValue != 'symbol' && typeof pValue != 'object');
 			// Check(pValue == pValue && pValue !== Infinity && pValue !== -Infinity && pValue !== void 0 && typeof pValue != 'function' && typeof pValue != 'symbol' && typeof pValue != 'object');
 		}
-		ИсправитьЗначение(пЗначение) {
+		CorrectValue(pValue) {
 		// CorrectValue(pValue) {
-			Настройка.ПроверитьЗначение(пЗначение);
+			Setting.CheckValue(pValue);
 			// Setting.CheckValue(pValue);
-			Проверить(typeof пЗначение == typeof this.пНачальное);
+			Check(typeof pValue == typeof this.pInitial);
 			// Check(typeof pValue == typeof this.pInitial);
-			if (this.мпПеречисление) {
+			if (this.mpEnumeration) {
 			// if (this.mpEnumeration) {
-				if (!this.мпПеречисление.includes(пЗначение)) {
+				if (!this.mpEnumeration.includes(pValue)) {
 				// if (!this.mpEnumeration.includes(pValue)) {
-					пЗначение = this.пНачальное;
+					pValue = this.pInitial;
 					// pValue = this.pInitial;
 				}
-			} else if (typeof пЗначение == 'number') {
+			} else if (typeof pValue == 'number') {
 			// } else if (typeof pValue == 'number') {
-				if (пЗначение === АВТОНАСТРОЙКА) {
+				if (pValue === АВТОНАСТРОЙКА) {
 				// if (pValue === AUTO_TUNE) {
-					if (this.сАвтонастройка === '') {
+					if (this.sAutoTune === '') {
 					// if (this.sAutoTune === '') {
-						пЗначение = this.пНачальное;
+						pValue = this.pInitial;
 						// pValue = this.pInitial;
 					}
-				} else if (пЗначение < this.чМинимальное) {
+				} else if (pValue < this.nMinimum) {
 				// } else if (pValue < this.nMinimum) {
-					пЗначение = this.чМинимальное;
+					pValue = this.nMinimum;
 					// pValue = this.nMinimum;
-				} else if (пЗначение > this.чМаксимальное) {
+				} else if (pValue > this.nMaximum) {
 				// } else if (pValue > this.nMaximum) {
-					пЗначение = this.чМаксимальное;
+					pValue = this.nMaximum;
 					// pValue = this.nMaximum;
 				}
 			}
-			return пЗначение;
+			return pValue;
 			// return pValue;
 		}
 	}
-	const _оНастройки = {
+	const _oSettings = {
 	// const _oSettings = {
-		чВерсияНастроек: Настройка.Создать(ВЕРСИЯ_НАСТРОЕК),
+		чВерсияНастроек: Setting.Create(SETTINGS_VERSION),
 		// nSettingsVersion: Setting.Create(SETTINGS_VERSION),
-		чСлучайноеЧисло: Настройка.Создать(Math.random()),
+		чСлучайноеЧисло: Setting.Create(Math.random()),
 		// nRandomNumber: Setting.Create(Math.random()),
-		сПредыдущаяВерсия: Настройка.Создать('2000.1.1'),
+		сПредыдущаяВерсия: Setting.Create('2000.1.1'),
 		// sPreviousVersion: Setting.Create('2000.1.1'),
-		чПоследняяПроверкаОбновленияРасширения: Настройка.Создать(0),
+		чПоследняяПроверкаОбновленияРасширения: Setting.Create(0),
 		// nLastExtensionUpdateCheck: Setting.Create(0),
-		чГромкость2: Настройка.СоздатьДиапазон(МАКСИМАЛЬНАЯ_ГРОМКОСТЬ / 2, МИНИМАЛЬНАЯ_ГРОМКОСТЬ, МАКСИМАЛЬНАЯ_ГРОМКОСТЬ),
+		чГромкость2: Setting.CreateRange(MAX_VOLUME / 2, MIN_VOLUME, MAX_VOLUME),
 		// nVolume2: Setting.CreateRange(MAX_VOLUME / 2, MIN_VOLUME, MAX_VOLUME),
-		лПриглушить: Настройка.Создать(false),
+		лПриглушить: Setting.Create(false),
 		// bMute: Setting.Create(false),
-		сИдАудиоустройства: Настройка.Создать(''),
+		сИдАудиоустройства: Setting.Create(''),
 		// sAudioDeviceId: Setting.Create(''),
-		сНазваниеВарианта: Настройка.Создать('CoolCmd'),
+		сНазваниеВарианта: Setting.Create('CoolCmd'),
 		// sVariantName: Setting.Create('CoolCmd'),
-		чБитрейтВарианта: Настройка.Создать(МАКС_ЗНАЧЕНИЕ_НАСТРОЙКИ),
+		чБитрейтВарианта: Setting.Create(MAX_SETTING_VALUE),
 		// nVariantBitrate: Setting.Create(MAX_SETTING_VALUE),
-		чДлительностьПовтора2: Настройка.СоздатьДиапазон(60, МИН_ДЛИТЕЛЬНОСТЬ_ПОВТОРА, МАКС_ДЛИТЕЛЬНОСТЬ_ПОВТОРА, 'J0124'),
+		чДлительностьПовтора2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
 		// nRepeatDuration2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
-		лМасштабироватьИзображение: Настройка.Создать(true),
+		лМасштабироватьИзображение: Setting.Create(true),
 		// bScaleImage: Setting.Create(true),
-		чСостояниеЧата: Настройка.СоздатьПеречисление(ЧАТ_ВЫГРУЖЕН, [ ЧАТ_ВЫГРУЖЕН, ЧАТ_СКРЫТ, ЧАТ_ПАНЕЛЬ ]),
+		чСостояниеЧата: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
 		// nChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
-		чСостояниеЗакрытогоЧата: Настройка.СоздатьПеречисление(ЧАТ_ВЫГРУЖЕН, [ ЧАТ_ВЫГРУЖЕН, ЧАТ_СКРЫТ ]),
+		чСостояниеЗакрытогоЧата: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
 		// nClosedChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
-		лАвтоПоложениеЧата: Настройка.Создать(этоМобильноеУстройство()),
+		лАвтоПоложениеЧата: Setting.Create(isMobileDevice()),
 		// bAutoChatPosition: Setting.Create(isMobileDevice()),
-		чГоризонтальноеПоложениеЧата: Настройка.СоздатьПеречисление(ПРАВАЯ_СТОРОНА, [ ПРАВАЯ_СТОРОНА, ЛЕВАЯ_СТОРОНА ]),
+		чГоризонтальноеПоложениеЧата: Setting.CreateEnum(RIGHT_SIDE, [ RIGHT_SIDE, LEFT_SIDE ]),
 		// nHorizontalChatPosition: Setting.CreateEnum(RIGHT_SIDE, [ RIGHT_SIDE, LEFT_SIDE ]),
-		чВертикальноеПоложениеЧата: Настройка.СоздатьПеречисление(НИЖНЯЯ_СТОРОНА, [ ВЕРХНЯЯ_СТОРОНА, НИЖНЯЯ_СТОРОНА ]),
+		чВертикальноеПоложениеЧата: Setting.CreateEnum(BOTTOM_SIDE, [ TOP_SIDE, BOTTOM_SIDE ]),
 		// nVerticalChatPosition: Setting.CreateEnum(BOTTOM_SIDE, [ TOP_SIDE, BOTTOM_SIDE ]),
-		чПоложениеПанелиЧата: Настройка.СоздатьПеречисление(ПРАВАЯ_СТОРОНА, [ ВЕРХНЯЯ_СТОРОНА, ПРАВАЯ_СТОРОНА, НИЖНЯЯ_СТОРОНА, ЛЕВАЯ_СТОРОНА ]),
+		чПоложениеПанелиЧата: Setting.CreateEnum(RIGHT_SIDE, [ TOP_SIDE, RIGHT_SIDE, BOTTOM_SIDE, LEFT_SIDE ]),
 		// nChatPanelPosition: Setting.CreateEnum(RIGHT_SIDE, [ TOP_SIDE, RIGHT_SIDE, BOTTOM_SIDE, LEFT_SIDE ]),
-		чШиринаПанелиЧата: Настройка.СоздатьДиапазон(340, 100, МАКС_ЗНАЧЕНИЕ_НАСТРОЙКИ),
+		чШиринаПанелиЧата: Setting.CreateRange(340, 100, MAX_SETTING_VALUE),
 		// nChatPanelWidth: Setting.CreateRange(340, 100, MAX_SETTING_VALUE),
-		чВысотаПанелиЧата: Настройка.СоздатьДиапазон(250, 100, МАКС_ЗНАЧЕНИЕ_НАСТРОЙКИ),
+		чВысотаПанелиЧата: Setting.CreateRange(250, 100, MAX_SETTING_VALUE),
 		// nChatPanelHeight: Setting.CreateRange(250, 100, MAX_SETTING_VALUE),
-		лПолноценныйЧат: Настройка.Создать(true),
+		лПолноценныйЧат: Setting.Create(true),
 		// bFullFeaturedChat: Setting.Create(true),
-		лЗатемнитьЧат: Настройка.Создать(false),
+		лЗатемнитьЧат: Setting.Create(false),
 		// bDimChat: Setting.Create(false),
-		чРазмерИнтерфейса: Настройка.СоздатьДиапазон(этоМобильноеУстройство() ? 115 : 100, 50, 200),
+		чРазмерИнтерфейса: Setting.CreateRange(isMobileDevice() ? 115 : 100, 50, 200),
 		// nInterfaceSize: Setting.CreateRange(isMobileDevice() ? 115 : 100, 50, 200),
-		чИнтервалАвтоскрытия: Настройка.СоздатьДиапазон(4, .5, 60),
+		чИнтервалАвтоскрытия: Setting.CreateRange(4, .5, 60),
 		// nAutoHideInterval: Setting.CreateRange(4, .5, 60),
-		лАнимацияИнтерфейса: Настройка.Создать(!этоМобильноеУстройство()),
+		лАнимацияИнтерфейса: Setting.Create(!isMobileDevice()),
 		// bInterfaceAnimation: Setting.Create(!isMobileDevice()),
-		лМенятьГромкостьКолесом: Настройка.Создать(true),
+		лМенятьГромкостьКолесом: Setting.Create(true),
 		// bChangeVolumeWithWheel: Setting.Create(true),
-		чШагИзмененияГромкостиКолесом: Настройка.СоздатьДиапазон(5, -10, 10),
+		чШагИзмененияГромкостиКолесом: Setting.CreateRange(5, -10, 10),
 		// nVolumeChangeStepWithWheel: Setting.CreateRange(5, -10, 10),
-		лПоказатьСтатистику: Настройка.Создать(false),
+		лПоказатьСтатистику: Setting.Create(false),
 		// bShowStatistics: Setting.Create(false),
-		сПредустановкаВыбрана_буферизация: Настройка.Создать('J0127'),
+		сПредустановкаВыбрана_буферизация: Setting.Create('J0127'),
 		// sPresetSelected_buffering: Setting.Create('J0127'),
-		лПредустановкаЗаполнена_буферизация: Настройка.Создать(false),
+		лПредустановкаЗаполнена_буферизация: Setting.Create(false),
 		// bPresetFilled_buffering: Setting.Create(false),
-		кОдновременныхЗагрузок: Настройка.СоздатьДиапазон(0, 1, 3),
+		кОдновременныхЗагрузок: Setting.CreateRange(0, 1, 3),
 		// nConcurrentDownloads: Setting.CreateRange(0, 1, 3),
-		чНачалоВоспроизведения: Настройка.СоздатьДиапазон(0, МИН_РАЗМЕР_БУФЕРА, МАКС_РАЗМЕР_БУФЕРА),
+		чНачалоВоспроизведения: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
 		// nPlaybackStart: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
-		чРазмерБуфера: Настройка.СоздатьДиапазон(0, МИН_РАЗМЕР_БУФЕРА, МАКС_РАЗМЕР_БУФЕРА),
+		чРазмерБуфера: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
 		// nBufferSize: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
-		чРастягиваниеБуфера: Настройка.СоздатьДиапазон(0, МИН_РАСТЯГИВАНИЕ_БУФЕРА, МАКС_РАСТЯГИВАНИЕ_БУФЕРА),
+		чРастягиваниеБуфера: Setting.CreateRange(0, MIN_BUFFER_STRETCH, MAX_BUFFER_STRETCH),
 		// nBufferStretch: Setting.CreateRange(0, MIN_BUFFER_STRETCH, MAX_BUFFER_STRETCH),
-		сПредустановкаВыбрана_оформление: Настройка.Создать('J0122'),
+		сПредустановкаВыбрана_оформление: Setting.Create('J0122'),
 		// sPresetSelected_appearance: Setting.Create('J0122'),
-		лПредустановкаЗаполнена_оформление: Настройка.Создать(false),
+		лПредустановкаЗаполнена_оформление: Setting.Create(false),
 		// bPresetFilled_appearance: Setting.Create(false),
-		сЦветФона: Настройка.Создать(''),
+		сЦветФона: Setting.Create(''),
 		// sBackgroundColor: Setting.Create(''),
-		сЦветГрадиента: Настройка.Создать('#ffffff'),
+		сЦветГрадиента: Setting.Create('#ffffff'),
 		// sGradientColor: Setting.Create('#ffffff'),
-		сЦветКнопок: Настройка.Создать(''),
+		сЦветКнопок: Setting.Create(''),
 		// sButtonColor: Setting.Create(''),
-		сЦветЗаголовка: Настройка.Создать(''),
+		сЦветЗаголовка: Setting.Create(''),
 		// sHeaderColor: Setting.Create(''),
-		сЦветВыделения: Настройка.Создать(''),
+		сЦветВыделения: Setting.Create(''),
 		// sHighlightColor: Setting.Create(''),
-		чПрозрачность: Настройка.СоздатьДиапазон(0, 0, 80),
+		чПрозрачность: Setting.CreateRange(0, 0, 80),
 		// nOpacity: Setting.CreateRange(0, 0, 80),
-		лАвтоперенаправлениеРазрешено: Настройка.Создать(true),
+		лАвтоперенаправлениеРазрешено: Setting.Create(true),
 		// bAutoRedirectAllowed: Setting.Create(true),
-		лАвтоперенаправлениеЗамечено: Настройка.Создать(false)
+		лАвтоперенаправлениеЗамечено: Setting.Create(false)
 		// bAutoRedirectNoticed: Setting.Create(false)
 	};
-	const ОТКЛАДЫВАТЬ_СОХРАНЕНИЕ_НА = ЭТО_CONTENT_SCRIPT ? 50 : 500;
+	const DELAY_SAVE_FOR = THIS_IS_CONTENT_SCRIPT ? 50 : 500;
 	// const DELAY_SAVE_FOR = THIS_IS_CONTENT_SCRIPT ? 50 : 500;
-	let _чТаймерОтложенногоСохранения = 0;
+	let _nDelayedSaveTimer = 0;
 	// let _nDelayedSaveTimer = 0;
-	let _оОтложенноеСохранение = null;
+	let _oDelayedSave = null;
 	// let _oDelayedSave = null;
-	let _лОтложенноеУдаление = false;
+	let _bDelayedDelete = false;
 	// let _bDelayedDelete = false;
-	function Восстановить() {
+	function Restore() {
 	// function Restore() {
-		м_Журнал.Вот('[Настройки] Восстанавливаю настройки');
+		m_Log.Вот('[Настройки] Восстанавливаю настройки');
 		// m_Log.Here('[Settings] Restoring settings');
-		return new Promise((фВыполнить, фОтказаться) => {
+		return new Promise((fResolve, fReject) => {
 		// return new Promise((fResolve, fReject) => {
-			chrome.storage.local.get(null, оВосстановленныеНастройки => {
+			chrome.storage.local.get(null, oRestoredSettings => {
 			// chrome.storage.local.get(null, oRestoredSettings => {
-				if (г_лРаботаЗавершена) {
+				if (g_bWorkFinished) {
 				// if (g_bWorkFinished) {
 					return;
 				}
 				try {
 					if (chrome.runtime.lastError) {
 						console.error('storage.local.get', chrome.runtime.lastError.message);
-						м_Отладка.ЗавершитьРаботуИПоказатьСообщение('J0221');
+						m_Debug.FinishWorkAndShowMessage('J0221');
 						// m_Debug.FinishWorkAndShowMessage('J0221');
 					}
-					м_Журнал.Вот(`[Настройки] Настройки прочитаны из хранилища: ${м_Журнал.O(оВосстановленныеНастройки)}`);
+					m_Log.Вот(`[Настройки] Настройки прочитаны из хранилища: ${m_Log.O(oRestoredSettings)}`);
 					// m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oRestoredSettings)}`);
-					ЗавершитьВосстановление(оВосстановленныеНастройки);
+					FinishRestoring(oRestoredSettings);
 					// FinishRestoring(oRestoredSettings);
-					фВыполнить();
+					fResolve();
 					// fResolve();
-				} catch (пИсключение) {
+				} catch (pException) {
 				// } catch (pException) {
-					фОтказаться(пИсключение);
+					fReject(pException);
 					// fReject(pException);
 				}
 			});
 		});
 	}
-	function ЗавершитьВосстановление(оВосстановленныеНастройки) {
+	function FinishRestoring(oRestoredSettings) {
 	// function FinishRestoring(oRestoredSettings) {
-		Проверить(ЭтоОбъект(оВосстановленныеНастройки));
+		Check(IsObject(oRestoredSettings));
 		// Check(IsObject(oRestoredSettings));
-		Проверить(!_оНастройки.чВерсияНастроек.пТекущее);
+		Check(!_oSettings.чВерсияНастроек.pCurrent);
 		// Check(!_oSettings.nSettingsVersion.pCurrent);
-		const оСохранить = {};
+		const oSave = {};
 		// const oSave = {};
-		const лОстальноеУдалить = ПроверитьВерсиюНастроек(оВосстановленныеНастройки, оСохранить);
+		const bDeleteRest = CheckSettingsVersion(oRestoredSettings, oSave);
 		// const bDeleteRest = CheckSettingsVersion(oRestoredSettings, oSave);
-		for (let сИмя of Object.keys(_оНастройки)) {
+		for (let sName of Object.keys(_oSettings)) {
 		// for (let sName of Object.keys(_oSettings)) {
-			if (оВосстановленныеНастройки.hasOwnProperty(сИмя)) {
+			if (oRestoredSettings.hasOwnProperty(sName)) {
 			// if (oRestoredSettings.hasOwnProperty(sName)) {
-				const пЗначение = _оНастройки[сИмя].ИсправитьЗначение(оВосстановленныеНастройки[сИмя]);
+				const pValue = _oSettings[sName].CorrectValue(oRestoredSettings[sName]);
 				// const pValue = _oSettings[sName].CorrectValue(oRestoredSettings[sName]);
-				if (пЗначение !== оВосстановленныеНастройки[сИмя]) {
+				if (pValue !== oRestoredSettings[sName]) {
 				// if (pValue !== oRestoredSettings[sName]) {
-					оСохранить[сИмя] = пЗначение;
+					oSave[sName] = pValue;
 					// oSave[sName] = pValue;
 				}
-				_оНастройки[сИмя].пТекущее = пЗначение;
+				_oSettings[sName].pCurrent = pValue;
 				// _oSettings[sName].pCurrent = pValue;
 			} else {
-				if (_мноПостоянныеНастройки.has(сИмя)) {
+				if (_mnoPermanentSettings.has(sName)) {
 				// if (_mnoPermanentSettings.has(sName)) {
-					оСохранить[сИмя] = _оНастройки[сИмя].пНачальное;
+					oSave[sName] = _oSettings[sName].pInitial;
 					// oSave[sName] = _oSettings[sName].pInitial;
 				}
-				_оНастройки[сИмя].пТекущее = _оНастройки[сИмя].пНачальное;
+				_oSettings[sName].pCurrent = _oSettings[sName].pInitial;
 				// _oSettings[sName].pCurrent = _oSettings[sName].pInitial;
 			}
 		}
-		НачатьСохранение(оСохранить, лОстальноеУдалить);
+		StartSaving(oSave, bDeleteRest);
 		// StartSaving(oSave, bDeleteRest);
 	}
-	function ПроверитьВерсиюНастроек(оНастройки, оСохранить) {
+	function CheckSettingsVersion(oSettings, oSave) {
 	// function CheckSettingsVersion(oSettings, oSave) {
-		if (!Number.isInteger(оНастройки.чВерсияНастроек) || оНастройки.чВерсияНастроек < 1 || оНастройки.чВерсияНастроек > ВЕРСИЯ_НАСТРОЕК) {
+		if (!Number.isInteger(oSettings.чВерсияНастроек) || oSettings.чВерсияНастроек < 1 || oSettings.чВерсияНастроек > SETTINGS_VERSION) {
 		// if (!Number.isInteger(oSettings.nSettingsVersion) || oSettings.nSettingsVersion < 1 || oSettings.nSettingsVersion > SETTINGS_VERSION) {
-			for (let сИмя of Object.keys(оНастройки)) {
+			for (let sName of Object.keys(oSettings)) {
 			// for (let sName of Object.keys(oSettings)) {
-				delete оНастройки[сИмя];
+				delete oSettings[sName];
 				// delete oSettings[sName];
 			}
 			return true;
 		}
-		for (let оМетаданные of _моМетаданныеПредустановок) {
+		for (let oMetadata of _moPresetMetadata) {
 		// for (let oMetadata of _moPresetMetadata) {
-			let сИмя = оНастройки[оМетаданные.сВыбрана];
+			let sName = oSettings[oMetadata.sSelected];
 			// let sName = oSettings[oMetadata.sSelected];
-			if (сИмя !== void 0 && сИмя !== оМетаданные.сНастраиваемая) {
+			if (sName !== void 0 && sName !== oMetadata.sCustomizable) {
 			// if (sName !== void 0 && sName !== oMetadata.sCustomizable) {
-				for (let сИмяПредустановки of оМетаданные.амДанные.keys()) {
+				for (let sPresetName of oMetadata.amData.keys()) {
 				// for (let sPresetName of oMetadata.amData.keys()) {
-					if (сИмя === сИмяПредустановки) {
+					if (sName === sPresetName) {
 					// if (sName === sPresetName) {
-						сИмя = void 0;
+						sName = void 0;
 						// sName = void 0;
 						break;
 					}
 				}
-				if (сИмя !== void 0) {
+				if (sName !== void 0) {
 				// if (sName !== void 0) {
-					оСохранить[оМетаданные.сВыбрана] = оНастройки[оМетаданные.сВыбрана] = _оНастройки[оМетаданные.сВыбрана].пНачальное;
+					oSave[oMetadata.sSelected] = oSettings[oMetadata.sSelected] = _oSettings[oMetadata.sSelected].pInitial;
 					// oSave[oMetadata.sSelected] = oSettings[oMetadata.sSelected] = _oSettings[oMetadata.sSelected].pInitial;
 				}
 			}
 		}
-		if (оНастройки.чСостояниеЗакрытогоЧата !== оНастройки.чСостояниеЧата && (оНастройки.чСостояниеЧата === ЧАТ_ВЫГРУЖЕН || оНастройки.чСостояниеЧата === ЧАТ_СКРЫТ)) {
+		if (oSettings.чСостояниеЗакрытогоЧата !== oSettings.чСостояниеЧата && (oSettings.чСостояниеЧата === CHAT_UNLOADED || oSettings.чСостояниеЧата === CHAT_HIDDEN)) {
 		// if (oSettings.nClosedChatState !== oSettings.nChatState && (oSettings.nChatState === CHAT_UNLOADED || oSettings.nChatState === CHAT_HIDDEN)) {
-			оСохранить.чСостояниеЗакрытогоЧата = оНастройки.чСостояниеЗакрытогоЧата = оНастройки.чСостояниеЧата;
+			oSave.чСостояниеЗакрытогоЧата = oSettings.чСостояниеЗакрытогоЧата = oSettings.чСостояниеЧата;
 			// oSave.nClosedChatState = oSettings.nClosedChatState = oSettings.nChatState;
 		}
-		if (оНастройки.чВерсияНастроек === ВЕРСИЯ_НАСТРОЕК) {
+		if (oSettings.чВерсияНастроек === SETTINGS_VERSION) {
 		// if (oSettings.nSettingsVersion === SETTINGS_VERSION) {
 			return false;
 		}
-		оСохранить.чВерсияНастроек = оНастройки.чВерсияНастроек = ВЕРСИЯ_НАСТРОЕК;
+		oSave.чВерсияНастроек = oSettings.чВерсияНастроек = SETTINGS_VERSION;
 		// oSave.nSettingsVersion = oSettings.nSettingsVersion = SETTINGS_VERSION;
 		return false;
 	}
-	function НачатьСохранение(оСохранить, лОстальноеУдалить) {
+	function StartSaving(oSave, bDeleteRest) {
 	// function StartSaving(oSave, bDeleteRest) {
-		Проверить(ЭтоОбъект(оСохранить));
+		Check(IsObject(oSave));
 		// Check(IsObject(oSave));
-		if (Object.keys(оСохранить).length !== 0 || лОстальноеУдалить) {
+		if (Object.keys(oSave).length !== 0 || bDeleteRest) {
 		// if (Object.keys(oSave).length !== 0 || bDeleteRest) {
-			if (_чТаймерОтложенногоСохранения === 0) {
+			if (_nDelayedSaveTimer === 0) {
 			// if (_nDelayedSaveTimer === 0) {
-				м_Журнал.Вот(`[Настройки] Откладываю сохранение настроек на ${ОТКЛАДЫВАТЬ_СОХРАНЕНИЕ_НА}мс`);
+				m_Log.Вот(`[Настройки] Откладываю сохранение настроек на ${DELAY_SAVE_FOR}мс`);
 				// m_Log.Here(`[Settings] Delaying settings save for ${DELAY_SAVE_FOR}ms`);
-				_оОтложенноеСохранение = оСохранить;
+				_oDelayedSave = oSave;
 				// _oDelayedSave = oSave;
-				_лОтложенноеУдаление = лОстальноеУдалить;
+				_bDelayedDelete = bDeleteRest;
 				// _bDelayedDelete = bDeleteRest;
-				_чТаймерОтложенногоСохранения = setTimeout(ДобавитьОбработчикИсключений(ЗавершитьСохранение), ОТКЛАДЫВАТЬ_СОХРАНЕНИЕ_НА);
+				_nDelayedSaveTimer = setTimeout(AddExceptionHandler(FinishSaving), DELAY_SAVE_FOR);
 				// _nDelayedSaveTimer = setTimeout(AddExceptionHandler(FinishSaving), DELAY_SAVE_FOR);
-			} else if (лОстальноеУдалить) {
+			} else if (bDeleteRest) {
 			// } else if (bDeleteRest) {
-				_оОтложенноеСохранение = оСохранить;
+				_oDelayedSave = oSave;
 				// _oDelayedSave = oSave;
-				_лОтложенноеУдаление = лОстальноеУдалить;
+				_bDelayedDelete = bDeleteRest;
 				// _bDelayedDelete = bDeleteRest;
 			} else {
-				Object.assign(_оОтложенноеСохранение, оСохранить);
+				Object.assign(_oDelayedSave, oSave);
 				// Object.assign(_oDelayedSave, oSave);
 			}
 		}
 	}
-	function ЗавершитьСохранение() {
+	function FinishSaving() {
 	// function FinishSaving() {
-		м_Журнал.Вот('[Настройки] Завершаю отложенное сохранение');
+		m_Log.Вот('[Настройки] Завершаю отложенное сохранение');
 		// m_Log.Here('[Settings] Finishing delayed save');
-		Проверить(_чТаймерОтложенногоСохранения !== 0);
+		Check(_nDelayedSaveTimer !== 0);
 		// Check(_nDelayedSaveTimer !== 0);
-		_чТаймерОтложенногоСохранения = 0;
+		_nDelayedSaveTimer = 0;
 		// _nDelayedSaveTimer = 0;
-		Проверить(ЭтоОбъект(_оОтложенноеСохранение));
+		Check(IsObject(_oDelayedSave));
 		// Check(IsObject(_oDelayedSave));
-		Сохранить(_оОтложенноеСохранение, _лОтложенноеУдаление);
+		Save(_oDelayedSave, _bDelayedDelete);
 		// Save(_oDelayedSave, _bDelayedDelete);
-		_оОтложенноеСохранение = null;
+		_oDelayedSave = null;
 		// _oDelayedSave = null;
 	}
-	function Сохранить(оСохранить, лОстальноеУдалить) {
+	function Save(oSave, bDeleteRest) {
 	// function Save(oSave, bDeleteRest) {
-		if (лОстальноеУдалить) {
+		if (bDeleteRest) {
 		// if (bDeleteRest) {
-			chrome.storage.local.clear(ПроверитьРезультатСохранения);
+			chrome.storage.local.clear(CheckSaveResult);
 			// chrome.storage.local.clear(CheckSaveResult);
-			м_Журнал.Вот('[Настройки] Все настройки удалены из хранилища');
+			m_Log.Вот('[Настройки] Все настройки удалены из хранилища');
 			// m_Log.Here('[Settings] All settings deleted from storage');
 		}
-		chrome.storage.local.set(оСохранить, ПроверитьРезультатСохранения);
+		chrome.storage.local.set(oSave, CheckSaveResult);
 		// chrome.storage.local.set(oSave, CheckSaveResult);
-		м_Журнал.Вот(`[Настройки] Настройки записаны в хранилище: ${м_Журнал.O(оСохранить)}`);
+		m_Log.Вот(`[Настройки] Настройки записаны в хранилище: ${m_Log.O(oSave)}`);
 		// m_Log.Here(`[Settings] Settings written to storage: ${m_Log.O(oSave)}`);
 	}
-	function ПроверитьРезультатСохранения() {
+	function CheckSaveResult() {
 	// function CheckSaveResult() {
 		if (chrome.runtime.lastError) {
 			console.error('storage.local.set', chrome.runtime.lastError.message);
-			м_Отладка.ЗавершитьРаботуИПоказатьСообщение('J0221');
+			m_Debug.FinishWorkAndShowMessage('J0221');
 			// m_Debug.FinishWorkAndShowMessage('J0221');
 		}
 	}
-	function Сбросить() {
+	function Reset() {
 	// function Reset() {
-		м_Журнал.Окак('[Настройки] Сбрасываю настройки');
+		m_Log.Окак('[Настройки] Сбрасываю настройки');
 		// m_Log.Wow('[Settings] Resetting settings');
-		Проверить(_оНастройки.чВерсияНастроек.пТекущее);
+		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
-		const оСохранить = {};
+		const oSave = {};
 		// const oSave = {};
-		for (let сИмя of _мноПостоянныеНастройки) {
+		for (let sName of _mnoPermanentSettings) {
 		// for (let sName of _mnoPermanentSettings) {
-			оСохранить[сИмя] = _оНастройки[сИмя].пТекущее;
+			oSave[sName] = _oSettings[sName].pCurrent;
 			// oSave[sName] = _oSettings[sName].pCurrent;
 		}
-		НачатьСохранение(оСохранить, true);
+		StartSaving(oSave, true);
 		// StartSaving(oSave, true);
 		window.location.reload(true);
 	}
-	function Экспорт() {
+	function Export() {
 	// function Export() {
-		м_Журнал.Окак('[Настройки] Экспортирую настройки');
+		m_Log.Окак('[Настройки] Экспортирую настройки');
 		// m_Log.Wow('[Settings] Exporting settings');
-		Проверить(_оНастройки.чВерсияНастроек.пТекущее);
+		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
-		const оЭкспорт = {
+		const oExport = {
 		// const oExport = {
-			чВерсияНастроек: ВЕРСИЯ_НАСТРОЕК
+			чВерсияНастроек: SETTINGS_VERSION
 			// nSettingsVersion: SETTINGS_VERSION
 		};
-		for (let сИмя of Object.keys(_оНастройки)) {
+		for (let sName of Object.keys(_oSettings)) {
 		// for (let sName of Object.keys(_oSettings)) {
-			if (!_мноПостоянныеНастройки.has(сИмя) && !_мноНеСветить.has(сИмя)) {
+			if (!_mnoPermanentSettings.has(sName) && !_mnoDoNotShow.has(sName)) {
 			// if (!_mnoPermanentSettings.has(sName) && !_mnoDoNotShow.has(sName)) {
-				оЭкспорт[сИмя] = _оНастройки[сИмя].пТекущее;
+				oExport[sName] = _oSettings[sName].pCurrent;
 				// oExport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
-		м_Журнал.Вот(`[Настройки] Отобраны настройки для экспорта: ${м_Журнал.O(оЭкспорт)}`);
+		m_Log.Вот(`[Настройки] Отобраны настройки для экспорта: ${m_Log.O(oExport)}`);
 		// m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
-		ЗаписатьТекстВЛокальныйФайл(JSON.stringify(оЭкспорт), 'application/json', Текст('J0133'));
+		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Текст('J0133'));
 		// WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Text('J0133'));
 	}
-	function Импорт(оИзФайла) {
+	function Import(oFromFile) {
 	// function Import(oFromFile) {
-		м_Журнал.Окак(`[Настройки] Импортирую настройки из файла ${оИзФайла.name}`);
+		m_Log.Окак(`[Настройки] Импортирую настройки из файла ${oFromFile.name}`);
 		// m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
-		Проверить(_оНастройки.чВерсияНастроек.пТекущее);
+		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
-		if (оИзФайла.size === 0 || оИзФайла.size > 1e4) {
+		if (oFromFile.size === 0 || oFromFile.size > 1e4) {
 		// if (oFromFile.size === 0 || oFromFile.size > 1e4) {
-			м_Журнал.Ой(`[Настройки] Размер файла: ${оИзФайла.size}`);
+			m_Log.Ой(`[Настройки] Размер файла: ${oFromFile.size}`);
 			// m_Log.Oops(`[Settings] File size: ${oFromFile.size}`);
-			м_Уведомление.ПоказатьЖопу();
+			m_Notification.ShowAss();
 			// m_Notification.ShowAss();
 			return;
 		}
-		const оЧиталка = new FileReader();
+		const oReader = new FileReader();
 		// const oReader = new FileReader();
-		оЧиталка.addEventListener('loadend', ДобавитьОбработчикИсключений(() => {
+		oReader.addEventListener('loadend', AddExceptionHandler(() => {
 		// oReader.addEventListener('loadend', AddExceptionHandler(() => {
-			if (!ЭтоНепустаяСтрока(оЧиталка.result)) {
+			if (!IsNonEmptyString(oReader.result)) {
 			// if (!IsNonEmptyString(oReader.result)) {
-				м_Журнал.Ой(`[Настройки] Результат чтения файла: ${оЧиталка.result}`);
+				m_Log.Ой(`[Настройки] Результат чтения файла: ${oReader.result}`);
 				// m_Log.Oops(`[Settings] File read result: ${oReader.result}`);
-				м_Уведомление.ПоказатьЖопу();
+				m_Notification.ShowAss();
 				// m_Notification.ShowAss();
 				return;
 			}
-			м_Журнал.Вот(`[Настройки] Настройки прочитаны из файла: ${оЧиталка.result}`);
+			m_Log.Вот(`[Настройки] Настройки прочитаны из файла: ${oReader.result}`);
 			// m_Log.Here(`[Settings] Settings read from file: ${oReader.result}`);
-			let оСохранить;
+			let oSave;
 			// let oSave;
 			try {
-				оСохранить = JSON.parse(оЧиталка.result);
+				oSave = JSON.parse(oReader.result);
 				// oSave = JSON.parse(oReader.result);
-				if (!ЭтоОбъект(оСохранить)) {
+				if (!IsObject(oSave)) {
 				// if (!IsObject(oSave)) {
 					throw 1;
 				}
-				if (ПроверитьВерсиюНастроек(оСохранить, оСохранить)) {
+				if (CheckSettingsVersion(oSave, oSave)) {
 				// if (CheckSettingsVersion(oSave, oSave)) {
 					throw 2;
 				}
-				for (let сИмя of Object.keys(оСохранить)) {
+				for (let sName of Object.keys(oSave)) {
 				// for (let sName of Object.keys(oSave)) {
-					if (!_оНастройки.hasOwnProperty(сИмя) || _мноНеСветить.has(сИмя)) {
+					if (!_oSettings.hasOwnProperty(sName) || _mnoDoNotShow.has(sName)) {
 					// if (!_oSettings.hasOwnProperty(sName) || _mnoDoNotShow.has(sName)) {
-						delete оСохранить[сИмя];
+						delete oSave[sName];
 						// delete oSave[sName];
 					} else {
-						оСохранить[сИмя] = _оНастройки[сИмя].ИсправитьЗначение(оСохранить[сИмя]);
+						oSave[sName] = _oSettings[sName].CorrectValue(oSave[sName]);
 						// oSave[sName] = _oSettings[sName].CorrectValue(oSave[sName]);
-						if (оСохранить[сИмя] === _оНастройки[сИмя].пНачальное) {
+						if (oSave[sName] === _oSettings[sName].pInitial) {
 						// if (oSave[sName] === _oSettings[sName].pInitial) {
-							delete оСохранить[сИмя];
+							delete oSave[sName];
 							// delete oSave[sName];
 						}
 					}
 				}
-			} catch (пИсключение) {
+			} catch (pException) {
 			// } catch (pException) {
-				м_Журнал.Ой(`[Настройки] Поймано исключение во время разбора настроек: ${пИсключение}`);
+				m_Log.Ой(`[Настройки] Поймано исключение во время разбора настроек: ${pException}`);
 				// m_Log.Oops(`[Settings] Exception caught while parsing settings: ${pException}`);
-				м_Уведомление.ПоказатьЖопу();
+				m_Notification.ShowAss();
 				// m_Notification.ShowAss();
 				return;
 			}
-			for (let сИмя of _мноПостоянныеНастройки) {
+			for (let sName of _mnoPermanentSettings) {
 			// for (let sName of _mnoPermanentSettings) {
-				оСохранить[сИмя] = _оНастройки[сИмя].пТекущее;
+				oSave[sName] = _oSettings[sName].pCurrent;
 				// oSave[sName] = _oSettings[sName].pCurrent;
 			}
-			НачатьСохранение(оСохранить, true);
+			StartSaving(oSave, true);
 			// StartSaving(oSave, true);
 			window.location.reload(true);
 		}));
-		оЧиталка.readAsText(оИзФайла);
+		oReader.readAsText(oFromFile);
 		// oReader.readAsText(oFromFile);
 	}
-	function Получить2(сИмя) {
+	function Get2(sName) {
 	// function Get2(sName) {
-		Проверить(typeof сИмя == 'string');
+		Check(typeof sName == 'string');
 		// Check(typeof sName == 'string');
-		Проверить(_оНастройки.hasOwnProperty(сИмя));
+		Check(_oSettings.hasOwnProperty(sName));
 		// Check(_oSettings.hasOwnProperty(sName));
-		Проверить(_оНастройки.чВерсияНастроек.пТекущее);
+		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
-		for (let оМетаданные of _моМетаданныеПредустановок) {
+		for (let oMetadata of _moPresetMetadata) {
 		// for (let oMetadata of _moPresetMetadata) {
-			const оПредустановка = оМетаданные.амДанные.get(_оНастройки[оМетаданные.сВыбрана].пТекущее);
+			const oPreset = oMetadata.amData.get(_oSettings[oMetadata.sSelected].pCurrent);
 			// const oPreset = oMetadata.amData.get(_oSettings[oMetadata.sSelected].pCurrent);
-			if (оПредустановка) {
+			if (oPreset) {
 			// if (oPreset) {
-				const пЗначение = оПредустановка[сИмя];
+				const pValue = oPreset[sName];
 				// const pValue = oPreset[sName];
-				if (пЗначение !== void 0) {
+				if (pValue !== void 0) {
 				// if (pValue !== void 0) {
-					return пЗначение;
+					return pValue;
 					// return pValue;
 				}
 			}
 		}
-		return _оНастройки[сИмя].пТекущее;
+		return _oSettings[sName].pCurrent;
 		// return _oSettings[sName].pCurrent;
 	}
-	function Получить(сИмя) {
+	function Get(sName) {
 	// function Get(sName) {
-		if (сИмя === 'чМаксРазмерБуфера') {
+		if (sName === 'чМаксРазмерБуфера') {
 		// if (sName === 'nMaxBufferSize') {
-			return Math.max(Получить2('чНачалоВоспроизведения'), Получить2('чРазмерБуфера'));
+			return Math.max(Get2('чНачалоВоспроизведения'), Get2('чРазмерБуфера'));
 			// return Math.max(Get2('nPlaybackStart'), Get2('nBufferSize'));
 		}
-		return Получить2(сИмя);
+		return Get2(sName);
 		// return Get2(sName);
 	}
-	function Изменить(сИмя, пЗначение, лНеСохранять = false) {
+	function Change(sName, pValue, bNoSave = false) {
 	// function Change(sName, pValue, bNoSave = false) {
-		Проверить(typeof сИмя == 'string');
+		Check(typeof sName == 'string');
 		// Check(typeof sName == 'string');
-		Проверить(_оНастройки[сИмя].ИсправитьЗначение(пЗначение) === пЗначение);
+		Check(_oSettings[sName].CorrectValue(pValue) === pValue);
 		// Check(_oSettings[sName].CorrectValue(pValue) === pValue);
-		const оСохранить = {};
+		const oSave = {};
 		// const oSave = {};
-		for (let оМетаданные of _моМетаданныеПредустановок) {
+		for (let oMetadata of _moPresetMetadata) {
 		// for (let oMetadata of _moPresetMetadata) {
-			const оПредустановка = оМетаданные.амДанные.get(_оНастройки[оМетаданные.сВыбрана].пТекущее);
+			const oPreset = oMetadata.amData.get(_oSettings[oMetadata.sSelected].pCurrent);
 			// const oPreset = oMetadata.amData.get(_oSettings[oMetadata.sSelected].pCurrent);
-			if (оПредустановка && оПредустановка.hasOwnProperty(сИмя)) {
+			if (oPreset && oPreset.hasOwnProperty(sName)) {
 			// if (oPreset && oPreset.hasOwnProperty(sName)) {
-				if (пЗначение === оПредустановка[сИмя]) {
+				if (pValue === oPreset[sName]) {
 				// if (pValue === oPreset[sName]) {
 					return;
 				}
-				Проверить(!лНеСохранять);
+				Check(!bNoSave);
 				// Check(!bNoSave);
-				оСохранить[оМетаданные.сВыбрана] = _оНастройки[оМетаданные.сВыбрана].пТекущее = оМетаданные.сНастраиваемая;
+				oSave[oMetadata.sSelected] = _oSettings[oMetadata.sSelected].pCurrent = oMetadata.sCustomizable;
 				// oSave[oMetadata.sSelected] = _oSettings[oMetadata.sSelected].pCurrent = oMetadata.sCustomizable;
-				оСохранить[оМетаданные.сЗаполнена] = _оНастройки[оМетаданные.сЗаполнена].пТекущее = true;
+				oSave[oMetadata.sFilled] = _oSettings[oMetadata.sFilled].pCurrent = true;
 				// oSave[oMetadata.sFilled] = _oSettings[oMetadata.sFilled].pCurrent = true;
-				for (let сИмяПредустановки of Object.keys(оПредустановка)) {
+				for (let sPresetName of Object.keys(oPreset)) {
 				// for (let sPresetName of Object.keys(oPreset)) {
-					оСохранить[сИмяПредустановки] = _оНастройки[сИмяПредустановки].пТекущее = оПредустановка[сИмяПредустановки];
+					oSave[sPresetName] = _oSettings[sPresetName].pCurrent = oPreset[sPresetName];
 					// oSave[sPresetName] = _oSettings[sPresetName].pCurrent = oPreset[sPresetName];
 				}
-				ОбновитьСписокПредустановок(оМетаданные);
+				UpdatePresetList(oMetadata);
 				// UpdatePresetList(oMetadata);
 				break;
 			}
 		}
-		if (_оНастройки[сИмя].пТекущее !== пЗначение) {
+		if (_oSettings[sName].pCurrent !== pValue) {
 		// if (_oSettings[sName].pCurrent !== pValue) {
-			оСохранить[сИмя] = _оНастройки[сИмя].пТекущее = пЗначение;
+			oSave[sName] = _oSettings[sName].pCurrent = pValue;
 			// oSave[sName] = _oSettings[sName].pCurrent = pValue;
 		}
-		if (!лНеСохранять) {
+		if (!bNoSave) {
 		// if (!bNoSave) {
-			НачатьСохранение(оСохранить, false);
+			StartSaving(oSave, false);
 			// StartSaving(oSave, false);
 		}
 	}
-	function ОбновитьСписокПредустановок(оМетаданные) {
+	function UpdatePresetList(oMetadata) {
 	// function UpdatePresetList(oMetadata) {
-		const узСписок = Узел(оМетаданные.сСписок);
+		const nodeList = GetNode(oMetadata.sList);
 		// const nodeList = Node(oMetadata.sList);
-		узСписок.length = 0;
+		nodeList.length = 0;
 		// nodeList.length = 0;
-		const сВыбрать = _оНастройки[оМетаданные.сВыбрана].пТекущее;
+		const sSelect = _oSettings[oMetadata.sSelected].pCurrent;
 		// const sSelect = _oSettings[oMetadata.sSelected].pCurrent;
-		for (let сИмя of оМетаданные.амДанные.keys()) {
+		for (let sName of oMetadata.amData.keys()) {
 		// for (let sName of oMetadata.amData.keys()) {
-			узСписок.add(new Option(Текст(сИмя), сИмя, сИмя === сВыбрать, сИмя === сВыбрать));
+			nodeList.add(new Option(Текст(sName), sName, sName === sSelect, sName === sSelect));
 			// nodeList.add(new Option(Text(sName), sName, sName === sSelect, sName === sSelect));
 		}
-		if (_оНастройки[оМетаданные.сЗаполнена].пТекущее) {
+		if (_oSettings[oMetadata.sFilled].pCurrent) {
 		// if (_oSettings[oMetadata.sFilled].pCurrent) {
-			узСписок.add(new Option(Текст(оМетаданные.сНастраиваемая), оМетаданные.сНастраиваемая, оМетаданные.сНастраиваемая === сВыбрать, оМетаданные.сНастраиваемая === сВыбрать));
+			nodeList.add(new Option(Текст(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
 			// nodeList.add(new Option(Text(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
 		}
-		Проверить(узСписок.value);
+		Check(nodeList.value);
 		// Check(nodeList.value);
-		return узСписок;
+		return nodeList;
 		// return nodeList;
 	}
-	const ОбработатьИзменениеПредустановки = ДобавитьОбработчикИсключений(оСобытие => {
+	const ProcessPresetChange = AddExceptionHandler(oEvent => {
 	// const ProcessPresetChange = AddExceptionHandler(oEvent => {
-		for (let оМетаданные of _моМетаданныеПредустановок) {
+		for (let oMetadata of _moPresetMetadata) {
 		// for (let oMetadata of _moPresetMetadata) {
-			if (оМетаданные.сСписок === оСобытие.target.id) {
+			if (oMetadata.sList === oEvent.target.id) {
 			// if (oMetadata.sList === oEvent.target.id) {
-				Проверить(оСобытие.target.value);
+				Check(oEvent.target.value);
 				// Check(oEvent.target.value);
-				Изменить(оМетаданные.сВыбрана, оСобытие.target.value);
+				Change(oMetadata.sSelected, oEvent.target.value);
 				// Change(oMetadata.sSelected, oEvent.target.value);
-				м_События.ПослатьСобытие(оМетаданные.сСобытие);
+				m_Events.SendEvent(oMetadata.sEvent);
 				// m_Events.SendEvent(oMetadata.sEvent);
 				return;
 			}
 		}
-		Проверить(false);
+		Check(false);
 		// Check(false);
 	});
-	function НастроитьСпискиПредустановок() {
+	function ConfigurePresetLists() {
 	// function ConfigurePresetLists() {
-		for (let оМетаданные of _моМетаданныеПредустановок) {
+		for (let oMetadata of _moPresetMetadata) {
 		// for (let oMetadata of _moPresetMetadata) {
-			ОбновитьСписокПредустановок(оМетаданные).addEventListener('change', ОбработатьИзменениеПредустановки);
+			UpdatePresetList(oMetadata).addEventListener('change', ProcessPresetChange);
 			// UpdatePresetList(oMetadata).addEventListener('change', ProcessPresetChange);
 		}
 	}
-	function ПолучитьПараметрыНастройки(сИмя) {
+	function GetSettingParameters(sName) {
 	// function GetSettingParameters(sName) {
-		Проверить(typeof сИмя == 'string');
+		Check(typeof sName == 'string');
 		// Check(typeof sName == 'string');
-		Проверить(_оНастройки.hasOwnProperty(сИмя));
+		Check(_oSettings.hasOwnProperty(sName));
 		// Check(_oSettings.hasOwnProperty(sName));
-		return _оНастройки[сИмя];
+		return _oSettings[sName];
 		// return _oSettings[sName];
 	}
-	function ПолучитьДанныеДляОтчета() {
+	function GetDataForReport() {
 	// function GetDataForReport() {
-		const оОтчет = {};
+		const oReport = {};
 		// const oReport = {};
-		for (let сИмя of Object.keys(_оНастройки)) {
+		for (let sName of Object.keys(_oSettings)) {
 		// for (let sName of Object.keys(_oSettings)) {
-			if (!_мноНеСветить.has(сИмя) && (_мноПостоянныеНастройки.has(сИмя) || _оНастройки[сИмя].пТекущее !== _оНастройки[сИмя].пНачальное)) {
+			if (!_mnoDoNotShow.has(sName) && (_mnoPermanentSettings.has(sName) || _oSettings[sName].pCurrent !== _oSettings[sName].pInitial)) {
 			// if (!_mnoDoNotShow.has(sName) && (_mnoPermanentSettings.has(sName) || _oSettings[sName].pCurrent !== _oSettings[sName].pInitial)) {
-				оОтчет[сИмя] = _оНастройки[сИмя].пТекущее;
+				oReport[sName] = _oSettings[sName].pCurrent;
 				// oReport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
-		return оОтчет;
+		return oReport;
 		// return oReport;
 	}
-	function СохранитьИзменения() {
+	function SaveChanges() {
 	// function SaveChanges() {
-		if (_чТаймерОтложенногоСохранения !== 0) {
+		if (_nDelayedSaveTimer !== 0) {
 		// if (_nDelayedSaveTimer !== 0) {
-			clearTimeout(_чТаймерОтложенногоСохранения);
+			clearTimeout(_nDelayedSaveTimer);
 			// clearTimeout(_nDelayedSaveTimer);
-			ЗавершитьСохранение();
+			FinishSaving();
 			// FinishSaving();
 		}
 	}
-	window.addEventListener('beforeunload', СохранитьИзменения);
+	window.addEventListener('beforeunload', SaveChanges);
 	// window.addEventListener('beforeunload', SaveChanges);
 	return {
-		Восстановить,
+		Restore,
 		// Restore,
-		Сбросить,
+		Reset,
 		// Reset,
-		Экспорт,
+		Export,
 		// Export,
-		Импорт,
+		Import,
 		// Import,
-		Получить,
+		Get,
 		// Get,
-		Изменить,
+		Change,
 		// Change,
-		СохранитьИзменения,
+		SaveChanges,
 		// SaveChanges,
-		ПолучитьПараметрыНастройки,
+		GetSettingParameters,
 		// GetSettingParameters,
-		НастроитьСпискиПредустановок,
+		ConfigurePresetLists,
 		// ConfigurePresetLists,
-		ПолучитьДанныеДляОтчета
+		GetDataForReport
 		// GetDataForReport
 	};
 })();

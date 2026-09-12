@@ -54,11 +54,11 @@
     // Function from content.js: разрешитьРаботуЧата()
     // Function from content.js: allowChatToWork()
     const fGetItem = Storage.prototype.getItem;
-    Storage.prototype.getItem = function (сИмя) {
+    Storage.prototype.getItem = function (sName) {
     // Storage.prototype.getItem = function (sName) {
         let сЗначение = fGetItem.apply(this, arguments);
         // let sValue = fGetItem.apply(this, arguments);
-        if (сИмя === 'TwitchCache:Layout' && сЗначение) {
+        if (sName === 'TwitchCache:Layout' && сЗначение) {
         // if (sName === 'TwitchCache:Layout' && sValue) {
             сЗначение = сЗначение.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');
             // sValue = sValue.replace('"isRightColumnClosedByUserAction":true', '"isRightColumnClosedByUserAction":false');

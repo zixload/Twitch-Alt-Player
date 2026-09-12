@@ -52,7 +52,7 @@ const m_Sidebar = (() => {
 	 */
 	function text(sCode, sFallback) {
 		try {
-			const sMessage = м_i18n.GetMessage(sCode);
+			const sMessage = m_i18n.GetMessage(sCode);
 			if (typeof sMessage === 'string' && sMessage !== '') {
 				return sMessage;
 			}
@@ -80,15 +80,15 @@ const m_Sidebar = (() => {
 	 * @returns {string} Address of our own player for that channel.
 	 */
 	function getPlayerAddress(sChannel) {
-		if (typeof ПолучитьАдресНашегоПроигрывателя === 'function') {
-			return ПолучитьАдресНашегоПроигрывателя(sChannel);
+		if (typeof GetOurPlayerAddress === 'function') {
+			return GetOurPlayerAddress(sChannel);
 		}
 		return chrome.runtime.getURL('player.html') + '?channel=' + encodeURIComponent(sChannel);
 	}
 
 	function log(sMessage) {
 		try {
-			м_Журнал.Вот('[Sidebar] ' + sMessage);
+			m_Log.Вот('[Sidebar] ' + sMessage);
 		} catch (_) {
 			console.log('[Sidebar] ' + sMessage);
 		}
@@ -506,7 +506,7 @@ const m_Sidebar = (() => {
 			if (_oAuth === null) {
 				setStatus(text('F1906', 'Sign in on twitch.tv to see your followed channels.'), {
 					label: text('F1907', 'Open Twitch'),
-					action: () => window.open(TWITCH_COOKIE_URL + '?' + АДРЕС_НЕ_ПЕРЕНАПРАВЛЯТЬ)
+					action: () => window.open(TWITCH_COOKIE_URL + '?' + DO_NOT_REDIRECT_ADDRESS)
 				});
 			} else if (aFollowed === null && aLive === null) {
 				setStatus(text('F1908', 'Could not load channels.'), {
