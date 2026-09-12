@@ -267,8 +267,8 @@ class IsoBaseMedia {
 		Check(Number.isInteger(this.uEnd) && this.uEnd >= this.uStart && this.uEnd <= this.mbBuffer.length);
 		return this.mbBuffer.subarray(this.uStart, this.uEnd);
 	}
-	AddFullBox(sType, чВерсия, чФлаги, pContent) {
-		Check(sType.length === 4 && Number.isFinite(чВерсия) && Number.isFinite(чФлаги));
+	AddFullBox(sType, nVersion, чФлаги, pContent) {
+		Check(sType.length === 4 && Number.isFinite(nVersion) && Number.isFinite(чФлаги));
 		Check(this.uEnd >= this.uStart);
 		var uStart = this.uEnd;
 		Check(this.mbBuffer.length - this.uEnd >= 8);
@@ -277,10 +277,10 @@ class IsoBaseMedia {
 		this.mbBuffer[uStart + 6] = sType.charCodeAt(2);
 		this.mbBuffer[uStart + 7] = sType.charCodeAt(3);
 		this.uEnd += 8;
-		if (чВерсия !== -1) {
-			Check(чВерсия >= 0 && чВерсия <= 255 && чФлаги >= 0 && чФлаги <= 16777215);
+		if (nVersion !== -1) {
+			Check(nVersion >= 0 && nVersion <= 255 && чФлаги >= 0 && чФлаги <= 16777215);
 			Check(this.mbBuffer.length - this.uEnd >= 4);
-			this.dvBuffer.setUint32(uStart + 8, чВерсия << 24 | чФлаги);
+			this.dvBuffer.setUint32(uStart + 8, nVersion << 24 | чФлаги);
 			this.uEnd += 4;
 		}
 		if (typeof pContent == 'number') {
@@ -1585,16 +1585,16 @@ var m_Log = (() => {
 		var mbufTransfer = void 0;
 		var oData = {
 			nConvertedIn: _nConvertedIn,
-			лЗабраковано: _bRejected,
-			лПотериВидео: _bVideoLoss,
-			лПотериЗвука: _bAudioLoss,
+			bRejected: _bRejected,
+			bVideoLoss: _bVideoLoss,
+			bAudioLoss: _bAudioLoss,
 			nMinVideoSampleDuration: _nMinVideoSampleDuration / TS_TIMESCALE * 1e3,
 			nMaxVideoSampleDuration: _nMaxVideoSampleDuration / TS_TIMESCALE * 1e3,
 			nAvgVideoSampleDuration: _nAvgVideoSampleDuration / TS_TIMESCALE * 1e3,
-			чБитрейтЗвука: _nAudioBitrate,
+			nAudioBitrate: _nAudioBitrate,
 			nEncodingPosition: _nEncodingPosition,
-			чПозицияТрансляции: _nBroadcastPosition,
-			чВремяКодирования: _nEncodingTime
+			nBroadcastPosition: _nBroadcastPosition,
+			nEncodingTime: _nEncodingTime
 		};
 		if (мбМедиасегмент) {
 			oData.мбМедиасегмент = СоздатьМедиасегмент(мбМедиасегмент);
@@ -1608,14 +1608,14 @@ var m_Log = (() => {
 				oData.nConstraintSetFlag = _nConstraintSetFlag;
 				oData.nLevelIndication = _nLevelIndication;
 				oData.nMaxNumberReferenceFrames = _nMaxNumberReferenceFrames;
-				oData.чШиринаКартинки = _nPictureWidth;
-				oData.чВысотаКартинки = _nPictureHeight;
+				oData.nPictureWidth = _nPictureWidth;
+				oData.nPictureHeight = _nPictureHeight;
 				oData.nFrameRate = _nFrameRate;
-				oData.чДиапазон = _nRange;
-				oData.лЧересстрочное = _bInterlaced;
+				oData.nRange = _nRange;
+				oData.bInterlaced = _bInterlaced;
 				oData.nAudioObjectType = _nAudioObjectType;
-				oData.чЧастотаДискретизации = _nSampleRate;
-				oData.чКоличествоКаналов = _nChannelCount;
+				oData.nSampleRate = _nSampleRate;
+				oData.nChannelCount = _nChannelCount;
 				mbufTransfer.push(oData.mbInitializationSegment.buffer);
 			}
 			_oSourceSegment.bDiscontinuity = _bDiscontinuity;
@@ -1679,7 +1679,7 @@ var m_Log = (() => {
 		_nVideoSegmentEndDTS = _nLastVideoSampleDTS + nDuration;
 	}
 	function ПреобразоватьСегмент() {
-		var чНачало = performance.now();
+		var nStart = performance.now();
 		_bDiscontinuity = _bDiscontinuity || _oSourceSegment.bDiscontinuity;
 		m_Log.Вот(`ПРЕОБРАЗУЮ СЕГМЕНТ ${_oSourceSegment.nNumber} Разрыв=${_bDiscontinuity} Длительность=${_oSourceSegment.nDuration} Размер=${(_oSourceSegment.pData.byteLength / 1024 / 1024).toFixed(2)}мб`);
 		ОчиститьСтатистику();
@@ -1715,7 +1715,7 @@ var m_Log = (() => {
 		_nPrevVideoSegmentLastSampleDTS = _nLastVideoSampleDTS;
 		_nPrevVideoSegmentEndDTS = _nVideoSegmentEndDTS;
 		_nPrevAudioSegmentEndDTS = _nAudioSegmentEndDTS;
-		_nConvertedIn = performance.now() - чНачало;
+		_nConvertedIn = performance.now() - nStart;
 	}
 	function ОбработатьСменуСостояния() {
 		m_Log.Вот(`ПРОПУСКАЮ СЕГМЕНТ ${_oSourceSegment.nNumber} Состояние=${_oSourceSegment.pData}`);

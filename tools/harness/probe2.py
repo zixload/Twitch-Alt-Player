@@ -188,6 +188,13 @@ def verdict(samples):
 
     print('images decodees  : %d' % gained)
     print('lecture avancee  : %.1f s' % advanced)
+    # **La cadence, pas seulement le total.** Un essai a rendu 77 images sur 30 s : la
+    # lecture avait bien eu lieu, mais au ralenti, et le seuil de 60 images laissait
+    # passer sans rien signaler. Affichee ici, l'anomalie saute aux yeux.
+    if advanced > 0:
+        print('cadence          : %.1f images/s%s'
+              % (gained / advanced,
+                 '   <-- anormalement bas' if gained / advanced < 20 else ''))
     print('tampon final     : %s s' % samples[-1].get('ahead'))
     print('publicite vue    : %s' % any(s.get('ad') for s in samples))
 
