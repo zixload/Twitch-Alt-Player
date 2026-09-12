@@ -11,7 +11,9 @@ Quatre scripts, dans cet ordre. Chacun refuse de deviner.
 ## Pourquoi overrides.json existe
 
 Les correspondances viennent des traductions que le mainteneur a ecrites en commentaire, et du
-glossaire du depot. Elles ne sont pas toutes bonnes. Le glossaire traduit `Узел` par `Node`, ce qui
+glossaire du depot (`Documentation/legacy_code_translation_reference.md`, supprime une fois la
+passe JavaScript finie : les 31 paires d'identifiants qu'il contenait etaient toutes appliquees,
+et il ne couvrait rien de ce qui reste a traduire). Elles ne sont pas toutes bonnes. Le glossaire traduit `Узел` par `Node`, ce qui
 masque l'interface `Node` du navigateur : `Node.ELEMENT_NODE` devient `undefined`, la garde
 `if (oEvent.target.nodeType === Node.ELEMENT_NODE)` n'est plus jamais vraie, et tous les
 gestionnaires de clic du lecteur cessent de repondre sans lever la moindre erreur.
