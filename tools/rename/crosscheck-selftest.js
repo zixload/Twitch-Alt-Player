@@ -40,9 +40,17 @@ const CASES = [
 		[['player.js', /"chatleft"/g, '"panelleft"']]],
 	['id demande par GetNode nu', 'opennews',
 		[['player.html', /id=opennews\b/g, 'id=newsbutton']]],
+	/*
+		Ce cas vient d'une vraie panne. Le lot de 64 noms avait renomme l'identifiant complet dans
+		le balisage sans voir que player.js le construit par prefixe, GetNode(`scrollindicator-${elScroll.id}`) :
+		GetNode rendait null et le bouton de verification des couleurs ne repondait plus.
+
+		La reparation etant desormais dans la source, ce cas n'a plus qu'un temps : casser le
+		balisage, et verifier que le prefixe orphelin est bien signale. Le total de pendantes ne
+		bouge pas -- c'est la comparaison nom par nom qui l'attrape, pas le compte.
+	*/
 	["prefixe d'id construit par gabarit (total inchange)", 'scrollindicator-',
-		[['player.js', /`индикаторпрокрутки-\$\{elScroll\.id\}`/, '`scrollindicator-${elScroll.id}`'],
-			['player.html', /id=scrollindicator-newstext\b/g, 'id=scrollhint-newstext']]],
+		[['player.html', /id=scrollindicator-newstext\b/g, 'id=scrollhint-newstext']]],
 ];
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'crosscheck-selftest-'));
