@@ -174,7 +174,7 @@ function requestChannelState(oParsedAddress) {
   // function requestChannelState(oParsedAddress) {
   if (
     !oParsedAddress.bCanRedirect ||
-    !m_Settings.Get("лАвтоперенаправлениеРазрешено")
+    !m_Settings.Get("bAutoRedirectAllowed")
   ) {
     // if (!oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
     return;
@@ -209,7 +209,7 @@ function pageAddressChanged(sMethod) {
   // g_sAddressSettingMethod = sMethod;
   if (
     !g_oParsedAddress.bCanRedirect ||
-    !m_Settings.Get("лАвтоперенаправлениеРазрешено")
+    !m_Settings.Get("bAutoRedirectAllowed")
   ) {
     // if (!g_oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
     if (g_nLastCheck === -2) {
@@ -467,11 +467,11 @@ function handleToggleAutoRedirect(oEvent) {
   // function handleToggleAutoRedirect(oEvent) {
   oEvent.preventDefault();
   // oEvent.preventDefault();
-  const b = !m_Settings.Get("лАвтоперенаправлениеРазрешено");
+  const b = !m_Settings.Get("bAutoRedirectAllowed");
   // const b = !m_Settings.Get('bAutoRedirectAllowed');
   m_Log.Окак(`[content.js] Автоперенаправление разрешено: ${b}`);
   // m_Log.Wow(`[content.js] Auto-redirect allowed: ${b}`);
-  m_Settings.Change("лАвтоперенаправлениеРазрешено", b);
+  m_Settings.Change("bAutoRedirectAllowed", b);
   // m_Settings.Change('bAutoRedirectAllowed', b);
   updateOurButton();
   // updateOurButton();
@@ -498,7 +498,7 @@ function handleCloseHelp(oEvent) {
       passive: false,
     }
   );
-  m_Settings.Change("лАвтоперенаправлениеЗамечено", true);
+  m_Settings.Change("bAutoRedirectNoticed", true);
   // m_Settings.Change('bAutoRedirectNoticed', true);
 }
 
@@ -512,7 +512,7 @@ function updateOurButton() {
   // function updateOurButton() {
   getOurButton().classList.toggle(
     "tw5-запрещено",
-    !m_Settings.Get("лАвтоперенаправлениеРазрешено")
+    !m_Settings.Get("bAutoRedirectAllowed")
   );
   // getOurButton().classList.toggle('tw5-forbidden', !m_Settings.Get('bAutoRedirectAllowed'));
 }
@@ -713,7 +713,7 @@ function insertOurButton() {
   // nodeButton.addEventListener('contextmenu', handleToggleAutoRedirect);
   if (
     !g_oParsedAddress.bMobileVersion &&
-    !m_Settings.Get("лАвтоперенаправлениеЗамечено")
+    !m_Settings.Get("bAutoRedirectNoticed")
   ) {
     // if (!g_oParsedAddress.bMobileVersion && !m_Settings.Get('bAutoRedirectNoticed')) {
     nodeButton.parentNode.classList.add("tw5-справка");

@@ -539,85 +539,85 @@ const m_Settings = (() => {
 	// const SETTINGS_VERSION = 2;
 	const _amBufferingPresets = new Map([ [ 'J0126', {
 	// const _amBufferingPresets = new Map([ [ 'J0126', {
-		кОдновременныхЗагрузок: 1,
+		nConcurrentDownloads: 1,
 		// nConcurrentDownloads: 1,
-		чНачалоВоспроизведения: 3,
+		nPlaybackStart: 3,
 		// nPlaybackStart: 3,
-		чРазмерБуфера: 5,
+		nBufferSize: 5,
 		// nBufferSize: 5,
-		чРастягиваниеБуфера: 15
+		nBufferStretch: 15
 		// nBufferStretch: 15
 	} ], [ 'J0127', {
-		кОдновременныхЗагрузок: 2,
+		nConcurrentDownloads: 2,
 		// nConcurrentDownloads: 2,
-		чНачалоВоспроизведения: 3,
+		nPlaybackStart: 3,
 		// nPlaybackStart: 3,
-		чРазмерБуфера: 8.5,
+		nBufferSize: 8.5,
 		// nBufferSize: 8.5,
-		чРастягиваниеБуфера: 20
+		nBufferStretch: 20
 		// nBufferStretch: 20
 	} ], [ 'J0128', {
-		кОдновременныхЗагрузок: 2,
+		nConcurrentDownloads: 2,
 		// nConcurrentDownloads: 2,
-		чНачалоВоспроизведения: 17,
+		nPlaybackStart: 17,
 		// nPlaybackStart: 17,
-		чРазмерБуфера: 9.5,
+		nBufferSize: 9.5,
 		// nBufferSize: 9.5,
-		чРастягиваниеБуфера: 30
+		nBufferStretch: 30
 		// nBufferStretch: 30
 	} ] ]);
 	const _amAppearancePresets = new Map([ [ 'J0122', {
 	// const _amAppearancePresets = new Map([ [ 'J0122', {
-		сЦветФона: '#282828',
+		sBackgroundColour: '#282828',
 		// sBackgroundColor: '#282828',
-		сЦветГрадиента: '#d4d4d4',
+		sGradientColour: '#d4d4d4',
 		// sGradientColor: '#d4d4d4',
-		сЦветКнопок: '#d3be96',
+		sButtonColour: '#d3be96',
 		// sButtonColor: '#d3be96',
-		сЦветЗаголовка: '#cdbdec',
+		sHeadingColour: '#cdbdec',
 		// sHeaderColor: '#cdbdec',
-		сЦветВыделения: '#ffd862',
+		sAccentColour: '#ffd862',
 		// sHighlightColor: '#ffd862',
-		чПрозрачность: 25
+		nOpacity: 25
 		// nOpacity: 25
 	} ], [ 'J0121', {
-		сЦветФона: '#405b77',
+		sBackgroundColour: '#405b77',
 		// sBackgroundColor: '#405b77',
-		сЦветГрадиента: '#aaccf2',
+		sGradientColour: '#aaccf2',
 		// sGradientColor: '#aaccf2',
-		сЦветКнопок: '#ffffff',
+		sButtonColour: '#ffffff',
 		// sButtonColor: '#ffffff',
-		сЦветЗаголовка: '#c2e4ff',
+		sHeadingColour: '#c2e4ff',
 		// sHeaderColor: '#c2e4ff',
-		сЦветВыделения: '#fef17c',
+		sAccentColour: '#fef17c',
 		// sHighlightColor: '#fef17c',
-		чПрозрачность: 30
+		nOpacity: 30
 		// nOpacity: 30
 	} ], [ 'J0138', {
-		сЦветФона: '#4b4b4b',
+		sBackgroundColour: '#4b4b4b',
 		// sBackgroundColor: '#4b4b4b',
-		сЦветГрадиента: '#aaaaaa',
+		sGradientColour: '#aaaaaa',
 		// sGradientColor: '#aaaaaa',
-		сЦветКнопок: '#bad4f8',
+		sButtonColour: '#bad4f8',
 		// sButtonColor: '#bad4f8',
-		сЦветЗаголовка: '#e2ebb4',
+		sHeadingColour: '#e2ebb4',
 		// sHeaderColor: '#e2ebb4',
-		сЦветВыделения: '#75a9f0',
+		sAccentColour: '#75a9f0',
 		// sHighlightColor: '#75a9f0',
-		чПрозрачность: 5
+		nOpacity: 5
 		// nOpacity: 5
 	} ], [ 'J0125', {
-		сЦветФона: '#161616',
+		sBackgroundColour: '#161616',
 		// sBackgroundColor: '#161616',
-		сЦветГрадиента: '#a0a0a0',
+		sGradientColour: '#a0a0a0',
 		// sGradientColor: '#a0a0a0',
-		сЦветКнопок: '#f0f0f0',
+		sButtonColour: '#f0f0f0',
 		// sButtonColor: '#f0f0f0',
-		сЦветЗаголовка: '#baccda',
+		sHeadingColour: '#baccda',
 		// sHeaderColor: '#baccda',
-		сЦветВыделения: '#6cb6ff',
+		sAccentColour: '#6cb6ff',
 		// sHighlightColor: '#6cb6ff',
-		чПрозрачность: 20
+		nOpacity: 20
 		// nOpacity: 20
 	} ] ]);
 	const _moPresetMetadata = [ {
@@ -626,9 +626,9 @@ const m_Settings = (() => {
 		// amData: _amBufferingPresets,
 		sCustomizable: 'J0129',
 		// sCustomizable: 'J0129',
-		sSelected: 'сПредустановкаВыбрана_буферизация',
+		sSelected: 'sPresetSelected_buffering',
 		// sSelected: 'sPresetSelected_buffering',
-		sFilled: 'лПредустановкаЗаполнена_буферизация',
+		sFilled: 'bPresetFilled_buffering',
 		// sFilled: 'bPresetFilled_buffering',
 		sList: 'preset-buffering',
 		// sList: 'preset-buffering',
@@ -639,16 +639,16 @@ const m_Settings = (() => {
 		// amData: _amAppearancePresets,
 		sCustomizable: 'J0123',
 		// sCustomizable: 'J0123',
-		sSelected: 'сПредустановкаВыбрана_оформление',
+		sSelected: 'sPresetSelected_appearance',
 		// sSelected: 'sPresetSelected_appearance',
-		sFilled: 'лПредустановкаЗаполнена_оформление',
+		sFilled: 'bPresetFilled_appearance',
 		// sFilled: 'bPresetFilled_appearance',
 		sList: 'preset-appearance',
 		// sList: 'preset-appearance',
 		sEvent: 'settings-presetchanged-appearance'
 		// sEvent: 'settings-presetChanged-appearance'
 	} ];
-	const _mnoPermanentSettings = new Set([ 'чВерсияНастроек', 'чСлучайноеЧисло', 'сПредыдущаяВерсия', 'чПоследняяПроверкаОбновленияРасширения', 'лАвтоперенаправлениеЗамечено' ]);
+	const _mnoPermanentSettings = new Set([ 'nSettingsVersion', 'nRandomNumber', 'sPreviousVersion', 'nLastExtensionUpdateCheck', 'bAutoRedirectNoticed' ]);
 	// const _mnoPermanentSettings = new Set([ 'nSettingsVersion', 'nRandomNumber', 'sPreviousVersion', 'nLastExtensionUpdateCheck', 'bAutoredirectNoticed' ]);
 	const _mnoDoNotShow = new Set();
 	// const _mnoDoNotShow = new Set();
@@ -727,91 +727,91 @@ const m_Settings = (() => {
 	}
 	const _oSettings = {
 	// const _oSettings = {
-		чВерсияНастроек: Setting.Create(SETTINGS_VERSION),
+		nSettingsVersion: Setting.Create(SETTINGS_VERSION),
 		// nSettingsVersion: Setting.Create(SETTINGS_VERSION),
-		чСлучайноеЧисло: Setting.Create(Math.random()),
+		nRandomNumber: Setting.Create(Math.random()),
 		// nRandomNumber: Setting.Create(Math.random()),
-		сПредыдущаяВерсия: Setting.Create('2000.1.1'),
+		sPreviousVersion: Setting.Create('2000.1.1'),
 		// sPreviousVersion: Setting.Create('2000.1.1'),
-		чПоследняяПроверкаОбновленияРасширения: Setting.Create(0),
+		nLastExtensionUpdateCheck: Setting.Create(0),
 		// nLastExtensionUpdateCheck: Setting.Create(0),
-		чГромкость2: Setting.CreateRange(MAX_VOLUME / 2, MIN_VOLUME, MAX_VOLUME),
+		nVolume2: Setting.CreateRange(MAX_VOLUME / 2, MIN_VOLUME, MAX_VOLUME),
 		// nVolume2: Setting.CreateRange(MAX_VOLUME / 2, MIN_VOLUME, MAX_VOLUME),
-		лПриглушить: Setting.Create(false),
+		bMute: Setting.Create(false),
 		// bMute: Setting.Create(false),
-		сИдАудиоустройства: Setting.Create(''),
+		sAudioDeviceId: Setting.Create(''),
 		// sAudioDeviceId: Setting.Create(''),
-		сНазваниеВарианта: Setting.Create('CoolCmd'),
+		sVariantLabel: Setting.Create('CoolCmd'),
 		// sVariantName: Setting.Create('CoolCmd'),
-		чБитрейтВарианта: Setting.Create(MAX_SETTING_VALUE),
+		nVariantBitrate: Setting.Create(MAX_SETTING_VALUE),
 		// nVariantBitrate: Setting.Create(MAX_SETTING_VALUE),
-		чДлительностьПовтора2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
+		nReplayDuration2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
 		// nRepeatDuration2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
-		лМасштабироватьИзображение: Setting.Create(true),
+		bScaleImage: Setting.Create(true),
 		// bScaleImage: Setting.Create(true),
-		чСостояниеЧата: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
+		nChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
 		// nChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
-		чСостояниеЗакрытогоЧата: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
+		nClosedChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
 		// nClosedChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
-		лАвтоПоложениеЧата: Setting.Create(isMobileDevice()),
+		bAutoChatPosition: Setting.Create(isMobileDevice()),
 		// bAutoChatPosition: Setting.Create(isMobileDevice()),
-		чГоризонтальноеПоложениеЧата: Setting.CreateEnum(RIGHT_SIDE, [ RIGHT_SIDE, LEFT_SIDE ]),
+		nHorizontalChatPosition: Setting.CreateEnum(RIGHT_SIDE, [ RIGHT_SIDE, LEFT_SIDE ]),
 		// nHorizontalChatPosition: Setting.CreateEnum(RIGHT_SIDE, [ RIGHT_SIDE, LEFT_SIDE ]),
-		чВертикальноеПоложениеЧата: Setting.CreateEnum(BOTTOM_SIDE, [ TOP_SIDE, BOTTOM_SIDE ]),
+		nVerticalChatPosition: Setting.CreateEnum(BOTTOM_SIDE, [ TOP_SIDE, BOTTOM_SIDE ]),
 		// nVerticalChatPosition: Setting.CreateEnum(BOTTOM_SIDE, [ TOP_SIDE, BOTTOM_SIDE ]),
-		чПоложениеПанелиЧата: Setting.CreateEnum(RIGHT_SIDE, [ TOP_SIDE, RIGHT_SIDE, BOTTOM_SIDE, LEFT_SIDE ]),
+		nChatPanelPosition: Setting.CreateEnum(RIGHT_SIDE, [ TOP_SIDE, RIGHT_SIDE, BOTTOM_SIDE, LEFT_SIDE ]),
 		// nChatPanelPosition: Setting.CreateEnum(RIGHT_SIDE, [ TOP_SIDE, RIGHT_SIDE, BOTTOM_SIDE, LEFT_SIDE ]),
-		чШиринаПанелиЧата: Setting.CreateRange(340, 100, MAX_SETTING_VALUE),
+		nChatPanelWidth: Setting.CreateRange(340, 100, MAX_SETTING_VALUE),
 		// nChatPanelWidth: Setting.CreateRange(340, 100, MAX_SETTING_VALUE),
-		чВысотаПанелиЧата: Setting.CreateRange(250, 100, MAX_SETTING_VALUE),
+		nChatPanelHeight: Setting.CreateRange(250, 100, MAX_SETTING_VALUE),
 		// nChatPanelHeight: Setting.CreateRange(250, 100, MAX_SETTING_VALUE),
-		лПолноценныйЧат: Setting.Create(true),
+		bFullChat: Setting.Create(true),
 		// bFullFeaturedChat: Setting.Create(true),
-		лЗатемнитьЧат: Setting.Create(false),
+		bDimChat: Setting.Create(false),
 		// bDimChat: Setting.Create(false),
-		чРазмерИнтерфейса: Setting.CreateRange(isMobileDevice() ? 115 : 100, 50, 200),
+		nInterfaceSize: Setting.CreateRange(isMobileDevice() ? 115 : 100, 50, 200),
 		// nInterfaceSize: Setting.CreateRange(isMobileDevice() ? 115 : 100, 50, 200),
-		чИнтервалАвтоскрытия: Setting.CreateRange(4, .5, 60),
+		nAutoHideInterval: Setting.CreateRange(4, .5, 60),
 		// nAutoHideInterval: Setting.CreateRange(4, .5, 60),
-		лАнимацияИнтерфейса: Setting.Create(!isMobileDevice()),
+		bInterfaceAnimation: Setting.Create(!isMobileDevice()),
 		// bInterfaceAnimation: Setting.Create(!isMobileDevice()),
-		лМенятьГромкостьКолесом: Setting.Create(true),
+		bWheelVolume: Setting.Create(true),
 		// bChangeVolumeWithWheel: Setting.Create(true),
-		чШагИзмененияГромкостиКолесом: Setting.CreateRange(5, -10, 10),
+		nWheelVolumeStep: Setting.CreateRange(5, -10, 10),
 		// nVolumeChangeStepWithWheel: Setting.CreateRange(5, -10, 10),
-		лПоказатьСтатистику: Setting.Create(false),
+		bShowStatistics: Setting.Create(false),
 		// bShowStatistics: Setting.Create(false),
-		сПредустановкаВыбрана_буферизация: Setting.Create('J0127'),
+		sPresetSelected_buffering: Setting.Create('J0127'),
 		// sPresetSelected_buffering: Setting.Create('J0127'),
-		лПредустановкаЗаполнена_буферизация: Setting.Create(false),
+		bPresetFilled_buffering: Setting.Create(false),
 		// bPresetFilled_buffering: Setting.Create(false),
-		кОдновременныхЗагрузок: Setting.CreateRange(0, 1, 3),
+		nConcurrentDownloads: Setting.CreateRange(0, 1, 3),
 		// nConcurrentDownloads: Setting.CreateRange(0, 1, 3),
-		чНачалоВоспроизведения: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
+		nPlaybackStart: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
 		// nPlaybackStart: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
-		чРазмерБуфера: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
+		nBufferSize: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
 		// nBufferSize: Setting.CreateRange(0, MIN_BUFFER_SIZE, MAX_BUFFER_SIZE),
-		чРастягиваниеБуфера: Setting.CreateRange(0, MIN_BUFFER_STRETCH, MAX_BUFFER_STRETCH),
+		nBufferStretch: Setting.CreateRange(0, MIN_BUFFER_STRETCH, MAX_BUFFER_STRETCH),
 		// nBufferStretch: Setting.CreateRange(0, MIN_BUFFER_STRETCH, MAX_BUFFER_STRETCH),
-		сПредустановкаВыбрана_оформление: Setting.Create('J0122'),
+		sPresetSelected_appearance: Setting.Create('J0122'),
 		// sPresetSelected_appearance: Setting.Create('J0122'),
-		лПредустановкаЗаполнена_оформление: Setting.Create(false),
+		bPresetFilled_appearance: Setting.Create(false),
 		// bPresetFilled_appearance: Setting.Create(false),
-		сЦветФона: Setting.Create(''),
+		sBackgroundColour: Setting.Create(''),
 		// sBackgroundColor: Setting.Create(''),
-		сЦветГрадиента: Setting.Create('#ffffff'),
+		sGradientColour: Setting.Create('#ffffff'),
 		// sGradientColor: Setting.Create('#ffffff'),
-		сЦветКнопок: Setting.Create(''),
+		sButtonColour: Setting.Create(''),
 		// sButtonColor: Setting.Create(''),
-		сЦветЗаголовка: Setting.Create(''),
+		sHeadingColour: Setting.Create(''),
 		// sHeaderColor: Setting.Create(''),
-		сЦветВыделения: Setting.Create(''),
+		sAccentColour: Setting.Create(''),
 		// sHighlightColor: Setting.Create(''),
-		чПрозрачность: Setting.CreateRange(0, 0, 80),
+		nOpacity: Setting.CreateRange(0, 0, 80),
 		// nOpacity: Setting.CreateRange(0, 0, 80),
-		лАвтоперенаправлениеРазрешено: Setting.Create(true),
+		bAutoRedirectAllowed: Setting.Create(true),
 		// bAutoRedirectAllowed: Setting.Create(true),
-		лАвтоперенаправлениеЗамечено: Setting.Create(false)
+		bAutoRedirectNoticed: Setting.Create(false)
 		// bAutoRedirectNoticed: Setting.Create(false)
 	};
 	const DELAY_SAVE_FOR = THIS_IS_CONTENT_SCRIPT ? 50 : 500;
@@ -822,6 +822,84 @@ const m_Settings = (() => {
 	// let _oDelayedSave = null;
 	let _bDelayedDelete = false;
 	// let _bDelayedDelete = false;
+	/*
+		Settings saved under the old Russian key names, carried over to the new English ones.
+
+		Every setting the user has ever changed sits in chrome.storage under the name this code
+		used at the time. Renaming the keys without this step would not raise an error: the schema
+		would simply find nothing for each name and fall back to its default, and the user would
+		discover on the next launch that their buffer size, their chat position and their colours
+		had all gone back to factory settings — silently, with no way to tell what happened.
+
+		The old names live here and nowhere else. They are data, not code: this table is the only
+		place in the extension where Cyrillic identifiers are still meaningful, and it stays for as
+		long as someone might still be carrying a profile written before the rename.
+
+		A value already stored under the new name always wins — re-running this must never undo a
+		setting the user has changed since.
+	*/
+	const _moOldSettingNames = new Map(Object.entries({
+		'кОдновременныхЗагрузок': 'nConcurrentDownloads',
+		'лАвтоПоложениеЧата': 'bAutoChatPosition',
+		'лАвтоперенаправлениеЗамечено': 'bAutoRedirectNoticed',
+		'лАвтоперенаправлениеРазрешено': 'bAutoRedirectAllowed',
+		'лАнимацияИнтерфейса': 'bInterfaceAnimation',
+		'лЗатемнитьЧат': 'bDimChat',
+		'лМасштабироватьИзображение': 'bScaleImage',
+		'лМенятьГромкостьКолесом': 'bWheelVolume',
+		'лПоказатьСтатистику': 'bShowStatistics',
+		'лПолноценныйЧат': 'bFullChat',
+		'лПредустановкаЗаполнена_буферизация': 'bPresetFilled_buffering',
+		'лПредустановкаЗаполнена_оформление': 'bPresetFilled_appearance',
+		'лПриглушить': 'bMute',
+		'сИдАудиоустройства': 'sAudioDeviceId',
+		'сНазваниеВарианта': 'sVariantLabel',
+		'сПредустановкаВыбрана_буферизация': 'sPresetSelected_buffering',
+		'сПредустановкаВыбрана_оформление': 'sPresetSelected_appearance',
+		'сПредыдущаяВерсия': 'sPreviousVersion',
+		'сЦветВыделения': 'sAccentColour',
+		'сЦветГрадиента': 'sGradientColour',
+		'сЦветЗаголовка': 'sHeadingColour',
+		'сЦветКнопок': 'sButtonColour',
+		'сЦветФона': 'sBackgroundColour',
+		'чБитрейтВарианта': 'nVariantBitrate',
+		'чВерсияНастроек': 'nSettingsVersion',
+		'чВертикальноеПоложениеЧата': 'nVerticalChatPosition',
+		'чВысотаПанелиЧата': 'nChatPanelHeight',
+		'чГоризонтальноеПоложениеЧата': 'nHorizontalChatPosition',
+		'чГромкость2': 'nVolume2',
+		'чДлительностьПовтора2': 'nReplayDuration2',
+		'чИнтервалАвтоскрытия': 'nAutoHideInterval',
+		'чНачалоВоспроизведения': 'nPlaybackStart',
+		'чПоложениеПанелиЧата': 'nChatPanelPosition',
+		'чПоследняяПроверкаОбновленияРасширения': 'nLastExtensionUpdateCheck',
+		'чПрозрачность': 'nOpacity',
+		'чРазмерБуфера': 'nBufferSize',
+		'чРазмерИнтерфейса': 'nInterfaceSize',
+		'чРастягиваниеБуфера': 'nBufferStretch',
+		'чСлучайноеЧисло': 'nRandomNumber',
+		'чСостояниеЗакрытогоЧата': 'nClosedChatState',
+		'чСостояниеЧата': 'nChatState',
+		'чШагИзмененияГромкостиКолесом': 'nWheelVolumeStep',
+		'чШиринаПанелиЧата': 'nChatPanelWidth',
+	}));
+	function MigrateSettingNames(oRestoredSettings) {
+		let nCarried = 0;
+		for (const [sOld, sNew] of _moOldSettingNames) {
+			if (!oRestoredSettings.hasOwnProperty(sOld)) {
+				continue;
+			}
+			if (!oRestoredSettings.hasOwnProperty(sNew)) {
+				oRestoredSettings[sNew] = oRestoredSettings[sOld];
+				++nCarried;
+			}
+			delete oRestoredSettings[sOld];
+		}
+		if (nCarried) {
+			m_Log.Вот(`[Настройки] ${nCarried} reglage(s) repris sous leur nouveau nom`);
+		}
+		return oRestoredSettings;
+	}
 	function Restore() {
 	// function Restore() {
 		m_Log.Вот('[Настройки] Восстанавливаю settings');
@@ -842,8 +920,7 @@ const m_Settings = (() => {
 					}
 					m_Log.Вот(`[Настройки] Настройки прочитаны из хранилища: ${m_Log.O(oRestoredSettings)}`);
 					// m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oRestoredSettings)}`);
-					FinishRestoring(oRestoredSettings);
-					// FinishRestoring(oRestoredSettings);
+					FinishRestoring(MigrateSettingNames(oRestoredSettings));
 					fResolve();
 					// fResolve();
 				} catch (pException) {
@@ -858,7 +935,7 @@ const m_Settings = (() => {
 	// function FinishRestoring(oRestoredSettings) {
 		Check(IsObject(oRestoredSettings));
 		// Check(IsObject(oRestoredSettings));
-		Check(!_oSettings.чВерсияНастроек.pCurrent);
+		Check(!_oSettings.nSettingsVersion.pCurrent);
 		// Check(!_oSettings.nSettingsVersion.pCurrent);
 		const oSave = {};
 		// const oSave = {};
@@ -892,7 +969,7 @@ const m_Settings = (() => {
 	}
 	function CheckSettingsVersion(oSettings, oSave) {
 	// function CheckSettingsVersion(oSettings, oSave) {
-		if (!Number.isInteger(oSettings.чВерсияНастроек) || oSettings.чВерсияНастроек < 1 || oSettings.чВерсияНастроек > SETTINGS_VERSION) {
+		if (!Number.isInteger(oSettings.nSettingsVersion) || oSettings.nSettingsVersion < 1 || oSettings.nSettingsVersion > SETTINGS_VERSION) {
 		// if (!Number.isInteger(oSettings.nSettingsVersion) || oSettings.nSettingsVersion < 1 || oSettings.nSettingsVersion > SETTINGS_VERSION) {
 			for (let sName of Object.keys(oSettings)) {
 			// for (let sName of Object.keys(oSettings)) {
@@ -923,16 +1000,16 @@ const m_Settings = (() => {
 				}
 			}
 		}
-		if (oSettings.чСостояниеЗакрытогоЧата !== oSettings.чСостояниеЧата && (oSettings.чСостояниеЧата === CHAT_UNLOADED || oSettings.чСостояниеЧата === CHAT_HIDDEN)) {
+		if (oSettings.nClosedChatState !== oSettings.nChatState && (oSettings.nChatState === CHAT_UNLOADED || oSettings.nChatState === CHAT_HIDDEN)) {
 		// if (oSettings.nClosedChatState !== oSettings.nChatState && (oSettings.nChatState === CHAT_UNLOADED || oSettings.nChatState === CHAT_HIDDEN)) {
-			oSave.чСостояниеЗакрытогоЧата = oSettings.чСостояниеЗакрытогоЧата = oSettings.чСостояниеЧата;
+			oSave.nClosedChatState = oSettings.nClosedChatState = oSettings.nChatState;
 			// oSave.nClosedChatState = oSettings.nClosedChatState = oSettings.nChatState;
 		}
-		if (oSettings.чВерсияНастроек === SETTINGS_VERSION) {
+		if (oSettings.nSettingsVersion === SETTINGS_VERSION) {
 		// if (oSettings.nSettingsVersion === SETTINGS_VERSION) {
 			return false;
 		}
-		oSave.чВерсияНастроек = oSettings.чВерсияНастроек = SETTINGS_VERSION;
+		oSave.nSettingsVersion = oSettings.nSettingsVersion = SETTINGS_VERSION;
 		// oSave.nSettingsVersion = oSettings.nSettingsVersion = SETTINGS_VERSION;
 		return false;
 	}
@@ -1005,7 +1082,7 @@ const m_Settings = (() => {
 	// function Reset() {
 		m_Log.Окак('[Настройки] Сбрасываю settings');
 		// m_Log.Wow('[Settings] Resetting settings');
-		Check(_oSettings.чВерсияНастроек.pCurrent);
+		Check(_oSettings.nSettingsVersion.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
 		const oSave = {};
 		// const oSave = {};
@@ -1022,11 +1099,11 @@ const m_Settings = (() => {
 	// function Export() {
 		m_Log.Окак('[Настройки] Экспортирую settings');
 		// m_Log.Wow('[Settings] Exporting settings');
-		Check(_oSettings.чВерсияНастроек.pCurrent);
+		Check(_oSettings.nSettingsVersion.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
 		const oExport = {
 		// const oExport = {
-			чВерсияНастроек: SETTINGS_VERSION
+			nSettingsVersion: SETTINGS_VERSION
 			// nSettingsVersion: SETTINGS_VERSION
 		};
 		for (let sName of Object.keys(_oSettings)) {
@@ -1046,7 +1123,7 @@ const m_Settings = (() => {
 	// function Import(oFromFile) {
 		m_Log.Окак(`[Настройки] Импортирую settings из файла ${oFromFile.name}`);
 		// m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
-		Check(_oSettings.чВерсияНастроек.pCurrent);
+		Check(_oSettings.nSettingsVersion.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
 		if (oFromFile.size === 0 || oFromFile.size > 1e4) {
 		// if (oFromFile.size === 0 || oFromFile.size > 1e4) {
@@ -1125,7 +1202,7 @@ const m_Settings = (() => {
 		// Check(typeof sName == 'string');
 		Check(_oSettings.hasOwnProperty(sName));
 		// Check(_oSettings.hasOwnProperty(sName));
-		Check(_oSettings.чВерсияНастроек.pCurrent);
+		Check(_oSettings.nSettingsVersion.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
 		for (let oMetadata of _moPresetMetadata) {
 		// for (let oMetadata of _moPresetMetadata) {
@@ -1149,7 +1226,7 @@ const m_Settings = (() => {
 	// function Get(sName) {
 		if (sName === 'nMaxBufferSize') {
 		// if (sName === 'nMaxBufferSize') {
-			return Math.max(Get2('чНачалоВоспроизведения'), Get2('чРазмерБуфера'));
+			return Math.max(Get2('nPlaybackStart'), Get2('nBufferSize'));
 			// return Math.max(Get2('nPlaybackStart'), Get2('nBufferSize'));
 		}
 		return Get2(sName);

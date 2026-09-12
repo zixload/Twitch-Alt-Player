@@ -15,9 +15,9 @@
 	--sb-ink: 242, 242, 245;
 	--sb-ink-dim: 154, 155, 166;
 	--sb-line: 255, 255, 255;
-	--sb-accent: var(--сЦветВыделения, 168, 128, 255);
+	--sb-accent: var(--sAccentColour, 168, 128, 255);
 	--sb-live: 236, 62, 62;
-	--sb-glass: var(--сЦветФона, 16, 16, 21);
+	--sb-glass: var(--sBackgroundColour, 16, 16, 21);
 
 	flex: 0 0 var(--sb-width);
 	width: var(--sb-width);

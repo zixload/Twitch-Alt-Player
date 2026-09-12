@@ -8,8 +8,8 @@
 	the statistics overlay). Everything here is colour, radius, blur and typography.
 
 	It keeps the user's appearance settings meaningful: the theme colours arrive as
-	RGB triplets in `--сЦветФона` / `--сЦветКнопок` / `--сЦветВыделения`, and the
-	transparency slider arrives as `--чНепрозрачность`, which is scaled down rather
+	RGB triplets in `--sBackgroundColour` / `--sButtonColour` / `--sAccentColour`, and the
+	transparency slider arrives as `--nOpacity`, which is scaled down rather
 	than ignored so the slider still does something.
 */
 
@@ -23,8 +23,8 @@
 	--gl-field: 26, 26, 32;
 
 	/* Panels sit over video, so they stay far lighter than free-floating windows. */
-	--gl-panel-alpha: calc(var(--чНепрозрачность, .75) * .26);
-	--gl-window-alpha: calc(var(--чНепрозрачностьОкна, .85) * .74);
+	--gl-panel-alpha: calc(var(--nOpacity, .75) * .26);
+	--gl-window-alpha: calc(var(--nWindowOpacity, .85) * .74);
 
 	scrollbar-color: rgba(var(--gl-line), .2) transparent;
 }
@@ -34,10 +34,10 @@
 .панель {
 	background:
 		linear-gradient(to right,
-			rgba(var(--сЦветГрадиента), 0) 0%,
-			rgba(var(--сЦветГрадиента), .05) 50%,
-			rgba(var(--сЦветГрадиента), 0) 100%),
-		rgba(var(--сЦветФона), var(--gl-panel-alpha));
+			rgba(var(--sGradientColour), 0) 0%,
+			rgba(var(--sGradientColour), .05) 50%,
+			rgba(var(--sGradientColour), 0) 100%),
+		rgba(var(--sBackgroundColour), var(--gl-panel-alpha));
 	backdrop-filter: var(--gl-blur);
 	-webkit-backdrop-filter: var(--gl-blur);
 }
@@ -57,9 +57,9 @@
 	border-radius: var(--gl-radius);
 	background:
 		linear-gradient(150deg,
-			rgba(var(--сЦветГрадиента), .1),
-			rgba(var(--сЦветГрадиента), 0) 55%),
-		rgba(var(--сЦветФона), var(--gl-window-alpha));
+			rgba(var(--sGradientColour), .1),
+			rgba(var(--sGradientColour), 0) 55%),
+		rgba(var(--sBackgroundColour), var(--gl-window-alpha));
 	backdrop-filter: var(--gl-blur);
 	-webkit-backdrop-filter: var(--gl-blur);
 	box-shadow:
@@ -75,7 +75,7 @@
 
 .menu-item:hover {
 	text-shadow: inherit;
-	color: rgb(var(--сЦветВыделения));
+	color: rgb(var(--sAccentColour));
 	background: rgba(var(--gl-line), .09);
 }
 
@@ -106,7 +106,7 @@ hr {
 
 input:checked+.settingsheading {
 	color: #111;
-	background: rgb(var(--сЦветВыделения));
+	background: rgb(var(--sAccentColour));
 }
 
 .setting-name {
@@ -147,7 +147,7 @@ input[type=color]:focus-visible,
 button:focus-visible,
 select:focus-visible,
 input:focus-visible {
-	outline: .125rem solid rgb(var(--сЦветВыделения));
+	outline: .125rem solid rgb(var(--sAccentColour));
 	outline-offset: .0625rem;
 }
 
@@ -186,8 +186,8 @@ select>optgroup {
 
 input:checked+.radio-icon,
 input:checked+.checkbox-icon {
-	border-color: rgb(var(--сЦветВыделения));
-	background: rgb(var(--сЦветВыделения));
+	border-color: rgb(var(--sAccentColour));
+	background: rgb(var(--sAccentColour));
 }
 
 kbd,
@@ -253,7 +253,7 @@ kbd,
 
 #speed:not(:disabled):hover {
 	border-color: rgba(var(--gl-line), .3);
-	color: rgb(var(--сЦветВыделения));
+	color: rgb(var(--sAccentColour));
 	background-image: none;
 }
 
@@ -302,7 +302,7 @@ kbd,
 }
 
 #statistics.dragger {
-	outline: .0625rem solid rgb(var(--сЦветВыделения));
+	outline: .0625rem solid rgb(var(--sAccentColour));
 }
 
 .statistics-maintable>tbody>tr>th {
@@ -331,7 +331,7 @@ kbd,
 
 #chatsize:hover,
 #chatsize.dragger {
-	box-shadow: inset .1875rem 0 0 rgb(var(--сЦветВыделения));
+	box-shadow: inset .1875rem 0 0 rgb(var(--sAccentColour));
 }
 
 ::-webkit-scrollbar {

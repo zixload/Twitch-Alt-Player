@@ -1398,7 +1398,7 @@ const m_Statistics = (() => {
       nCount < HIGHLIGHT_UNWATCHED_MIN ||
       nCount >=
       m_Settings.Get("nMaxBufferSize") +
-      m_Settings.Get("чРастягиваниеБуфера") *
+      m_Settings.Get("nBufferStretch") *
       HIGHLIGHT_UNWATCHED_MAX
     );
   }
@@ -1732,7 +1732,7 @@ const m_Statistics = (() => {
       HandleWindowDrag
     );
     ShowElement("statistics", true);
-    m_Settings.Change("лПоказатьСтатистику", true);
+    m_Settings.Change("bShowStatistics", true);
   }
   function CloseWindow() {
     if (!WindowOpened()) {
@@ -1758,7 +1758,7 @@ const m_Statistics = (() => {
     }
     clearInterval(_nTimer);
     _nTimer = 0;
-    m_Settings.Change("лПоказатьСтатистику", false);
+    m_Settings.Change("bShowStatistics", false);
   }
   function HandleWindowDrag(oParameters) {
     switch (oParameters.nStep) {
@@ -1787,7 +1787,7 @@ const m_Statistics = (() => {
     }
   }
   function Start() {
-    if (m_Settings.Get("лПоказатьСтатистику")) {
+    if (m_Settings.Get("bShowStatistics")) {
       OpenWindow();
     }
   }
@@ -2648,12 +2648,12 @@ const m_AutoHide = (() => {
       document.body.classList.add("panelanimation");
       _nTimer = setTimeout(
         handleTimer,
-        m_Settings.Get("чИнтервалАвтоскрытия") * 1e3
+        m_Settings.Get("nAutoHideInterval") * 1e3
       );
       _nHideAfter = _nDoNotShowUntil = 0;
     } else {
       _nHideAfter =
-        performance.now() + m_Settings.Get("чИнтервалАвтоскрытия") * 1e3;
+        performance.now() + m_Settings.Get("nAutoHideInterval") * 1e3;
     }
   }
   function Hide(bWithAnimation = true) {
@@ -2748,7 +2748,7 @@ const m_MediaQuery = (() => {
     const elPlayer = GetNode("player");
     const nPlayerHeight =
       (elPlayer.clientHeight * 100) /
-      m_Settings.Get("чРазмерИнтерфейса");
+      m_Settings.Get("nInterfaceSize");
     Check(nPlayerHeight > 0);
     elPlayer.classList.toggle(
       "collapsemainmenu",
@@ -2842,23 +2842,23 @@ const m_Appearance = (() => {
       );
     }
     const чНепрозрачность = Round(
-      1 - m_Settings.Get("чПрозрачность") / 100,
+      1 - m_Settings.Get("nOpacity") / 100,
       2
     );
-    oStyle.setProperty("--чНепрозрачность", чНепрозрачность);
+    oStyle.setProperty("--nOpacity", чНепрозрачность);
     oStyle.setProperty(
-      "--чНепрозрачностьОкна",
+      "--nWindowOpacity",
       Clamp(чНепрозрачность, 0.85, 1)
     );
   }
   function ApplyInterfaceSize() {
-    document.documentElement.style.fontSize = `${(16 * m_Settings.Get("чРазмерИнтерфейса")) / 100
+    document.documentElement.style.fontSize = `${(16 * m_Settings.Get("nInterfaceSize")) / 100
       }px`;
     m_MediaQuery.updateSlowly();
   }
   function Start() {
     m_i18n.TranslateDocument(document);
-    _oOpacity = new NumberInput("чПрозрачность", 5, 0, "opacity");
+    _oOpacity = new NumberInput("nOpacity", 5, 0, "opacity");
     _oOpacity.AfterChange = UpdateStyles;
     document.addEventListener("input", HandleColourInput);
     document.addEventListener("change", HandleColourChange);
@@ -2868,7 +2868,7 @@ const m_Appearance = (() => {
     );
     HandleAppearancePresetChange();
     new NumberInput(
-      "чРазмерИнтерфейса",
+      "nInterfaceSize",
       1,
       0,
       "interfacesize"
@@ -2992,11 +2992,11 @@ const m_Scale = (() => {
  *    - Auto-generates "Google Translate" links for non-Russian users.
  *
  * 2. UPDATE CHECKING:
- *    - Notifies the user if a new version is found (logic involves `м_Настройки.чПоследняяПроверкаОбновленияРасширения`).
+ *    - Notifies the user if a new version is found (logic involves `м_Настройки.nLastExtensionUpdateCheck`).
  *
  * 3. VERSION TRACKING:
  *    - On startup (`Запустить`), compares the current extension version (`ВЕРСИЯ_РАСШИРЕНИЯ`)
- *      with the last seen version (`сПредыдущаяВерсия` in Settings).
+ *      with the last seen version (`sPreviousVersion` in Settings).
  *    - If upgraded, highlights the "News" button to alert the user of new features.
  *
  * USAGE IN CODEBASE:
@@ -3188,7 +3188,7 @@ const m_News = (() => {
       ElementIsShown("postponenews")
     ) {
       ShowElement("opennews", false);
-      m_Settings.Change("сПредыдущаяВерсия", EXTENSION_VERSION);
+      m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
     } else if (oEvent.target.href === "translate:") {
       let sText = "";
       for (
@@ -3208,15 +3208,15 @@ const m_News = (() => {
     OpenWindow(false);
   }
   function OpenNews() {
-    const { pCurrent: сПредыдущаяВерсия, pInitial: sInitialVersion } =
-      m_Settings.GetSettingParameters("сПредыдущаяВерсия");
-    if (сПредыдущаяВерсия === sInitialVersion) {
+    const { pCurrent: sPreviousVersion, pInitial: sInitialVersion } =
+      m_Settings.GetSettingParameters("sPreviousVersion");
+    if (sPreviousVersion === sInitialVersion) {
       AddNewsItems(Infinity, SHOW_ONCE);
       OpenWindow(false);
       ShowElement("opennews", false);
-      m_Settings.Change("сПредыдущаяВерсия", EXTENSION_VERSION);
-    } else if (сПредыдущаяВерсия !== EXTENSION_VERSION) {
-      AddNewsItems(ConvertVersionToMilliseconds(сПредыдущаяВерсия), "");
+      m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
+    } else if (sPreviousVersion !== EXTENSION_VERSION) {
+      AddNewsItems(ConvertVersionToMilliseconds(sPreviousVersion), "");
       OpenWindow(true);
       GetNode("opennews").classList.remove("unread");
     } else {
@@ -3230,19 +3230,19 @@ const m_News = (() => {
    * there, so the check is gone rather than left pointing at someone else's site.
    */
   function Start() {
-    const { pCurrent: сПредыдущаяВерсия, pInitial: sInitialVersion } =
-      m_Settings.GetSettingParameters("сПредыдущаяВерсия");
-    if (сПредыдущаяВерсия !== EXTENSION_VERSION) {
+    const { pCurrent: sPreviousVersion, pInitial: sInitialVersion } =
+      m_Settings.GetSettingParameters("sPreviousVersion");
+    if (sPreviousVersion !== EXTENSION_VERSION) {
       m_Log.Окак(
-        `[Новости] Версия расширения изменилась с ${сПредыдущаяВерсия} на ${EXTENSION_VERSION}`
+        `[Новости] Версия расширения изменилась с ${sPreviousVersion} на ${EXTENSION_VERSION}`
       );
       if (
-        сПредыдущаяВерсия === sInitialVersion ||
-        HasNewsWithVersionOlderThan(сПредыдущаяВерсия)
+        sPreviousVersion === sInitialVersion ||
+        HasNewsWithVersionOlderThan(sPreviousVersion)
       ) {
         ShowElement("opennews", true).classList.add("unread");
       } else {
-        m_Settings.Change("сПредыдущаяВерсия", EXTENSION_VERSION);
+        m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
       }
     }
   }
@@ -3266,9 +3266,9 @@ const m_Controls = (() => {
   function startWheelVolumeChange() {
     document.removeEventListener("pointerdown", handleWheelPress);
     document.removeEventListener("wheel", handleWheelRotate);
-    if (m_Settings.Get("лМенятьГромкостьКолесом")) {
+    if (m_Settings.Get("bWheelVolume")) {
       document.addEventListener("pointerdown", handleWheelPress);
-      if (m_Settings.Get("чШагИзмененияГромкостиКолесом") !== 0) {
+      if (m_Settings.Get("nWheelVolumeStep") !== 0) {
         document.addEventListener("wheel", handleWheelRotate, {
           passive: false,
         });
@@ -3288,7 +3288,7 @@ const m_Controls = (() => {
         )
       ) {
         oEvent.preventDefault();
-        SaveAndApplyVolume(!m_Settings.Get("лПриглушить"));
+        SaveAndApplyVolume(!m_Settings.Get("bMute"));
       }
     }
   );
@@ -3310,8 +3310,8 @@ const m_Controls = (() => {
         SaveAndApplyVolume(
           void 0,
           Clamp(
-            m_Settings.Get("чГромкость2") -
-            m_Settings.Get("чШагИзмененияГромкостиКолесом") *
+            m_Settings.Get("nVolume2") -
+            m_Settings.Get("nWheelVolumeStep") *
             Math.sign(oEvent.deltaY),
             MIN_VOLUME,
             MAX_VOLUME
@@ -3323,13 +3323,13 @@ const m_Controls = (() => {
   function ApplyImageScaling() {
     GetNode("eye").classList.toggle(
       "scaled",
-      m_Settings.Get("лМасштабироватьИзображение")
+      m_Settings.Get("bScaleImage")
     );
   }
   function ApplyInterfaceAnimation() {
     document.body.classList.toggle(
       "interfaceanimation",
-      m_Settings.Get("лАнимацияИнтерфейса")
+      m_Settings.Get("bInterfaceAnimation")
     );
   }
   function StopWatchingBroadcast() {
@@ -3433,34 +3433,34 @@ const m_Controls = (() => {
       SaveAndApplyVolume(false, oEvent.target.valueAsNumber);
     }
   );
-  function SaveAndApplyVolume(лПриглушить, nVolume) {
-    Check(лПриглушить !== void 0 || nVolume !== void 0);
+  function SaveAndApplyVolume(bMute, nVolume) {
+    Check(bMute !== void 0 || nVolume !== void 0);
     if (document.body.classList.contains("noaudio")) {
       return;
     }
-    if (лПриглушить !== void 0) {
-      m_Settings.Change("лПриглушить", лПриглушить);
+    if (bMute !== void 0) {
+      m_Settings.Change("bMute", bMute);
     }
     if (nVolume !== void 0) {
-      m_Settings.Change("чГромкость2", Math.round(nVolume));
+      m_Settings.Change("nVolume2", Math.round(nVolume));
     }
     m_Player.ApplyVolume();
     UpdateVolume();
     m_AutoHide.Show();
   }
   function UpdateVolume() {
-    const nVolume = m_Settings.Get("чГромкость2");
+    const nVolume = m_Settings.Get("nVolume2");
     const nodeVolume = GetNode("volume");
     nodeVolume.value = nVolume;
     nodeVolume.style.setProperty(
-      "--ширина",
+      "--width",
       `${((nVolume - MIN_VOLUME) / (100 - MIN_VOLUME)) *
       100
       }%`
     );
     ChangeButton(
       "togglemute",
-      m_Settings.Get("лПриглушить")
+      m_Settings.Get("bMute")
     );
   }
   function UpdateTrackCount(bHasVideo, bHasAudio) {
@@ -3502,7 +3502,7 @@ const m_Controls = (() => {
         break;
 
       case "togglemute":
-        SaveAndApplyVolume(!m_Settings.Get("лПриглушить"));
+        SaveAndApplyVolume(!m_Settings.Get("bMute"));
         break;
 
       case "togglechat":
@@ -3524,24 +3524,24 @@ const m_Controls = (() => {
       case "concurrentdownloads":
         Check(nodeClick.checked);
         m_Settings.Change(
-          "кОдновременныхЗагрузок",
+          "nConcurrentDownloads",
           Number.parseInt(nodeClick.value, 10)
         );
         m_Statistics.ClearHistory();
         break;
 
       case "interfaceanimation":
-        m_Settings.Change("лАнимацияИнтерфейса", nodeClick.checked);
+        m_Settings.Change("bInterfaceAnimation", nodeClick.checked);
         ApplyInterfaceAnimation();
         break;
 
       case "scaleimage":
-        m_Settings.Change("лМасштабироватьИзображение", nodeClick.checked);
+        m_Settings.Change("bScaleImage", nodeClick.checked);
         ApplyImageScaling();
         break;
 
       case "autochatposition":
-        m_Settings.Change("лАвтоПоложениеЧата", nodeClick.checked);
+        m_Settings.Change("bAutoChatPosition", nodeClick.checked);
         UpdateSettingsWindow();
         m_Chat.ApplyPanelPosition();
         break;
@@ -3549,7 +3549,7 @@ const m_Controls = (() => {
       case "horizontalchatposition":
         Check(nodeClick.checked);
         m_Settings.Change(
-          "чГоризонтальноеПоложениеЧата",
+          "nHorizontalChatPosition",
           Number.parseInt(nodeClick.value, 10)
         );
         m_Chat.ApplyPanelPosition();
@@ -3558,7 +3558,7 @@ const m_Controls = (() => {
       case "verticalchatposition":
         Check(nodeClick.checked);
         m_Settings.Change(
-          "чВертикальноеПоложениеЧата",
+          "nVerticalChatPosition",
           Number.parseInt(nodeClick.value, 10)
         );
         m_Chat.ApplyPanelPosition();
@@ -3567,7 +3567,7 @@ const m_Controls = (() => {
       case "chatposition":
         Check(nodeClick.checked);
         m_Settings.Change(
-          "чПоложениеПанелиЧата",
+          "nChatPanelPosition",
           Number.parseInt(nodeClick.value, 10)
         );
         m_Chat.ApplyPanelPosition();
@@ -3838,7 +3838,7 @@ const m_Controls = (() => {
             SaveAndApplyVolume(
               false,
               Math.min(
-                m_Settings.Get("чГромкость2") +
+                m_Settings.Get("nVolume2") +
                 VOLUME_INCREASE_STEP_BY_KEY,
                 MAX_VOLUME
               )
@@ -3851,7 +3851,7 @@ const m_Controls = (() => {
             SaveAndApplyVolume(
               false,
               Math.max(
-                m_Settings.Get("чГромкость2") -
+                m_Settings.Get("nVolume2") -
                 VOLUME_DECREASE_STEP_BY_KEY,
                 MIN_VOLUME
               )
@@ -3873,23 +3873,23 @@ const m_Controls = (() => {
 
         case 77:
           if (bPress1) {
-            SaveAndApplyVolume(!m_Settings.Get("лПриглушить"));
+            SaveAndApplyVolume(!m_Settings.Get("bMute"));
           }
           break;
 
         case 73 + CTRL_KEY:
           if (bPress1) {
-            const лМасштабироватьИзображение = m_Settings.Get(
-              "лМасштабироватьИзображение"
+            const bScaleImage = m_Settings.Get(
+              "bScaleImage"
             );
             m_Settings.Change(
-              "лМасштабироватьИзображение",
-              !лМасштабироватьИзображение
+              "bScaleImage",
+              !bScaleImage
             );
             UpdateSettingsWindow();
             ApplyImageScaling();
             m_Notification.Show(
-              `svg-fullscreen-${лМасштабироватьИзображение}`,
+              `svg-fullscreen-${bScaleImage}`,
               false
             );
           }
@@ -3910,39 +3910,39 @@ const m_Controls = (() => {
   function UpdateSettingsWindow() {
     document.querySelector(
       `input[name="concurrentdownloads"][value="${m_Settings.Get(
-        "кОдновременныхЗагрузок"
+        "nConcurrentDownloads"
       )}"]`
     ).checked = true;
     document.querySelector(
       `input[name="closedchatstate"][value="${m_Settings.Get(
-        "чСостояниеЗакрытогоЧата"
+        "nClosedChatState"
       )}"]`
     ).checked = true;
-    GetNode("chaturl").selectedIndex = m_Settings.Get("лПолноценныйЧат")
+    GetNode("chaturl").selectedIndex = m_Settings.Get("bFullChat")
       ? 0
-      : m_Settings.Get("лЗатемнитьЧат")
+      : m_Settings.Get("bDimChat")
         ? 2
         : 1;
     GetNode("scaleimage").checked = m_Settings.Get(
-      "лМасштабироватьИзображение"
+      "bScaleImage"
     );
     GetNode("interfaceanimation").checked = m_Settings.Get(
-      "лАнимацияИнтерфейса"
+      "bInterfaceAnimation"
     );
     GetNode("wheelvolume").value = m_Settings.Get(
-      "лМенятьГромкостьКолесом"
+      "bWheelVolume"
     )
-      ? m_Settings.Get("чШагИзмененияГромкостиКолесом")
+      ? m_Settings.Get("nWheelVolumeStep")
       : "";
-    const bAutoPosition = m_Settings.Get("лАвтоПоложениеЧата");
+    const bAutoPosition = m_Settings.Get("bAutoChatPosition");
     GetNode("autochatposition").checked = bAutoPosition;
     const snodeSides = document.querySelectorAll(".chatposition input");
     if (bAutoPosition) {
       const nHorizontalPosition = m_Settings.Get(
-        "чГоризонтальноеПоложениеЧата"
+        "nHorizontalChatPosition"
       );
       const nVerticalPosition = m_Settings.Get(
-        "чВертикальноеПоложениеЧата"
+        "nVerticalChatPosition"
       );
       let nodeHorizontalPosition, nodeVerticalPosition;
       for (let nodeSide of snodeSides) {
@@ -3961,7 +3961,7 @@ const m_Controls = (() => {
       nodeHorizontalPosition.checked =
         nodeVerticalPosition.checked = true;
     } else {
-      const nPosition = m_Settings.Get("чПоложениеПанелиЧата");
+      const nPosition = m_Settings.Get("nChatPanelPosition");
       let nodePosition;
       for (let nodeSide of snodeSides) {
         if (nPosition === Number.parseInt(nodeSide.value, 10)) {
@@ -3979,20 +3979,20 @@ const m_Controls = (() => {
       _oAutoHideInterval.Update();
     } else {
       _oPlaybackStart = new NumberInput(
-        "чНачалоВоспроизведения",
+        "nPlaybackStart",
         0.5,
         1,
         "playbackstart"
       );
-      _oBufferSize = new NumberInput("чРазмерБуфера", 0.5, 1, "buffersize");
+      _oBufferSize = new NumberInput("nBufferSize", 0.5, 1, "buffersize");
       _oBufferStretch = new NumberInput(
-        "чРастягиваниеБуфера",
+        "nBufferStretch",
         0.5,
         1,
         "bufferstretch"
       );
       _oReplayDuration = new NumberInput(
-        "чДлительностьПовтора2",
+        "nReplayDuration2",
         30,
         0,
         "replayduration"
@@ -4002,7 +4002,7 @@ const m_Controls = (() => {
         _oBufferStretch.AfterChange =
         m_Statistics.ClearHistory;
       _oAutoHideInterval = new NumberInput(
-        "чИнтервалАвтоскрытия",
+        "nAutoHideInterval",
         0.5,
         1,
         "autohideinterval"
@@ -4071,13 +4071,13 @@ const m_Controls = (() => {
   const HandleWheelVolumeChange = AddExceptionHandler(
     (oEvent) => {
       if (oEvent.target.value) {
-        m_Settings.Change("лМенятьГромкостьКолесом", true);
+        m_Settings.Change("bWheelVolume", true);
         m_Settings.Change(
-          "чШагИзмененияГромкостиКолесом",
+          "nWheelVolumeStep",
           Number(oEvent.target.value)
         );
       } else {
-        m_Settings.Change("лМенятьГромкостьКолесом", false);
+        m_Settings.Change("bWheelVolume", false);
       }
       startWheelVolumeChange();
     }
@@ -4089,17 +4089,17 @@ const m_Controls = (() => {
       );
       switch (oEvent.target.selectedIndex) {
         case 0:
-          m_Settings.Change("лПолноценныйЧат", true);
+          m_Settings.Change("bFullChat", true);
           break;
 
         case 1:
-          m_Settings.Change("лПолноценныйЧат", false);
-          m_Settings.Change("лЗатемнитьЧат", false);
+          m_Settings.Change("bFullChat", false);
+          m_Settings.Change("bDimChat", false);
           break;
 
         case 2:
-          m_Settings.Change("лПолноценныйЧат", false);
-          m_Settings.Change("лЗатемнитьЧат", true);
+          m_Settings.Change("bFullChat", false);
+          m_Settings.Change("bDimChat", true);
           break;
 
         default:
@@ -4512,8 +4512,8 @@ const m_Chat = (() => {
     _nodeChat = document.createElement("iframe");
     _nodeChat.src = sAddress;
     _nodeChat.id = "chat";
-    _nodeChat.width = m_Settings.Get("чШиринаПанелиЧата");
-    _nodeChat.height = m_Settings.Get("чВысотаПанелиЧата");
+    _nodeChat.width = m_Settings.Get("nChatPanelWidth");
+    _nodeChat.height = m_Settings.Get("nChatPanelHeight");
     GetNode("chatsize").insertAdjacentElement("afterend", _nodeChat);
   }
   function RemovePanel() {
@@ -4532,7 +4532,7 @@ const m_Chat = (() => {
     }
   }
   function ApplyPanelState() {
-    const nState = m_Settings.Get("чСостояниеЧата");
+    const nState = m_Settings.Get("nChatState");
     m_Log.Окак(`[Чат] Новое состояние панели: ${nState}`);
     CancelPanelDrag();
     switch (nState) {
@@ -4559,18 +4559,18 @@ const m_Chat = (() => {
   function ApplyPanelPosition() {
     CancelPanelDrag();
     const oClasses = document.body.classList;
-    if (m_Settings.Get("лАвтоПоложениеЧата")) {
+    if (m_Settings.Get("bAutoChatPosition")) {
       oClasses.add("autochatposition");
       oClasses.toggle(
         "chattop",
-        m_Settings.Get("чВертикальноеПоложениеЧата") === TOP_SIDE
+        m_Settings.Get("nVerticalChatPosition") === TOP_SIDE
       );
       oClasses.toggle(
         "chatleft",
-        m_Settings.Get("чГоризонтальноеПоложениеЧата") === LEFT_SIDE
+        m_Settings.Get("nHorizontalChatPosition") === LEFT_SIDE
       );
     } else {
-      const nPosition = m_Settings.Get("чПоложениеПанелиЧата");
+      const nPosition = m_Settings.Get("nChatPanelPosition");
       oClasses.remove("autochatposition");
       oClasses.toggle("chattop", nPosition === TOP_SIDE);
       oClasses.toggle("chatright", nPosition === RIGHT_SIDE);
@@ -4580,30 +4580,30 @@ const m_Chat = (() => {
     m_MediaQuery.updateSlowly();
   }
   function SaveAndApplyClosedPanelState(nNewState) {
-    m_Settings.Change("чСостояниеЗакрытогоЧата", nNewState);
-    const nState = m_Settings.Get("чСостояниеЧата");
+    m_Settings.Change("nClosedChatState", nNewState);
+    const nState = m_Settings.Get("nChatState");
     if (
       (nState === CHAT_UNLOADED || nState === CHAT_HIDDEN) &&
       nState !== nNewState
     ) {
-      m_Settings.Change("чСостояниеЧата", nNewState);
+      m_Settings.Change("nChatState", nNewState);
       ApplyPanelState();
     }
   }
   function TogglePanelState() {
     const bFullscreen = m_FullscreenMode.Enabled();
-    switch (m_Settings.Get("чСостояниеЧата")) {
+    switch (m_Settings.Get("nChatState")) {
       case CHAT_UNLOADED:
       case CHAT_HIDDEN:
-        m_Settings.Change("чСостояниеЧата", CHAT_PANEL, bFullscreen);
+        m_Settings.Change("nChatState", CHAT_PANEL, bFullscreen);
         break;
 
       case CHAT_PANEL:
         m_Settings.Change(
-          "чСостояниеЧата",
+          "nChatState",
           bFullscreen
             ? CHAT_HIDDEN
-            : m_Settings.Get("чСостояниеЗакрытогоЧата"),
+            : m_Settings.Get("nClosedChatState"),
           bFullscreen
         );
         break;
@@ -4614,31 +4614,31 @@ const m_Chat = (() => {
     ApplyPanelState();
   }
   function TogglePanelPosition() {
-    if (m_Settings.Get("чСостояниеЧата") !== CHAT_PANEL) {
+    if (m_Settings.Get("nChatState") !== CHAT_PANEL) {
       return;
     }
     let nPosition;
-    if (m_Settings.Get("лАвтоПоложениеЧата")) {
-      m_Settings.Change("лАвтоПоложениеЧата", false);
+    if (m_Settings.Get("bAutoChatPosition")) {
+      m_Settings.Change("bAutoChatPosition", false);
       nPosition = GetPanelPosition();
     } else {
-      nPosition = m_Settings.Get("чПоложениеПанелиЧата");
+      nPosition = m_Settings.Get("nChatPanelPosition");
     }
     switch (nPosition) {
       case TOP_SIDE:
-        m_Settings.Change("чПоложениеПанелиЧата", RIGHT_SIDE);
+        m_Settings.Change("nChatPanelPosition", RIGHT_SIDE);
         break;
 
       case RIGHT_SIDE:
-        m_Settings.Change("чПоложениеПанелиЧата", BOTTOM_SIDE);
+        m_Settings.Change("nChatPanelPosition", BOTTOM_SIDE);
         break;
 
       case BOTTOM_SIDE:
-        m_Settings.Change("чПоложениеПанелиЧата", LEFT_SIDE);
+        m_Settings.Change("nChatPanelPosition", LEFT_SIDE);
         break;
 
       case LEFT_SIDE:
-        m_Settings.Change("чПоложениеПанелиЧата", TOP_SIDE);
+        m_Settings.Change("nChatPanelPosition", TOP_SIDE);
         break;
 
       default:
@@ -4726,12 +4726,12 @@ const m_Chat = (() => {
       case 3:
         if (nPosition === RIGHT_SIDE || nPosition === LEFT_SIDE) {
           m_Settings.Change(
-            "чШиринаПанелиЧата",
+            "nChatPanelWidth",
             Number.parseInt(getComputedStyle(_nodeChat).width, 10)
           );
         } else {
           m_Settings.Change(
-            "чВысотаПанелиЧата",
+            "nChatPanelHeight",
             Number.parseInt(getComputedStyle(_nodeChat).height, 10)
           );
         }
@@ -4751,12 +4751,12 @@ const m_Chat = (() => {
         HandleFullscreenChange.nStateInNormalMode === -1
       ) {
         HandleFullscreenChange.nStateInNormalMode =
-          m_Settings.Get("чСостояниеЧата");
+          m_Settings.Get("nChatState");
         if (
           HandleFullscreenChange.nStateInNormalMode ===
           CHAT_PANEL
         ) {
-          m_Settings.Change("чСостояниеЧата", CHAT_HIDDEN, true);
+          m_Settings.Change("nChatState", CHAT_HIDDEN, true);
           ApplyPanelState();
         }
       }
@@ -4767,13 +4767,13 @@ const m_Chat = (() => {
         HandleFullscreenChange.nStateInNormalMode ===
         CHAT_PANEL
       ) {
-        m_Settings.Change("чСостояниеЧата", CHAT_PANEL);
+        m_Settings.Change("nChatState", CHAT_PANEL);
         ApplyPanelState();
       } else if (
-        m_Settings.Get("чСостояниеЧата") === CHAT_HIDDEN &&
-        m_Settings.Get("чСостояниеЗакрытогоЧата") === CHAT_UNLOADED
+        m_Settings.Get("nChatState") === CHAT_HIDDEN &&
+        m_Settings.Get("nClosedChatState") === CHAT_UNLOADED
       ) {
-        m_Settings.Change("чСостояниеЧата", CHAT_UNLOADED);
+        m_Settings.Change("nChatState", CHAT_UNLOADED);
         ApplyPanelState();
       }
       HandleFullscreenChange.nStateInNormalMode = -1;
@@ -4826,7 +4826,7 @@ const m_AudioDevice = (() => {
               ? ""
               : _oMediaElement.sinkId;
           const sSavedDevice =
-            m_Settings.Get("сИдАудиоустройства");
+            m_Settings.Get("sAudioDeviceId");
           let kDevices = 0,
             kRealDevices = 0;
           let bHasDefaultDevice = false,
@@ -4981,7 +4981,7 @@ const m_AudioDevice = (() => {
         .then(
           () => {
             m_Log.Вот("[Аудиоустройства] Устройство выбрано");
-            m_Settings.Change("сИдАудиоустройства", sSelect);
+            m_Settings.Change("sAudioDeviceId", sSelect);
           },
           (pReason) => {
             m_Log.Ой(
@@ -5039,7 +5039,7 @@ const m_Player = (() => {
   let _bHasVideoTrack = false;
   let _nPlaybackStarted = 0;
   let _bAsyncOperation = false;
-  let _sBufferSize = "чНачалоВоспроизведения";
+  let _sBufferSize = "nPlaybackStart";
   let _bWaitForBufferFill = true;
   let _nBroadcastOffset = NaN;
   let _bSeekNeeded = false;
@@ -5311,8 +5311,8 @@ const m_Player = (() => {
   }
   function ApplyVolume() {
     _oMediaElement.volume =
-      m_Settings.Get("чГромкость2") / MAX_VOLUME;
-    _oMediaElement.muted = m_Settings.Get("лПриглушить");
+      m_Settings.Get("nVolume2") / MAX_VOLUME;
+    _oMediaElement.muted = m_Settings.Get("bMute");
   }
   function ReloadAndWaitForBufferFill(nNewState) {
     _bWaitForBufferFill = true;
@@ -5426,22 +5426,22 @@ const m_Player = (() => {
     let sSeekReason = "";
     const nUnwatched = oBuffer.end(nLastRegion) - nSeekTo;
     if (nCheckSource === CHECK_SEGMENT_ADDITION) {
-      const чРазмерБуфера = m_Settings.Get("nMaxBufferSize");
+      const nBufferSize = m_Settings.Get("nMaxBufferSize");
       const nOverflow =
-        чРазмерБуфера + m_Settings.Get("чРастягиваниеБуфера");
+        nBufferSize + m_Settings.Get("nBufferStretch");
       if (nUnwatched <= nOverflow) {
         return;
       }
       if (_nPlaybackStarted === 2) {
         m_Events.SendEvent(
           "player-bufferoverflow",
-          nUnwatched - чРазмерБуфера
+          nUnwatched - nBufferSize
         );
       }
       sSeekReason += `Переполнен буфер проигрывателя ${nUnwatched.toFixed(
         2
       )}с > ${nOverflow}с. `;
-      nSeekTo = oBuffer.end(nLastRegion) - чРазмерБуфера - 0.1;
+      nSeekTo = oBuffer.end(nLastRegion) - nBufferSize - 0.1;
     }
     if (
       nCheckSource === CHECK_PLAYBACK_START &&
@@ -5513,19 +5513,19 @@ const m_Player = (() => {
     }
     if (_bWaitForBufferFill && _oMediaSource.readyState !== "ended") {
       const { nUnwatched } = GetBufferFill();
-      const чРазмерБуфера = m_Settings.Get(_sBufferSize);
-      if (nUnwatched < чРазмерБуфера) {
+      const nBufferSize = m_Settings.Get(_sBufferSize);
+      if (nUnwatched < nBufferSize) {
         m_Log.Вот(
           `[Проигрыватель] В буфере не просмотрено ${m_Log.F3(
             nUnwatched
-          )}с < ${чРазмерБуфера}с`
+          )}с < ${nBufferSize}с`
         );
         return;
       }
       m_Log.Окак(
         `[Проигрыватель] В буфере не просмотрено ${m_Log.F3(
           nUnwatched
-        )}с >= ${чРазмерБуфера}с`
+        )}с >= ${nBufferSize}с`
       );
     } else {
       m_Log.Окак("[Проигрыватель] Не нужно ждать заполнения буфера");
@@ -5562,10 +5562,10 @@ const m_Player = (() => {
     const bEarly = nUnwatched > 1;
     m_Statistics.PlayerBufferExhausted(bEarly);
     _sBufferSize = "nMaxBufferSize";
-    const чРазмерБуфера = m_Settings.Get(_sBufferSize);
+    const nBufferSize = m_Settings.Get(_sBufferSize);
     if (
       nToLastRangeEnd + nWillBeAdded >= MIN_BUFFER_SIZE &&
-      nUnwatched + nWillBeAdded >= чРазмерБуфера
+      nUnwatched + nWillBeAdded >= nBufferSize
     ) {
       ShowState(
         bEarly ? "Ой" : "Окак",
@@ -5575,7 +5575,7 @@ const m_Player = (() => {
           nToLastRangeEnd
         )}с НеПросмотрено=${m_Log.F3(
           nUnwatched
-        )}с РазмерБуфера=${чРазмерБуфера}с`
+        )}с РазмерБуфера=${nBufferSize}с`
       );
     } else {
       ShowState(
@@ -5584,7 +5584,7 @@ const m_Player = (() => {
           nToLastRangeEnd
         )}с НеПросмотрено=${m_Log.F3(
           nUnwatched
-        )}с РазмерБуфера=${чРазмерБуфера}с`
+        )}с РазмерБуфера=${nBufferSize}с`
       );
       _bSeekNeeded = true;
       StopPlayback(STATE_LOADING);
@@ -5612,7 +5612,7 @@ const m_Player = (() => {
   function RemoveWatchedVideo(oSegment) {
     const MAX_AUDIO_REPLAY_DURATION = 640;
     WatchForErrors();
-    let nReplayDuration = m_Settings.Get("чДлительностьПовтора2");
+    let nReplayDuration = m_Settings.Get("nReplayDuration2");
     if (nReplayDuration === AUTO_SETTING) {
       if (_bHasVideoTrack) {
         return Promise.resolve(oSegment);
@@ -6078,12 +6078,12 @@ const m_Playlist = (() => {
       }
     }
     saveBroadcastVariant(oVariant) {
-      m_Settings.Change("сНазваниеВарианта", oVariant.sIdentifier);
-      m_Settings.Change("чБитрейтВарианта", oVariant.nBitrate);
+      m_Settings.Change("sVariantLabel", oVariant.sIdentifier);
+      m_Settings.Change("nVariantBitrate", oVariant.nBitrate);
     }
     selectBroadcastVariant(moVariants) {
-      const sSavedId = m_Settings.Get("сНазваниеВарианта");
-      const nSavedBitrate = m_Settings.Get("чБитрейтВарианта");
+      const sSavedId = m_Settings.Get("sVariantLabel");
+      const nSavedBitrate = m_Settings.Get("nVariantBitrate");
       let oSelectedVariant = moVariants.find(
         ({ sIdentifier }) => sIdentifier === sSavedId
       );
@@ -7107,7 +7107,7 @@ const m_Playlist = (() => {
     let nQueuedSegmentIndex = oNewSegments.moSegments.length;
     let kSegmentsToQueue =
       _sAppendedBroadcastId !== oNewVariants.sBroadcastId ? 1 : 3;
-    let nSecondsToQueue = m_Settings.Get("чРазмерБуфера");
+    let nSecondsToQueue = m_Settings.Get("nBufferSize");
     while (--nQueuedSegmentIndex > 0) {
       if (
         !oNewSegments.moSegments[nQueuedSegmentIndex].bAd &&
@@ -8013,18 +8013,18 @@ const m_Downloader = (() => {
       }
       g_maQueue.ShowState();
     } else {
-      let кОдновременныхЗагрузок = m_Settings.Get(
-        "кОдновременныхЗагрузок"
+      let nConcurrentDownloads = m_Settings.Get(
+        "nConcurrentDownloads"
       );
       let nAllDownloadsDuration = 0;
       for (let oSegment of g_maQueue) {
         if (oSegment.nProcessing <= PROCESSING_DOWNLOADED) {
           nAllDownloadsDuration += oSegment.nDuration;
           if (oSegment.nProcessing <= PROCESSING_DOWNLOADING) {
-            --кОдновременныхЗагрузок;
+            --nConcurrentDownloads;
             if (
               oSegment.nProcessing === PROCESSING_AWAITING_DOWNLOAD &&
-              кОдновременныхЗагрузок >= 0
+              nConcurrentDownloads >= 0
             ) {
               LoadSegment(oSegment);
             }
@@ -8033,7 +8033,7 @@ const m_Downloader = (() => {
       }
       const nQueueOverflow =
         m_Settings.Get("nMaxBufferSize") +
-        m_Settings.Get("чРастягиваниеБуфера");
+        m_Settings.Get("nBufferStretch");
       if (nAllDownloadsDuration > nQueueOverflow) {
         m_Log.Ой(
           `[Загрузчик] Длительность всех загрузок в очереди ${m_Log.F1(
@@ -8097,7 +8097,7 @@ const m_Downloader = (() => {
   function LoadSegmentNoLongerThan(oSegment) {
     const nVariable =
       oSegment.nDuration *
-      m_Settings.Get("кОдновременныхЗагрузок") *
+      m_Settings.Get("nConcurrentDownloads") *
       1.15;
     const nConstant = 8;
     return (nVariable + nConstant) * 1e3;
@@ -8108,11 +8108,11 @@ const m_Downloader = (() => {
     if (oUnloadedSegment) {
       g_maQueue.Remove(oUnloadedSegment);
     } else {
-      let чРазмерБуфера = m_Settings.Get("чРазмерБуфера");
+      let nBufferSize = m_Settings.Get("nBufferSize");
       for (let oSegment, idx = kInQueue; (oSegment = g_maQueue[--idx]);) {
         if (oSegment.nProcessing === PROCESSING_AWAITING_DOWNLOAD) {
-          if (чРазмерБуфера > 0) {
-            чРазмерБуфера -= oSegment.nDuration;
+          if (nBufferSize > 0) {
+            nBufferSize -= oSegment.nDuration;
           } else {
             g_maQueue.Remove(idx);
           }
@@ -8179,14 +8179,14 @@ const m_Twitch = (() => {
       : `https://www.twitch.tv/${encodeURIComponent(_sChannelLogin)}`;
   }
   function GetChatPanelUrl() {
-    if (m_Settings.Get("лПолноценныйЧат")) {
+    if (m_Settings.Get("bFullChat")) {
       return `https://www.twitch.tv/popout/${encodeURIComponent(
         _sChannelLogin
       )}/chat?no-mobile-redirect=true&popout=`;
     }
     return `https://www.twitch.tv/embed/${encodeURIComponent(
       _sChannelLogin
-    )}/chat?${m_Settings.Get("лЗатемнитьЧат") ? "darkpopout&" : ""
+    )}/chat?${m_Settings.Get("bDimChat") ? "darkpopout&" : ""
       }parent=localhost`;
   }
   function GetRecordingUrl(sRecordingId) {
@@ -8778,7 +8778,7 @@ const m_Twitch = (() => {
   function getUniqueDeviceIdentifier() {
     return (
       "0000000000000000" +
-      (m_Settings.Get("чСлучайноеЧисло") || 0.1).toFixed(16).slice(2)
+      (m_Settings.Get("nRandomNumber") || 0.1).toFixed(16).slice(2)
     );
   }
   function parseAuthCookie(sCookie) {
