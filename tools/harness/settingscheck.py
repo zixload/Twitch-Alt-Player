@@ -77,7 +77,7 @@ PORT = {'chrome': 9497, 'vivaldi': 9498}[WHICH]
 PROFILE = os.path.join(HERE, 'settingscheck-' + WHICH)
 OUT = os.path.join(HERE, 'settingscheck-out.txt')
 
-# **Sur le deuxieme ecran, pas sur celui ou Luca travaille.** Voir fscheck.py.
+# **Sur le deuxieme ecran, pas sur celui ou travaille l'utilisateur.** Voir fscheck.py.
 ECRAN2 = ['--window-position=1960,40', '--window-size=1600,950']
 
 # Le lecteur demarre le flux avant d'etre utilisable ; laisser le temps a la page de se poser.

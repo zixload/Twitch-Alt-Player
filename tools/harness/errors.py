@@ -38,7 +38,7 @@ PORT = {'chrome': 9495, 'vivaldi': 9496}[WHICH]
 PROFILE = os.path.join(HERE, 'errors-' + WHICH)
 OUT = os.path.join(HERE, 'errors-out.txt')
 
-# **Sur le deuxieme ecran, pas sur celui ou Luca travaille.**
+# **Sur le deuxieme ecran, pas sur celui ou travaille l'utilisateur.**
 # Releve de la disposition reelle : DISPLAY1 principal en 0,0 (1920x1080) et DISPLAY2 en
 # 1920,0 (1680x1050). La fenetre se pose donc a 1960,40, soit 40 px a l'interieur du second.
 ECRAN2 = ['--window-position=1960,40', '--window-size=1600,950']
