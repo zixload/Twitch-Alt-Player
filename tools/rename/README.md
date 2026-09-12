@@ -30,3 +30,30 @@ overrides.json corrige ces cas au cas par cas.
 
 Ces trois familles bougeront plus tard, dans une passe coordonnee qui renomme les deux cotes a la
 fois, avec une migration pour les cles persistees dans chrome.storage.
+
+## Le controle croise : crosscheck.js
+
+    node crosscheck.js --json avant.json        # avant le renommage
+    node crosscheck.js --json apres.json        # apres
+    node crosscheck-selftest.js                 # prouve que le controle sait encore echouer
+
+Il verifie que script, balisage et feuilles de style s'accordent sur chaque nom : identifiants,
+classes, valeurs de `name=`, attributs `data-*`, et prefixes de noms construits par gabarit
+(`` `индикаторпрокрутки-${elScroll.id}` ``). Les scripts sont lus avec l'analyseur : gabarits,
+constantes (`COLOUR_BUTTON_SELECTOR`), alias (`const oClasses = document.body.classList`),
+parametres suivis sur un niveau (`ShowForm(oDocument, "debug-message")`).
+
+**Comparer les listes du JSON, jamais les seuls totaux.** Un renommage peut reparer une
+reference et en casser une autre : le total reste egal pendant qu'une recherche vient de casser.
+Le cas 8 de l'auto-test le montre.
+
+Deux perimetres, jamais melanges. Les pages de l'extension forment un monde clos : c'est
+l'invariant, et le seul total. La page twitch.tv est listee pour information : son DOM est inconnu.
+
+Ce que l'outil ne sait pas suivre est liste sous « CHEMINS NON RESOLUS » — un nom venu d'un
+parametre a deux niveaux, d'un `elFrame.id`, d'un `SOURCE[sKey]`. C'est son angle mort : un
+renommage qui touche un de ces chemins se verifie a la main.
+
+Le premier jet lisait le script a l'expression reguliere. Il ne voyait ni les gabarits, ni les
+`name=`, ni les `data-*`, ni les constantes, ni `GetNode` appele nu, et comptait 150 pendantes
+dont presque toutes etaient du bruit. Sur les huit casses de l'auto-test, il en voyait deux.
