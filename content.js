@@ -332,19 +332,19 @@ function processResponse({ target: oRequest }) {
     // const bRedirect = g_nLastCheck === -2;
     g_nLastCheck = performance.now();
     // g_nLastCheck = performance.now();
-    let лТрансляцияЗавершенаИлиЗакодирована = true,
-      лСовместныйПросмотр = false;
+    let bBroadcastEndedOrEncoded = true,
+      bCoWatching = false;
     // let bStreamFinishedOrEncoded = true, bWatchParty = false;
     try {
-      лТрансляцияЗавершенаИлиЗакодирована =
+      bBroadcastEndedOrEncoded =
         oRequest.response.data.user.stream.isEncrypted === true;
       // bStreamFinishedOrEncoded = oRequest.response.data.user.stream.isEncrypted === true;
-      лСовместныйПросмотр =
+      bCoWatching =
         oRequest.response.data.user.watchParty.session.state === "IN_PROGRESS";
       // bWatchParty = oRequest.response.data.user.watchParty.session.state === 'IN_PROGRESS';
     } catch (_) {}
     g_bIsStreaming =
-      !лТрансляцияЗавершенаИлиЗакодирована && !лСовместныйПросмотр;
+      !bBroadcastEndedOrEncoded && !bCoWatching;
     // g_bIsStreaming = !bStreamFinishedOrEncoded && !bWatchParty;
     if (g_bIsStreaming && bRedirect) {
       // if (g_bIsStreaming && bRedirect) {
@@ -467,11 +467,11 @@ function handleToggleAutoRedirect(oEvent) {
   // function handleToggleAutoRedirect(oEvent) {
   oEvent.preventDefault();
   // oEvent.preventDefault();
-  const л = !m_Settings.Get("лАвтоперенаправлениеРазрешено");
+  const b = !m_Settings.Get("лАвтоперенаправлениеРазрешено");
   // const b = !m_Settings.Get('bAutoRedirectAllowed');
-  m_Log.Окак(`[content.js] Автоперенаправление разрешено: ${л}`);
+  m_Log.Окак(`[content.js] Автоперенаправление разрешено: ${b}`);
   // m_Log.Wow(`[content.js] Auto-redirect allowed: ${b}`);
-  m_Settings.Change("лАвтоперенаправлениеРазрешено", л);
+  m_Settings.Change("лАвтоперенаправлениеРазрешено", b);
   // m_Settings.Change('bAutoRedirectAllowed', b);
   updateOurButton();
   // updateOurButton();
@@ -749,7 +749,7 @@ function insertOurButtonFirstTime() {
   // insertOurButton();
   if (g_oParsedAddress.bMobileVersion) {
     // if (g_oParsedAddress.bMobileVersion) {
-    new MutationObserver((моЗаписи) => {
+    new MutationObserver((moRecords) => {
       // new MutationObserver(moRecords => {
       insertOurButtonIfNeeded();
       // insertOurButtonIfNeeded();
@@ -776,11 +776,11 @@ function waitForDom() {
     } else {
       document.addEventListener(
         "DOMContentLoaded",
-        function ОбработатьЗагрузкуДомика() {
+        function HandleHomePageLoad() {
           // document.addEventListener('DOMContentLoaded', function HandleDomLoad() {
           document.removeEventListener(
             "DOMContentLoaded",
-            ОбработатьЗагрузкуДомика
+            HandleHomePageLoad
           );
           // document.removeEventListener('DOMContentLoaded', HandleDomLoad);
           fResolve();
@@ -799,9 +799,9 @@ function waitForPageLoad() {
       fResolve();
       // fResolve();
     } else {
-      window.addEventListener("load", function ОбработатьЗагрузкуСтраницы() {
+      window.addEventListener("load", function HandlePageLoad() {
         // window.addEventListener('load', function HandlePageLoad() {
-        window.removeEventListener("load", ОбработатьЗагрузкуСтраницы);
+        window.removeEventListener("load", HandlePageLoad);
         // window.removeEventListener('load', HandlePageLoad);
         fResolve();
         // fResolve();
@@ -909,7 +909,7 @@ function changeChatBehavior() {
     },
     true
   );
-  const oObserver = new MutationObserver((моЗаписи) => {
+  const oObserver = new MutationObserver((moRecords) => {
     // const oObserver = new MutationObserver(moRecords => {
     const sel = document.getElementsByClassName("channel-leaderboard");
     // const sel = document.getElementsByClassName('channel-leaderboard');
