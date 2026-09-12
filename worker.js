@@ -1584,33 +1584,33 @@ var m_Log = (() => {
 	function ОтправитьПреобразованныйСегмент(мбМедиасегмент) {
 		var mbufTransfer = void 0;
 		var oData = {
-			чПреобразованЗа: _nConvertedIn,
+			nConvertedIn: _nConvertedIn,
 			лЗабраковано: _bRejected,
 			лПотериВидео: _bVideoLoss,
 			лПотериЗвука: _bAudioLoss,
-			чМинДлительностьВидеоСемпла: _nMinVideoSampleDuration / TS_TIMESCALE * 1e3,
-			чМаксДлительностьВидеоСемпла: _nMaxVideoSampleDuration / TS_TIMESCALE * 1e3,
-			чСредняяДлительностьВидеоСемпла: _nAvgVideoSampleDuration / TS_TIMESCALE * 1e3,
+			nMinVideoSampleDuration: _nMinVideoSampleDuration / TS_TIMESCALE * 1e3,
+			nMaxVideoSampleDuration: _nMaxVideoSampleDuration / TS_TIMESCALE * 1e3,
+			nAvgVideoSampleDuration: _nAvgVideoSampleDuration / TS_TIMESCALE * 1e3,
 			чБитрейтЗвука: _nAudioBitrate,
-			чПозицияКодирования: _nEncodingPosition,
+			nEncodingPosition: _nEncodingPosition,
 			чПозицияТрансляции: _nBroadcastPosition,
 			чВремяКодирования: _nEncodingTime
 		};
 		if (мбМедиасегмент) {
 			oData.мбМедиасегмент = СоздатьМедиасегмент(мбМедиасегмент);
-			oData.лЕстьВидео = !_trVideo.Empty();
-			oData.лЕстьЗвук = !_trAudio.Empty();
+			oData.bHasVideo = !_trVideo.Empty();
+			oData.bHasAudio = !_trAudio.Empty();
 			mbufTransfer = [ oData.мбМедиасегмент.buffer ];
 			if (_bDiscontinuity) {
 				oData.mbInitializationSegment = СоздатьСегментИнициализации();
-				oData.сКодеки = ПолучитьНазваниеКодеков();
+				oData.sCodecs = ПолучитьНазваниеКодеков();
 				oData.nProfileIndication = _nProfileIndication;
 				oData.nConstraintSetFlag = _nConstraintSetFlag;
 				oData.nLevelIndication = _nLevelIndication;
 				oData.nMaxNumberReferenceFrames = _nMaxNumberReferenceFrames;
 				oData.чШиринаКартинки = _nPictureWidth;
 				oData.чВысотаКартинки = _nPictureHeight;
-				oData.чЧастотаКадров = _nFrameRate;
+				oData.nFrameRate = _nFrameRate;
 				oData.чДиапазон = _nRange;
 				oData.лЧересстрочное = _bInterlaced;
 				oData.nAudioObjectType = _nAudioObjectType;
@@ -1681,7 +1681,7 @@ var m_Log = (() => {
 	function ПреобразоватьСегмент() {
 		var чНачало = performance.now();
 		_bDiscontinuity = _bDiscontinuity || _oSourceSegment.bDiscontinuity;
-		m_Log.Вот(`ПРЕОБРАЗУЮ СЕГМЕНТ ${_oSourceSegment.чНомер} Разрыв=${_bDiscontinuity} Длительность=${_oSourceSegment.nDuration} Размер=${(_oSourceSegment.pData.byteLength / 1024 / 1024).toFixed(2)}мб`);
+		m_Log.Вот(`ПРЕОБРАЗУЮ СЕГМЕНТ ${_oSourceSegment.nNumber} Разрыв=${_bDiscontinuity} Длительность=${_oSourceSegment.nDuration} Размер=${(_oSourceSegment.pData.byteLength / 1024 / 1024).toFixed(2)}мб`);
 		ОчиститьСтатистику();
 		var лСегментПреобразован = false;
 		var mbTransportStream = new Uint8Array(_oSourceSegment.pData);
@@ -1718,7 +1718,7 @@ var m_Log = (() => {
 		_nConvertedIn = performance.now() - чНачало;
 	}
 	function ОбработатьСменуСостояния() {
-		m_Log.Вот(`ПРОПУСКАЮ СЕГМЕНТ ${_oSourceSegment.чНомер} Состояние=${_oSourceSegment.pData}`);
+		m_Log.Вот(`ПРОПУСКАЮ СЕГМЕНТ ${_oSourceSegment.nNumber} Состояние=${_oSourceSegment.pData}`);
 		if (_oSourceSegment.pData !== STATE_VARIANT_CHANGE) {
 			m_Memory.Free();
 		}
