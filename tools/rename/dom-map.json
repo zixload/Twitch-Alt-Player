@@ -1,0 +1,80 @@
+{
+  "// note": "Noms partages entre balisage et feuilles de style uniquement — aucun n'apparait dans un fichier JavaScript, ce qui rend ce lot renommable des deux cotes seuls. Les noms d'element restent en minuscules sans separateur quand l'original l'etait, pour ne pas melanger deux conventions dans le meme document.",
+
+  "вводчисла-плюс": "numberinput-plus",
+
+  "горизвырав": "halign",
+  "горизвырав-лево": "halign-left",
+  "горизвырав-право": "halign-right",
+  "горизвырав-середина": "halign-centre",
+
+  "группабуферизация": "groupbuffering",
+  "группавсенастройки": "groupallsettings",
+  "группаинтерфейс": "groupinterface",
+  "группанастроек": "groupofsettings",
+  "группаосновные": "groupgeneral",
+  "группацвета": "groupcolours",
+  "группачат": "groupchat",
+
+  "дляповтора": "forreplay",
+  "недляповтора": "notforreplay",
+  "заголовокнастроек": "settingsheading",
+  "индикаторпрокрутки-текстновостей": "scrollindicator-newstext",
+  "крутилка": "spinner",
+
+  "меню-значок": "menu-icon",
+  "меню-клавиши": "menu-keys",
+  "меню-секция": "menu-section",
+  "меню-текст": "menu-text",
+  "метка": "label",
+  "многоточие": "ellipsis",
+  "можнотыкать": "clickable",
+
+  "настройка": "setting",
+  "настройка-данные": "setting-data",
+  "настройка-имя": "setting-name",
+
+  "нижняя": "bottom",
+  "новости-текст": "news-text",
+  "обновлениерасширения": "extensionupdate",
+  "обновлениерасширения-закрыть": "extensionupdate-close",
+
+  "отладка-браузерустарел": "debug-browseroutdated",
+  "отладка-версияустарела": "debug-versionoutdated",
+  "отладка-идетотправка": "debug-sending",
+  "отладка-отзыв-показатьотчет": "debug-feedback-showreport",
+  "отладка-отзыв-сообщение": "debug-feedback-message",
+  "отладка-ошибка-показатьотчет": "debug-error-showreport",
+  "отладка-ошибка-сообщение": "debug-error-message",
+  "отладка-почта": "debug-email",
+  "отладка-сбойотправки": "debug-sendfailed",
+  "отладка-ссылкакнопка": "debug-linkbutton",
+  "отладка-типданных": "debug-datatype",
+  "отладка-ходотправки": "debug-sendprogress",
+
+  "пара": "pair",
+  "переключитьглавноеменю": "togglemainmenu",
+  "поддержать": "support",
+  "показатьнесразу": "showdelayed",
+
+  "радио-значок": "radio-icon",
+  "радио-метка": "radio-label",
+  "радио-текст": "radio-text",
+
+  "скрытиерекламы": "adhiding",
+  "скрытиерекламы-текст": "adhiding-text",
+
+  "статистика-анализ": "statistics-analysis",
+  "статистика-главнаятаблица": "statistics-maintable",
+  "статистика-интервалобновления": "statistics-updateinterval",
+  "статистика-кнопка": "statistics-button",
+  "статистика-переместить": "statistics-move",
+  "статистика-прокрутка": "statistics-scroll",
+  "статистика-сегментовдобавлено": "statistics-segmentsadded",
+  "статистика-сервер": "statistics-server",
+  "статистика-сжатиевидео": "statistics-videocompression",
+
+  "флажок-значок": "checkbox-icon",
+  "шкала-фон": "scale-background",
+  "элементпанели": "panelitem"
+}

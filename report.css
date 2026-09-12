@@ -10,14 +10,14 @@
 	background: linear-gradient(#1f5cad, #3171c4 18px, #0f2e57) fixed
 }
 .отладка-ошибка,
-.отладка-сбойотправки {
+.debug-sendfailed {
 /* .debug-error, */
 /* .debug-sendfailure */
 	color: #fff;
 	background: linear-gradient(#420000, #790303 30px, #4a0000) fixed
 }
-.отладка-браузерустарел,
-.отладка-версияустарела {
+.debug-browseroutdated,
+.debug-versionoutdated {
 /* .debug-browseroutdated, */
 /* .debug-versionoutdated */
 	color: #fff;
@@ -49,13 +49,13 @@ a {
 a:not([href]) {
 	display: none
 }
-.отладка-ссылкакнопка {
+.debug-linkbutton {
 /* .debug-linkbutton */
 	border-bottom: 1px dashed;
 	cursor: pointer
 }
 a:hover,
-.отладка-ссылкакнопка:hover {
+.debug-linkbutton:hover {
 /* .debug-linkbutton:hover */
 	opacity: .85
 }

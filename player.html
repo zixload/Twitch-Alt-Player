@@ -47,7 +47,7 @@
 		<!-- <div id=player> -->
 			<video id=глаз playsinline tabindex=-1></video>
 			<!-- <video id=eye playsinline tabindex=-1></video> -->
-			<svg class=крутилка xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+			<svg class=spinner xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 			<!-- <svg class=spinner xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink> -->
 				<use class=svg-busy xlink:href=#svg-busy />
 				<use class=svg-end xlink:href=#svg-end />
@@ -61,21 +61,21 @@
 			</svg>
 			<div id=статистика hidden>
 			<!-- <div id=statistics hidden> -->
-				<div id=закрытьстатистику class=статистика-кнопка data-i18n=^A0666>
+				<div id=закрытьстатистику class=statistics-button data-i18n=^A0666>
 				<!-- <div id=closestatistics class=statistics-button data-i18n=^A0666> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-close />
 					</svg>
 				</div>
-				<div class="статистика-переместить статистика-кнопка" data-тащилка=статистика data-i18n=^A0667>
+				<div class="statistics-move statistics-button" data-тащилка=статистика data-i18n=^A0667>
 				<!-- <div class="statistics-move statistics-button" data-dragger=statistics data-i18n=^A0667> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-move />
 					</svg>
 				</div>
-				<div class=статистика-прокрутка>
+				<div class=statistics-scroll>
 				<!-- <div class=statistics-scroll> -->
-					<table class=статистика-главнаятаблица>
+					<table class=statistics-maintable>
 					<!-- <table class=statistics-maintable> -->
 						<tr>
 							<th data-тащилка=статистика data-i18n=F0539>
@@ -93,7 +93,7 @@
 							<th data-тащилка=статистика data-i18n=F0540>
 							<!-- <th data-dragger=statistics data-i18n=F0540> -->
 								<td>
-									<!-- <span id=статистика-сжатиевидео title="Параметры сжатия видео: стандарт сжатия, профиль, уровень, максимальное количество опорных кадров, диапазон, частота кадров"></span> -->
+									<!-- <span id=statistics-videocompression title="Параметры сжатия видео: стандарт сжатия, профиль, уровень, максимальное количество опорных кадров, диапазон, частота кадров"></span> -->
 									<span id=statistics-videocompression title="Video compression parameters: compression standard, profile, level, maximum number of reference frames, range, frame rate"></span>
 						<tr class=статистика-подробно>
 						<!-- <tr class=statistics-detailed> -->
@@ -113,7 +113,7 @@ If the HE-AAC compression standard is used, then all compression parameters exce
 							<th data-тащилка=статистика data-i18n=F0542>
 							<!-- <th data-dragger=statistics data-i18n=F0542> -->
 								<td>
-									<!-- <span id=статистика-сервер data-очистить="" title="Сервер, с которого загружается видео"></span> -->
+									<!-- <span id=statistics-server data-очистить="" title="Сервер, с которого загружается видео"></span> -->
 									<span id=statistics-server data-clear="" title="The server from which the video is downloaded"></span>
 						<tr class=статистика-подробно>
 						<!-- <tr class=statistics-detailed> -->
@@ -151,15 +151,15 @@ Unwatched in player buffer + Watched in player buffer">
 							<th data-тащилка=статистика data-i18n=F0545>
 							<!-- <th data-dragger=statistics data-i18n=F0545> -->
 								<td rowspan=3>
-									<table class=статистика-анализ>
+									<table class=statistics-analysis>
 									<!-- <table class=statistics-analysis> -->
-										<!-- <tr id=статистика-интервалобновления title="Интервал между скачиваниями списка воспроизведения.
+										<!-- <tr id=statistics-updateinterval title="Интервал между скачиваниями списка воспроизведения.
 
 Расшифровка: минимальное < среднее < максимальное [таблица с последними значениями, красным цветом выделено последнее добавленное]."> -->
 										<tr id=statistics-updateinterval title="Interval between playlist downloads.
 
 Legend: minimum < average < maximum [table with the latest values, the last added value is highlighted in red].">
-										<!-- <tr id=статистика-сегментовдобавлено title="Количество новых сегментов в скаченном списке воспроизведения.
+										<!-- <tr id=statistics-segmentsadded title="Количество новых сегментов в скаченном списке воспроизведения.
 
 Расшифровка: минимальное < среднее < максимальное [таблица с последними значениями, красным цветом выделено последнее добавленное]."> -->
 										<tr id=statistics-segmentsadded title="Number of new segments in the downloaded playlist.
@@ -179,7 +179,7 @@ Legend: minimum < average < maximum [table with the latest values, the last adde
 							<th data-тащилка=статистика data-i18n=F0548>
 							<!-- <th data-dragger=statistics data-i18n=F0548> -->
 								<td rowspan=3>
-									<table class=статистика-анализ>
+									<table class=statistics-analysis>
 									<!-- <table class=statistics-analysis> -->
 										<tr id=statistics-segmentthickness title="Sum of bitrates of video, audio and service information in the downloaded segment. The audio bitrate can be viewed in the audio parameters above.
 
@@ -203,7 +203,7 @@ Legend: minimum < average < maximum [table with the latest values, the last adde
 							<th data-тащилка=статистика data-i18n=F0573>
 							<!-- <th data-dragger=statistics data-i18n=F0573> -->
 								<td>
-									<table class=статистика-анализ>
+									<table class=statistics-analysis>
 									<!-- <table class=statistics-analysis> -->
 										<tr id=statistics-unwatched title="Duration of unwatched video in the player buffer. Also see the statistics for “Buffer overflows”, “Buffer underflows” and the description of the “Buffer size” setting.
 
@@ -352,55 +352,55 @@ Possible causes of buffer overflow:
 			</div>
 			<div id=верхняяпанель class="панель верхняя">
 			<!-- <div id=toppanel class="panel top"> -->
-				<div class=элементпанели hidden>
+				<div class=panelitem hidden>
 				<!-- <div class=panelelement hidden> -->
 					<div id=типтрансляции class=типтрансляции></div>
 					<!-- <div id=streamtype class=streamtype></div> -->
 				</div>
-				<a id=названиетрансляции class="элементпанели многоточие можнотыкать метка" rel="noopener noreferrer"></a>
+				<a id=названиетрансляции class="panelitem ellipsis clickable label" rel="noopener noreferrer"></a>
 				<!-- <a id=streamtitle class="panelelement ellipsis clickable label" rel="noopener noreferrer"></a> -->
 				<div id=заполнитель class=заполнитель></div>
 				<!-- <div id=filler class=filler></div> -->
-				<div class=элементпанели data-i18n=F0501></div>
+				<div class=panelitem data-i18n=F0501></div>
 				<!-- <div class=panelelement data-i18n=F0501></div> -->
-				<a id=категориятрансляции class="категориятрансляции элементпанели многоточие можнотыкать метка пара" rel="noopener noreferrer"></a>
+				<a id=категориятрансляции class="категориятрансляции panelitem ellipsis clickable label pair" rel="noopener noreferrer"></a>
 				<!-- <a id=streamcategory class="streamcategory panelelement ellipsis clickable label pair" rel="noopener noreferrer"></a> -->
-				<div class=элементпанели data-i18n=F0502^A0503></div>
+				<div class=panelitem data-i18n=F0502^A0503></div>
 				<!-- <div class=panelelement data-i18n=F0502^A0503></div> -->
-				<div id=количествозрителей class="элементпанели метка пара" data-i18n=^A0503></div>
+				<div id=количествозрителей class="panelitem label pair" data-i18n=^A0503></div>
 				<!-- <div id=viewercount class="panelelement label pair" data-i18n=^A0503></div> -->
-				<button class="кнопка элементпанели можнотыкать" type=button data-окно-переключить=канал data-i18n=^A0597>
+				<button class="кнопка panelitem clickable" type=button data-окно-переключить=канал data-i18n=^A0597>
 				<!-- <button class="button panelelement clickable" type=button data-window-toggle=channel data-i18n=^A0597> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-channel />
 					</svg>
 				</button>
 			</div>
-			<div class="панель нижняя">
+			<div class="панель bottom">
 			<!-- <div class="panel bottom"> -->
-				<button id=переключитьтрансляцию class="кнопка элементпанели можнотыкать" type=button>
+				<button id=переключитьтрансляцию class="кнопка panelitem clickable" type=button>
 				<!-- <button id=togglestream class="button panelelement clickable" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-pause xlink:title=J0106 />
 						<use xlink:href=#svg-live xlink:title=J0107 />
 					</svg>
 				</button>
-				<button id=переключитьприглушить class="кнопка элементпанели можнотыкать" type=button>
+				<button id=переключитьприглушить class="кнопка panelitem clickable" type=button>
 				<!-- <button id=togglemute class="button panelelement clickable" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-mute-false xlink:title=J0108 />
 						<use xlink:href=#svg-mute-true xlink:title=J0109 />
 					</svg>
 				</button>
-				<input id=громкость class="элементпанели можнотыкать" type=range max=100 step=1 value=0 data-i18n=^A0506>
+				<input id=громкость class="panelitem clickable" type=range max=100 step=1 value=0 data-i18n=^A0506>
 				<!-- <input id=volume class="panelelement clickable" type=range max=100 step=1 value=0 data-i18n=^A0506> -->
-				<div id=позиция class="элементпанели можнотыкать метка недляповтора" data-i18n=^A0507></div>
+				<div id=позиция class="panelitem clickable label notforreplay" data-i18n=^A0507></div>
 				<!-- <div id=position class="panelelement clickable label notforrepeat" data-i18n=^A0507></div> -->
-				<div class="заполнитель недляповтора"></div>
+				<div class="заполнитель notforreplay"></div>
 				<!-- <div class="filler notforrepeat"></div> -->
-				<div class="заполнитель дляповтора"></div>
+				<div class="заполнитель forreplay"></div>
 				<!-- <div class="filler forrepeat"></div> -->
-				<select id=скорость class="элементпанели можнотыкать дляповтора" data-i18n=^A0536>
+				<select id=скорость class="panelitem clickable forreplay" data-i18n=^A0536>
 				<!-- <select id=speed class="panelelement clickable forrepeat" data-i18n=^A0536> -->
 					<option value=3>
 					<option value=2>
@@ -413,61 +413,61 @@ Possible causes of buffer overflow:
 					<option value=0.25>
 					<option value=0.1>
 				</select>
-				<button id=переключитьпаузу class="кнопка элементпанели можнотыкать дляповтора" type=button>
+				<button id=переключитьпаузу class="кнопка panelitem clickable forreplay" type=button>
 				<!-- <button id=togglepause class="button panelelement clickable forrepeat" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-pause xlink:title=J0112 />
 						<use xlink:href=#svg-play xlink:title=J0113 />
 					</svg>
 				</button>
-				<div id=шкала class="элементпанели можнотыкать дляповтора" data-i18n=^A0535>
+				<div id=шкала class="panelitem clickable forreplay" data-i18n=^A0535>
 				<!-- <div id=scale class="panelelement clickable forrepeat" data-i18n=^A0535> -->
-					<div class=шкала-фон>
+					<div class=scale-background>
 					<!-- <div class=scale-background> -->
 						<div id=шкала-просмотрено></div>
 						<!-- <div id=scale-viewed></div> -->
 					</div>
 				</div>
-				<div class="заполнитель дляповтора"></div>
+				<div class="заполнитель forreplay"></div>
 				<!-- <div class="filler forrepeat"></div> -->
-				<button id=открытьновости class="кнопка элементпанели можнотыкать" type=button hidden data-i18n=^A0508>
+				<button id=открытьновости class="кнопка panelitem clickable" type=button hidden data-i18n=^A0508>
 				<!-- <button id=opennews class="button panelelement clickable" type=button hidden data-i18n=^A0508> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-notification />
 					</svg>
 				</button>
-				<button id=переключитьглавноеменю class="кнопка элементпанели можнотыкать" type=button data-окно-переключить=главноеменю data-i18n=^A0660>
+				<button id=togglemainmenu class="кнопка panelitem clickable" type=button data-окно-переключить=главноеменю data-i18n=^A0660>
 				<!-- <button id=togglemainmenu class="button panelelement clickable" type=button data-window-toggle=mainmenu data-i18n=^A0660> -->
 					<svg>
 						<use xlink:href=#svg-menu />
 					</svg>
 				</button>
-				<button id=переключитьчат class="кнопка элементпанели можнотыкать" type=button data-i18n=^A0509>
+				<button id=переключитьчат class="кнопка panelitem clickable" type=button data-i18n=^A0509>
 				<!-- <button id=togglechat class="button panelelement clickable" type=button data-i18n=^A0509> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-chat />
 					</svg>
 				</button>
-				<button class="кнопка элементпанели можнотыкать" type=button data-окно-переключить=настройки data-i18n=^A0510>
+				<button class="кнопка panelitem clickable" type=button data-окно-переключить=настройки data-i18n=^A0510>
 				<!-- <button class="button panelelement clickable" type=button data-window-toggle=settings data-i18n=^A0510> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-settings />
 					</svg>
 				</button>
-				<button id=создатьклип class="кнопка элементпанели можнотыкать" type=button data-i18n=^A0504>
+				<button id=создатьклип class="кнопка panelitem clickable" type=button data-i18n=^A0504>
 				<!-- <button id=createclip class="button panelelement clickable" type=button data-i18n=^A0504> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-cut />
 					</svg>
 				</button>
-				<button id=переключитькартинкавкартинке class="кнопка элементпанели можнотыкать" type=button hidden data-i18n=^A0672>
+				<button id=переключитькартинкавкартинке class="кнопка panelitem clickable" type=button hidden data-i18n=^A0672>
 				<!-- <button id=togglepictureinpicture class="button panelelement clickable" type=button hidden data-i18n=^A0672> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-pip-false />
 						<use xlink:href=#svg-pip-true />
 					</svg>
 				</button>
-				<button id=переключитьполноэкранный class="кнопка элементпанели можнотыкать" type=button data-i18n=^A0511>
+				<button id=переключитьполноэкранный class="кнопка panelitem clickable" type=button data-i18n=^A0511>
 				<!-- <button id=togglefullscreen class="button panelelement clickable" type=button data-i18n=^A0511> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-fullscreen-false />
@@ -475,14 +475,14 @@ Possible causes of buffer overflow:
 					</svg>
 				</button>
 			</div>
-			<div class=скрытиерекламы>
+			<div class=adhiding>
 			<!-- <div class=adblock> -->
-				<div class=скрытиерекламы-текст data-i18n=F0669></div>
+				<div class=adhiding-text data-i18n=F0669></div>
 				<!-- <div class=adblock-text data-i18n=F0669></div> -->
 			</div>
-			<div id=обновлениерасширения class="обновлениерасширения окно">
+			<div id=extensionupdate class="extensionupdate окно">
 			<!-- <div id=extensionupdate class="extensionupdate window"> -->
-				<button type=button class=обновлениерасширения-закрыть data-окно-переключить=обновлениерасширения>X</button>
+				<button type=button class=extensionupdate-close data-окно-переключить=extensionupdate>X</button>
 				<!-- <button type=button class=extensionupdate-close data-window-toggle=extensionupdate>X</button> -->
 				<p data-i18n=F0668>
 			</div>
@@ -500,22 +500,22 @@ Possible causes of buffer overflow:
 							<div id=канал-описание></div>
 							<!-- <div id=channel-description></div> -->
 					<tr>
-						<th class=метка data-i18n=F0582>
+						<th class=label data-i18n=F0582>
 						<!-- <th class=label data-i18n=F0582> -->
 							<td id=канал-язык>
 							<!-- <td id=channel-language> -->
 					<tr>
-						<th class=метка data-i18n=F0583>
+						<th class=label data-i18n=F0583>
 						<!-- <th class=label data-i18n=F0583> -->
 							<td id=канал-подписчиков>
 							<!-- <td id=channel-followers> -->
 					<tr>
-						<th class=метка data-i18n=F0585>
+						<th class=label data-i18n=F0585>
 						<!-- <th class=label data-i18n=F0585> -->
 							<td id=канал-создан>
 							<!-- <td id=channel-created> -->
 					<tr hidden>
-						<th class=метка data-i18n=F0588>
+						<th class=label data-i18n=F0588>
 						<!-- <th class=label data-i18n=F0588> -->
 							<td id=канал-команды>
 							<!-- <td id=channel-teams> -->
@@ -523,7 +523,7 @@ Possible causes of buffer overflow:
 						<td colspan=2>
 							<hr>
 					<tr>
-						<th class=метка data-i18n=F0589>
+						<th class=label data-i18n=F0589>
 						<!-- <th class=label data-i18n=F0589> -->
 							<td>
 								<span id=зритель-имя></span>
@@ -536,13 +536,13 @@ Possible causes of buffer overflow:
 							<button id=зритель-отписаться type=button data-i18n=F0593^A0594></button>
 							<!-- <button id=viewer-unsubscribe type=button data-i18n=F0593^A0594></button> -->
 						<td>
-							<label class="зритель-уведомлять радио-метка" data-i18n=^A0595>
+							<label class="зритель-уведомлять radio-label" data-i18n=^A0595>
 							<!-- <label class="viewer-notify radio-label" data-i18n=^A0595> -->
 								<input id=зритель-уведомлять type=checkbox hidden>
 								<!-- <input id=viewer-notify type=checkbox hidden> -->
-								<span class=флажок-значок></span>
+								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
-								<span class=радио-текст data-i18n=F0633></span>
+								<span class=radio-text data-i18n=F0633></span>
 								<!-- <span class=radio-text data-i18n=F0633></span> -->
 							</label>
 							<a href=https://www.twitch.tv/settings/notifications rel="noopener noreferrer" data-i18n=F0646^A0647></a>
@@ -550,21 +550,21 @@ Possible causes of buffer overflow:
 			</div>
 			<div id=новости class="новости окно">
 			<!-- <div id=news class="news window"> -->
-				<div id=текстновостей class=новости-текст></div>
+				<div id=текстновостей class=news-text></div>
 				<!-- <div id=newstext class=news-text></div> -->
-				<div class=горизвырав>
+				<div class=halign>
 				<!-- <div class=horizalign> -->
-					<div class=горизвырав-лево>
+					<div class=halign-left>
 					<!-- <div class=horizalign-left> -->
 						<button id=закрытьновости type=button data-окно-переключить=новости></button>
 						<!-- <button id=closenews type=button data-window-toggle=news></button> -->
 					</div>
-					<div class=горизвырав-середина>
+					<div class=halign-centre>
 					<!-- <div class=horizalign-middle> -->
-						<div id=индикаторпрокрутки-текстновостей class=индикаторпрокрутки data-i18n=^A0618></div>
+						<div id=scrollindicator-newstext class=индикаторпрокрутки data-i18n=^A0618></div>
 						<!-- <div id=scrollindicator-newstext class=scrollindicator data-i18n=^A0618></div> -->
 					</div>
-					<div class=горизвырав-право>
+					<div class=halign-right>
 					<!-- <div class=horizalign-right> -->
 						<button id=отложитьновости type=button data-окно-переключить=новости data-i18n=F0621^A0622></button>
 						<!-- <button id=postponenews type=button data-window-toggle=news data-i18n=F0621^A0622></button> -->
@@ -573,7 +573,7 @@ Possible causes of buffer overflow:
 			</div>
 			<div id=главноеменю class="главноеменю окно">
 			<!-- <div id=mainmenu class="mainmenu window"> -->
-				<section class=меню-секция>
+				<section class=menu-section>
 				<!-- <section class=menu-section> -->
 					<a class=меню-пункт href=https://www.twitch.tv/ data-i18n=F0640></a>
 					<!-- <a class=menu-item href=https://www.twitch.tv/ data-i18n=F0640></a> -->
@@ -581,11 +581,11 @@ Possible causes of buffer overflow:
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory data-i18n=F0641></a> -->
 					<a class=меню-пункт href=https://www.twitch.tv/directory/following>
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory/following> -->
-						<svg class=меню-значок>
+						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
 							<use xlink:href=#svg-follow />
 						</svg>
-						<span class=меню-текст data-i18n=F0642></span>
+						<span class=menu-text data-i18n=F0642></span>
 						<!-- <span class=menu-text data-i18n=F0642></span> -->
 					</a>
 					<a class=меню-пункт href=https://www.twitch.tv/directory/following/live data-i18n=F0643></a>
@@ -594,42 +594,42 @@ Possible causes of buffer overflow:
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory/following/games data-i18n=F0644></a> -->
 					<a class=меню-пункт href=https://dashboard.twitch.tv/content/clips/created>
 					<!-- <a class=menu-item href=https://dashboard.twitch.tv/content/clips/created> -->
-						<svg class=меню-значок>
+						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
 							<use xlink:href=#svg-cut />
 						</svg>
-						<span class=меню-текст data-i18n=F0645></span>
+						<span class=menu-text data-i18n=F0645></span>
 						<!-- <span class=menu-text data-i18n=F0645></span> -->
 					</a>
 					<hr>
 					<a class=меню-пункт id=адресзаписи data-i18n=^A0665>
 					<!-- <a class=menu-item id=recordaddress data-i18n=^A0665> -->
-						<svg class=меню-значок>
+						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
 							<use xlink:href=#svg-archive />
 						</svg>
-						<span class=меню-текст data-i18n=F0664></span>
+						<span class=menu-text data-i18n=F0664></span>
 						<!-- <span class=menu-text data-i18n=F0664></span> -->
 					</a>
 					<hr>
 					<div class=меню-пункт tabindex=0 id=копироватьадрестрансляции data-i18n=^A0656>
 					<!-- <div class=menu-item tabindex=0 id=copybroadcastaddress data-i18n=^A0656> -->
-						<svg class=меню-значок>
+						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
 							<use xlink:href=#svg-live />
 						</svg>
-						<span class=меню-текст data-i18n=F0655></span>
+						<span class=menu-text data-i18n=F0655></span>
 						<!-- <span class=menu-text data-i18n=F0655></span> -->
 					</div>
 					<div class=меню-пункт tabindex=0 id=копироватьадресканала data-i18n=F0653^A0654></div>
 					<!-- <div class=menu-item tabindex=0 id=copychanneladdress data-i18n=F0653^A0654></div> -->
 				</section>
-				<section class=меню-секция>
+				<section class=menu-section>
 				<!-- <section class=menu-section> -->
 					<hr>
 					<div class=меню-пункт tabindex=0 id=переключитьстатистику data-i18n=F0526^A0527>
 					<!-- <div class=menu-item tabindex=0 id=togglestatistics data-i18n=F0526^A0527> -->
-						<span class=меню-клавиши>S</span>
+						<span class=menu-keys>S</span>
 						<!-- <span class=menu-keys>S</span> -->
 					</div>
 					<hr>
@@ -640,50 +640,50 @@ Possible causes of buffer overflow:
 					<!-- <div class=menu-item tabindex=0 id=opennews2 data-i18n=F0661^A0662></div> -->
 					<div class=меню-пункт tabindex=0 id=открытьсправку data-i18n=^A0599>
 					<!-- <div class=menu-item tabindex=0 id=openhelp data-i18n=^A0599> -->
-						<svg class=меню-значок>
+						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
 							<use xlink:href=player.svg#svg-help />
 						</svg>
-						<span class=меню-текст data-i18n=F0625></span>
+						<span class=menu-text data-i18n=F0625></span>
 						<!-- <span class=menu-text data-i18n=F0625></span> -->
-						<span class=меню-клавиши>F1</span>
+						<span class=menu-keys>F1</span>
 						<!-- <span class=menu-keys>F1</span> -->
 					</div>
 				</section>
 			</div>
 			<div id=настройки class="настройки окно">
 			<!-- <div id=settings class="settings window"> -->
-				<input id=группаосновные name=группанастроек type=radio hidden checked>
+				<input id=groupgeneral name=groupofsettings type=radio hidden checked>
 				<!-- <input id=maingroup name=settingsgroup type=radio hidden checked> -->
-				<label for=группаосновные class=заголовокнастроек data-i18n=F0561></label>
+				<label for=groupgeneral class=settingsheading data-i18n=F0561></label>
 				<!-- <label for=maingroup class=settingsheader data-i18n=F0561></label> -->
-				<div class=группанастроек>
+				<div class=groupofsettings>
 				<!-- <div class=settingsgroup> -->
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0512></div>
+						<div class=setting-name data-i18n=F0512></div>
 						<!-- <div class=setting-name data-i18n=F0512></div> -->
-						<div class=настройка-данные data-i18n=^A0513>
+						<div class=setting-data data-i18n=^A0513>
 						<!-- <div class=setting-data data-i18n=^A0513> -->
 							<select id=варианттрансляции disabled></select>
 							<!-- <select id=streamvariant disabled></select> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0580></div>
+						<div class=setting-name data-i18n=F0580></div>
 						<!-- <div class=setting-name data-i18n=F0580></div> -->
-						<div class=настройка-данные data-i18n=^A0581>
+						<div class=setting-data data-i18n=^A0581>
 						<!-- <div class=setting-data data-i18n=^A0581> -->
 							<select id=предустановка-буферизация></select>
 							<!-- <select id=preset-buffering></select> -->
 						</div>
 					</div>
-					<div id=аудиоустройства class=настройка hidden>
+					<div id=аудиоустройства class=setting hidden>
 					<!-- <div id=audiodevices class=setting hidden> -->
-						<div class=настройка-имя data-i18n=F0634></div>
+						<div class=setting-name data-i18n=F0634></div>
 						<!-- <div class=setting-name data-i18n=F0634></div> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<button id=аудиоустройства-доступ type=button data-i18n=F0636^A0637></button>
 							<!-- <button id=audiodevices-access type=button data-i18n=F0636^A0637></button> -->
@@ -691,117 +691,117 @@ Possible causes of buffer overflow:
 							<!-- <select id=audiodevices-list data-i18n=^A0635></select> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0533></div>
+						<div class=setting-name data-i18n=F0533></div>
 						<!-- <div class=setting-name data-i18n=F0533></div> -->
-						<div id=длительностьповтора class=настройка-данные data-i18n=^A0534>
+						<div id=длительностьповтора class=setting-data data-i18n=^A0534>
 						<!-- <div id=repeatduration class=setting-data data-i18n=^A0534> -->
 							<button type=button class=вводчисла-минус data-тащилка=длительностьповтора>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=repeatduration>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=длительностьповтора>+</button>
+							<button type=button class=numberinput-plus data-тащилка=длительностьповтора>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=repeatduration>+</button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0657></div>
+						<div class=setting-name data-i18n=F0657></div>
 						<!-- <div class=setting-name data-i18n=F0657></div> -->
-						<div class=настройка-данные data-i18n=^A0658>
+						<div class=setting-data data-i18n=^A0658>
 						<!-- <div class=setting-data data-i18n=^A0658> -->
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input id=масштабироватьизображение type=checkbox hidden>
 								<!-- <input id=scaleimage type=checkbox hidden> -->
-								<span class=флажок-значок></span>
+								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
 							</label>
 						</div>
 					</div>
 				</div>
-				<input id=группачат name=группанастроек type=radio hidden>
+				<input id=groupchat name=groupofsettings type=radio hidden>
 				<!-- <input id=chatgroup name=settingsgroup type=radio hidden> -->
-				<label for=группачат class=заголовокнастроек data-i18n=F0626></label>
+				<label for=groupchat class=settingsheading data-i18n=F0626></label>
 				<!-- <label for=chatgroup class=settingsheader data-i18n=F0626></label> -->
-				<div class=группанастроек>
+				<div class=groupofsettings>
 				<!-- <div class=settingsgroup> -->
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0623></div>
+						<div class=setting-name data-i18n=F0623></div>
 						<!-- <div class=setting-name data-i18n=F0623></div> -->
-						<div class=настройка-данные data-i18n=^A0624>
+						<div class=setting-data data-i18n=^A0624>
 						<!-- <div class=setting-data data-i18n=^A0624> -->
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input id=автоположениечата type=checkbox hidden>
 								<!-- <input id=autopositionchat type=checkbox hidden> -->
-								<span class=флажок-значок></span>
+								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
-								<span class=радио-текст data-i18n=J0120></span>
+								<span class=radio-text data-i18n=J0120></span>
 								<!-- <span class=radio-text data-i18n=J0120></span> -->
 							</label>
 							<div class=положениечата>
 							<!-- <div class=chatposition> -->
-								<label class=радио-метка>
+								<label class=radio-label>
 								<!-- <label class=radio-label> -->
 									<input type=radio value=4 hidden>
-									<span class=радио-значок></span>
+									<span class=radio-icon></span>
 									<!-- <span class=radio-icon></span> -->
 								</label>
-								<label class=радио-метка>
+								<label class=radio-label>
 								<!-- <label class=radio-label> -->
 									<input type=radio value=1 hidden>
-									<span class=радио-значок></span>
+									<span class=radio-icon></span>
 									<!-- <span class=radio-icon></span> -->
 								</label>
-								<label class=радио-метка>
+								<label class=radio-label>
 								<!-- <label class=radio-label> -->
 									<input type=radio value=3 hidden>
-									<span class=радио-значок></span>
+									<span class=radio-icon></span>
 									<!-- <span class=radio-icon></span> -->
 								</label>
-								<label class=радио-метка>
+								<label class=radio-label>
 								<!-- <label class=radio-label> -->
 									<input type=radio value=2 hidden>
-									<span class=радио-значок></span>
+									<span class=radio-icon></span>
 									<!-- <span class=radio-icon></span> -->
 								</label>
 							</div>
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0629></div>
+						<div class=setting-name data-i18n=F0629></div>
 						<!-- <div class=setting-name data-i18n=F0629></div> -->
-						<div class=настройка-данные data-i18n=^A0630>
+						<div class=setting-data data-i18n=^A0630>
 						<!-- <div class=setting-data data-i18n=^A0630> -->
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input name=состояниезакрытогочата type=radio value=0 hidden>
 								<!-- <input name=closedchatstate type=radio value=0 hidden> -->
-								<span class=радио-значок></span>
+								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
-								<span class=радио-текст data-i18n=F0631></span>
+								<span class=radio-text data-i18n=F0631></span>
 								<!-- <span class=radio-text data-i18n=F0631></span> -->
 							</label>
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input name=состояниезакрытогочата type=radio value=1 hidden>
 								<!-- <input name=closedchatstate type=radio value=1 hidden> -->
-								<span class=радио-значок></span>
+								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
-								<span class=радио-текст data-i18n=F0632></span>
+								<span class=radio-text data-i18n=F0632></span>
 								<!-- <span class=radio-text data-i18n=F0632></span> -->
 							</label>
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0648></div>
+						<div class=setting-name data-i18n=F0648></div>
 						<!-- <div class=setting-name data-i18n=F0648></div> -->
-						<div class=настройка-данные data-i18n=^A0649>
+						<div class=setting-data data-i18n=^A0649>
 						<!-- <div class=setting-data data-i18n=^A0649> -->
 							<select id=адресчата>
 							<!-- <select id=chataddress> -->
@@ -812,55 +812,55 @@ Possible causes of buffer overflow:
 						</div>
 					</div>
 				</div>
-				<input id=группаинтерфейс name=группанастроек type=radio hidden>
+				<input id=groupinterface name=groupofsettings type=radio hidden>
 				<!-- <input id=interfacegroup name=settingsgroup type=radio hidden> -->
-				<label for=группаинтерфейс class=заголовокнастроек data-i18n=F0609></label>
+				<label for=groupinterface class=settingsheading data-i18n=F0609></label>
 				<!-- <label for=interfacegroup class=settingsheader data-i18n=F0609></label> -->
-				<div class=группанастроек>
+				<div class=groupofsettings>
 				<!-- <div class=settingsgroup> -->
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0564></div>
+						<div class=setting-name data-i18n=F0564></div>
 						<!-- <div class=setting-name data-i18n=F0564></div> -->
-						<div class=настройка-данные data-i18n=^A0565>
+						<div class=setting-data data-i18n=^A0565>
 						<!-- <div class=setting-data data-i18n=^A0565> -->
 							<select id=предустановка-оформление></select>
 							<!-- <select id=preset-appearance></select> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0610></div>
+						<div class=setting-name data-i18n=F0610></div>
 						<!-- <div class=setting-name data-i18n=F0610></div> -->
-						<div id=размеринтерфейса class=настройка-данные data-i18n=^A0611>
+						<div id=размеринтерфейса class=setting-data data-i18n=^A0611>
 						<!-- <div id=interfacesize class=setting-data data-i18n=^A0611> -->
 							<button type=button class=вводчисла-минус data-тащилка=размеринтерфейса>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=interfacesize>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=размеринтерфейса>+</button>
+							<button type=button class=numberinput-plus data-тащилка=размеринтерфейса>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=interfacesize>+</button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0627></div>
+						<div class=setting-name data-i18n=F0627></div>
 						<!-- <div class=setting-name data-i18n=F0627></div> -->
-						<div id=интервалавтоскрытия class=настройка-данные data-i18n=^A0628>
+						<div id=интервалавтоскрытия class=setting-data data-i18n=^A0628>
 						<!-- <div id=autohideinterval class=setting-data data-i18n=^A0628> -->
 							<button type=button class=вводчисла-минус data-тащилка=интервалавтоскрытия>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=autohideinterval>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=интервалавтоскрытия>+</button>
+							<button type=button class=numberinput-plus data-тащилка=интервалавтоскрытия>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=autohideinterval>+</button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0574></div>
+						<div class=setting-name data-i18n=F0574></div>
 						<!-- <div class=setting-name data-i18n=F0574></div> -->
-						<div class=настройка-данные data-i18n=^A0575>
+						<div class=setting-data data-i18n=^A0575>
 						<!-- <div class=setting-data data-i18n=^A0575> -->
 							<select id=менятьгромкостьколесом>
 							<!-- <select id=changevolumewithwheel> -->
@@ -893,210 +893,210 @@ Possible causes of buffer overflow:
 							</select>
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0612></div>
+						<div class=setting-name data-i18n=F0612></div>
 						<!-- <div class=setting-name data-i18n=F0612></div> -->
-						<div class=настройка-данные data-i18n=^A0613>
+						<div class=setting-data data-i18n=^A0613>
 						<!-- <div class=setting-data data-i18n=^A0613> -->
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input id=анимацияинтерфейса type=checkbox hidden>
 								<!-- <input id=interfaceanimation type=checkbox hidden> -->
-								<span class=флажок-значок></span>
+								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
 							</label>
 						</div>
 					</div>
 				</div>
-				<input id=группацвета name=группанастроек type=radio hidden>
+				<input id=groupcolours name=groupofsettings type=radio hidden>
 				<!-- <input id=colorsgroup name=settingsgroup type=radio hidden> -->
-				<label for=группацвета class=заголовокнастроек data-i18n=F0562></label>
+				<label for=groupcolours class=settingsheading data-i18n=F0562></label>
 				<!-- <label for=colorsgroup class=settingsheader data-i18n=F0562></label> -->
-				<div class=группанастроек>
+				<div class=groupofsettings>
 				<!-- <div class=settingsgroup> -->
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0566></div>
+						<div class=setting-name data-i18n=F0566></div>
 						<!-- <div class=setting-name data-i18n=F0566></div> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<input id=сЦветФона type=color>
 							<!-- <input id=sBackgroundColor type=color> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0579></div>
+						<div class=setting-name data-i18n=F0579></div>
 						<!-- <div class=setting-name data-i18n=F0579></div> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<input id=сЦветГрадиента type=color>
 							<!-- <input id=sGradientColor type=color> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0567></div>
+						<div class=setting-name data-i18n=F0567></div>
 						<!-- <div class=setting-name data-i18n=F0567></div> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<input id=сЦветКнопок type=color>
 							<!-- <input id=sButtonColor type=color> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0568></div>
+						<div class=setting-name data-i18n=F0568></div>
 						<!-- <div class=setting-name data-i18n=F0568></div> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<input id=сЦветЗаголовка type=color>
 							<!-- <input id=sHeaderColor type=color> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0569></div>
+						<div class=setting-name data-i18n=F0569></div>
 						<!-- <div class=setting-name data-i18n=F0569></div> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<input id=сЦветВыделения type=color>
 							<!-- <input id=sHighlightColor type=color> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0570></div>
+						<div class=setting-name data-i18n=F0570></div>
 						<!-- <div class=setting-name data-i18n=F0570></div> -->
-						<div id=прозрачность class=настройка-данные>
+						<div id=прозрачность class=setting-data>
 						<!-- <div id=opacity class=setting-data> -->
 							<button type=button class=вводчисла-минус data-тащилка=прозрачность>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=opacity>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=прозрачность>+</button>
+							<button type=button class=numberinput-plus data-тащилка=прозрачность>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=opacity>+</button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<button id=проверкацвета type=button data-i18n=F0571^A0572></button>
 							<!-- <button id=colorcheck type=button data-i18n=F0571^A0572></button> -->
 						</div>
 					</div>
 				</div>
-				<input id=группабуферизация name=группанастроек type=radio hidden>
+				<input id=groupbuffering name=groupofsettings type=radio hidden>
 				<!-- <input id=bufferinggroup name=settingsgroup type=radio hidden> -->
-				<label for=группабуферизация class=заголовокнастроек data-i18n=F0563></label>
+				<label for=groupbuffering class=settingsheading data-i18n=F0563></label>
 				<!-- <label for=bufferinggroup class=settingsheader data-i18n=F0563></label> -->
-				<div class=группанастроек>
+				<div class=groupofsettings>
 				<!-- <div class=settingsgroup> -->
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0514></div>
+						<div class=setting-name data-i18n=F0514></div>
 						<!-- <div class=setting-name data-i18n=F0514></div> -->
-						<div class=настройка-данные data-i18n=^A0515>
+						<div class=setting-data data-i18n=^A0515>
 						<!-- <div class=setting-data data-i18n=^A0515> -->
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input name=одновременныхзагрузок type=radio value=1 hidden>
 								<!-- <input name=concurrentdownloads type=radio value=1 hidden> -->
-								<span class=радио-значок></span>
+								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
-								<span class=радио-текст>1</span>
+								<span class=radio-text>1</span>
 								<!-- <span class=radio-text>1</span> -->
 							</label>
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input name=одновременныхзагрузок type=radio value=2 hidden>
 								<!-- <input name=concurrentdownloads type=radio value=2 hidden> -->
-								<span class=радио-значок></span>
+								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
-								<span class=радио-текст>2</span>
+								<span class=radio-text>2</span>
 								<!-- <span class=radio-text>2</span> -->
 							</label>
-							<label class=радио-метка>
+							<label class=radio-label>
 							<!-- <label class=radio-label> -->
 								<input name=одновременныхзагрузок type=radio value=3 hidden>
 								<!-- <input name=concurrentdownloads type=radio value=3 hidden> -->
-								<span class=радио-значок></span>
+								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
-								<span class=радио-текст>3</span>
+								<span class=radio-text>3</span>
 								<!-- <span class=radio-text>3</span> -->
 							</label>
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0518></div>
+						<div class=setting-name data-i18n=F0518></div>
 						<!-- <div class=setting-name data-i18n=F0518></div> -->
-						<div id=началовоспроизведения class=настройка-данные data-i18n=^A0519>
+						<div id=началовоспроизведения class=setting-data data-i18n=^A0519>
 						<!-- <div id=playbackstart class=setting-data data-i18n=^A0519> -->
 							<button type=button class=вводчисла-минус data-тащилка=началовоспроизведения>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=playbackstart>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=началовоспроизведения>+</button>
+							<button type=button class=numberinput-plus data-тащилка=началовоспроизведения>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=playbackstart>+</button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0516></div>
+						<div class=setting-name data-i18n=F0516></div>
 						<!-- <div class=setting-name data-i18n=F0516></div> -->
-						<div id=размербуфера class=настройка-данные data-i18n=^A0517>
+						<div id=размербуфера class=setting-data data-i18n=^A0517>
 						<!-- <div id=buffersize class=setting-data data-i18n=^A0517> -->
 							<button type=button class=вводчисла-минус data-тащилка=размербуфера>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=buffersize>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=размербуфера>+</button>
+							<button type=button class=numberinput-plus data-тащилка=размербуфера>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=buffersize>+</button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-имя data-i18n=F0537></div>
+						<div class=setting-name data-i18n=F0537></div>
 						<!-- <div class=setting-name data-i18n=F0537></div> -->
-						<div id=растягиваниебуфера class=настройка-данные data-i18n=^A0538>
+						<div id=растягиваниебуфера class=setting-data data-i18n=^A0538>
 						<!-- <div id=bufferstretch class=setting-data data-i18n=^A0538> -->
 							<button type=button class=вводчисла-минус data-тащилка=растягиваниебуфера>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=bufferstretch>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=вводчисла-плюс data-тащилка=растягиваниебуфера>+</button>
+							<button type=button class=numberinput-plus data-тащилка=растягиваниебуфера>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=bufferstretch>+</button> -->
 						</div>
 					</div>
 				</div>
-				<input id=группавсенастройки name=группанастроек type=radio hidden>
+				<input id=groupallsettings name=groupofsettings type=radio hidden>
 				<!-- <input id=allsettingsgroup name=settingsgroup type=radio hidden> -->
-				<label for=группавсенастройки class=заголовокнастроек data-i18n=F0604></label>
+				<label for=groupallsettings class=settingsheading data-i18n=F0604></label>
 				<!-- <label for=allsettingsgroup class=settingsheader data-i18n=F0604></label> -->
-				<div class=группанастроек>
+				<div class=groupofsettings>
 				<!-- <div class=settingsgroup> -->
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<button id=экспортнастроек type=button data-i18n=F0605^A0606></button>
 							<!-- <button id=exportsettings type=button data-i18n=F0605^A0606></button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<button id=импортнастроек type=button data-i18n=F0607^A0608></button>
 							<!-- <button id=importsettings type=button data-i18n=F0607^A0608></button> -->
 						</div>
 					</div>
-					<div class=настройка>
+					<div class=setting>
 					<!-- <div class=setting> -->
-						<div class=настройка-данные>
+						<div class=setting-data>
 						<!-- <div class=setting-data> -->
 							<button id=сброситьнастройки type=button data-i18n=F0524^A0525></button>
 							<!-- <button id=resetsettings type=button data-i18n=F0524^A0525></button> -->

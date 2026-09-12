@@ -46,7 +46,7 @@
 	box-shadow: inset 0 -.0625rem 0 rgba(var(--gl-line), .07);
 }
 
-.нижняя {
+.bottom {
 	box-shadow: inset 0 .0625rem 0 rgba(var(--gl-line), .07);
 }
 
@@ -86,7 +86,7 @@ hr {
 
 /* -------------------------------------------------------- settings windows */
 
-.заголовокнастроек {
+.settingsheading {
 	margin-top: .25rem;
 	border: .0625rem solid transparent;
 	border-radius: 999rem;
@@ -99,17 +99,17 @@ hr {
 	transition: color .15s ease, background-color .15s ease;
 }
 
-.заголовокнастроек:hover {
+.settingsheading:hover {
 	color: rgb(var(--gl-ink));
 	background: rgba(var(--gl-line), .11);
 }
 
-input:checked+.заголовокнастроек {
+input:checked+.settingsheading {
 	color: #111;
 	background: rgb(var(--сЦветВыделения));
 }
 
-.настройка-имя {
+.setting-name {
 	color: rgb(var(--gl-ink-dim));
 }
 
@@ -165,33 +165,33 @@ select>optgroup {
 	background: rgb(var(--gl-field));
 }
 
-.вводчисла-плюс.вводчисла-плюс,
+.numberinput-plus.numberinput-plus,
 .вводчисла-минус {
 	border-radius: var(--gl-radius-small);
 }
 
-.радио-значок,
-.флажок-значок {
+.radio-icon,
+.checkbox-icon {
 	border: .0625rem solid rgba(var(--gl-line), .2);
 	background: rgba(var(--gl-field), .8);
 }
 
-.флажок-значок {
+.checkbox-icon {
 	border-radius: .25rem;
 }
 
-.радио-значок {
+.radio-icon {
 	border-radius: 50%;
 }
 
-input:checked+.радио-значок,
-input:checked+.флажок-значок {
+input:checked+.radio-icon,
+input:checked+.checkbox-icon {
 	border-color: rgb(var(--сЦветВыделения));
 	background: rgb(var(--сЦветВыделения));
 }
 
 kbd,
-.меню-клавиши {
+.menu-keys {
 	border: .0625rem solid rgba(var(--gl-line), .14);
 	border-radius: .25rem;
 	color: rgb(var(--gl-ink-dim));
@@ -273,7 +273,7 @@ kbd,
 }
 
 #шкала,
-.шкала-фон,
+.scale-background,
 #шкала-просмотрено,
 #громкость::-webkit-slider-runnable-track {
 	border-radius: 999rem;
@@ -305,7 +305,7 @@ kbd,
 	outline: .0625rem solid rgb(var(--сЦветВыделения));
 }
 
-.статистика-главнаятаблица>tbody>tr>th {
+.statistics-maintable>tbody>tr>th {
 	color: rgb(var(--gl-ink-dim));
 	font-weight: 600;
 }
@@ -320,7 +320,7 @@ kbd,
 	border-radius: var(--gl-radius);
 }
 
-.обновлениерасширения {
+.extensionupdate {
 	border-radius: var(--gl-radius-small);
 }
 
@@ -354,7 +354,7 @@ kbd,
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.заголовокнастроек,
+	.settingsheading,
 	.панель .кнопка>svg,
 	input[type=color],
 	button,

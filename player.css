@@ -6,9 +6,9 @@
 input,
 button,
 select,
-.радио-значок,
+.radio-icon,
 /* .radio-icon, */
-.флажок-значок {
+.checkbox-icon {
 /* .checkbox-icon */
 	-webkit-appearance: none;
 	appearance: none;
@@ -60,13 +60,13 @@ select {
 	background-position: right;
 	background-repeat: no-repeat
 }
-.радио-метка+.радио-метка {
+.radio-label+.radio-label {
 /* .radio-label+.radio-label */
 	margin-left: 1em
 }
-.радио-значок,
+.radio-icon,
 /* .radio-icon, */
-.флажок-значок {
+.checkbox-icon {
 /* .checkbox-icon */
 	display: inline-block;
 	width: 1.4167em;
@@ -74,19 +74,19 @@ select {
 	vertical-align: middle;
 	background: url(player.svg#radio0) center no-repeat
 }
-.флажок-значок {
+.checkbox-icon {
 /* .checkbox-icon */
 	background-image: url(player.svg#checkbox0)
 }
-input:checked+.радио-значок {
+input:checked+.radio-icon {
 /* input:checked+.radio-icon */
 	background-image: url(player.svg#radio1)
 }
-input:checked+.флажок-значок {
+input:checked+.checkbox-icon {
 /* input:checked+.checkbox-icon */
 	background-image: url(player.svg#checkbox1)
 }
-.радио-текст {
+.radio-text {
 /* .radio-text */
 	margin-left: .25em;
 	vertical-align: middle
@@ -344,27 +344,27 @@ a:hover {
 	color: rgb(var(--сЦветВыделения))
 	/* color: rgb(var(--sHighlightColor)) */
 }
-.горизвырав {
+.halign {
 /* .horizalign */
 	display: flex;
 	flex-shrink: 0
 }
-.горизвырав-лево {
+.halign-left {
 /* .horizalign-left */
 	flex: 1;
 	text-align: left
 }
-.горизвырав-середина {
+.halign-centre {
 /* .horizalign-middle */
 	flex: 1;
 	text-align: center
 }
-.горизвырав-право {
+.halign-right {
 /* .horizalign-right */
 	flex: 1;
 	text-align: right
 }
-.метка.метка {
+.label.label {
 /* .label.label */
 	color: rgb(var(--сЦветЗаголовка))
 	/* color: rgb(var(--sHeaderColor)) */
@@ -384,7 +384,7 @@ a:hover {
 /* #eye.scale */
 	object-fit: contain
 }
-.крутилка {
+.spinner {
 /* .spinner */
 	position: absolute;
 	z-index: 1;
@@ -401,16 +401,16 @@ a:hover {
 	/* background: rgba(var(--sBackgroundColor),var(--nWindowOpacity)); */
 	box-shadow: inset 0 .3125rem .625rem rgba(var(--сЦветГрадиента), .1);
 	/* box-shadow: inset 0 .3125rem .625rem rgba(var(--sGradientColor),.1); */
-	animation: 0s step-end показатьнесразу
+	animation: 0s step-end showdelayed
 	/* animation: 0s step-end showimmediately */
 }
-body[data-состояние="4"] .крутилка,
-body[data-состояние="5"] .крутилка {
+body[data-состояние="4"] .spinner,
+body[data-состояние="5"] .spinner {
 /* body[data-state="4"] .spinner, */
 /* body[data-state="5"] .spinner */
 	animation-duration: .5s
 }
-@keyframes показатьнесразу {
+@keyframes showdelayed {
 /* @keyframes showimmediately */
 	0% {
 		opacity: 0
@@ -459,12 +459,12 @@ body[data-состояние="5"] .крутилка {
 /* .top */
 	top: 0
 }
-.нижняя {
+.bottom {
 /* .bottom */
 	bottom: 0;
 	font-size: .875rem
 }
-.элементпанели {
+.panelitem {
 /* .panelelement */
 	padding: 0 .5rem;
 	height: 100%;
@@ -472,7 +472,7 @@ body[data-состояние="5"] .крутилка {
 	display: flex;
 	align-items: center
 }
-.многоточие {
+.ellipsis {
 /* .ellipsis */
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -480,21 +480,21 @@ body[data-состояние="5"] .крутилка {
 	min-width: calc(2.1em + .5rem*2);
 	text-decoration: none
 }
-.можнотыкать:not(:disabled) {
+.clickable:not(:disabled) {
 /* .clickable:not(:disabled) */
 	cursor: pointer
 }
-.можнотыкать:not(:disabled):not(select):hover {
+.clickable:not(:disabled):not(select):hover {
 /* .clickable:not(:disabled):not(select):hover */
 	color: rgb(var(--сЦветВыделения))!important
 	/* color: rgb(var(--sHighlightColor))!important */
 }
-.можнотыкать:not(:disabled):not(select):active {
+.clickable:not(:disabled):not(select):active {
 /* .clickable:not(:disabled):not(select):active */
 	opacity: .9;
 	text-shadow: none
 }
-.пара {
+.pair {
 /* .pair */
 	margin-left: calc(.42em - .5rem*2)
 }
@@ -567,7 +567,7 @@ body[data-состояние="5"] .крутилка {
 	background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .25)), currentColor;
 	box-shadow: 0 0 .125rem #000
 }
-.заполнитель.дляповтора {
+.заполнитель.forreplay {
 /* .filler.forrepeat */
 	flex: 0 100 3.75rem
 }
@@ -591,18 +591,18 @@ body[data-состояние="5"] .крутилка {
 /* .backgroundcolorcheck #player */
 	background: repeating-linear-gradient(to right, #fff, #fff 5px, transparent 5px, transparent 10px), repeating-linear-gradient(to bottom, #fff, #fff 5px, transparent 5px, transparent 10px), #000
 }
-body[data-состояние="6"]:not(.нетвидео):not(.проверкацвета) .крутилка,
-body[data-состояние="8"]:not(.нетвидео):not(.проверкацвета) .крутилка,
+body[data-состояние="6"]:not(.нетвидео):not(.проверкацвета) .spinner,
+body[data-состояние="8"]:not(.нетвидео):not(.проверкацвета) .spinner,
 body:not([data-состояние="1"]):not([data-состояние="2"]):not([data-состояние="4"]):not([data-состояние="5"]) .svg-busy,
 body:not([data-состояние="3"]) .svg-end,
 body:not([data-состояние="7"]) .svg-stop,
 body:not([data-состояние="6"]):not([data-состояние="8"]) .svg-mute-false,
 body:not(.нетвидео) .svg-mute-false,
 body:not(.проверкацвета) .svg-settings,
-.проверкацвета .крутилка>use:not(.svg-settings),
+.проверкацвета .spinner>use:not(.svg-settings),
 .проверкацветафон #глаз,
-body[data-состояние="8"] .недляповтора,
-body:not([data-состояние="8"]) .дляповтора,
+body[data-состояние="8"] .notforreplay,
+body:not([data-состояние="8"]) .forreplay,
 .нетвидео #переключитькартинкавкартинке,
 .нетзвука #переключитьприглушить,
 .нетзвука #громкость {
@@ -628,7 +628,7 @@ body:not([data-состояние="8"]) .дляповтора,
 	flex: 1 3 25rem;
 	min-width: 6rem
 }
-.шкала-фон {
+.scale-background {
 /* .scale-background */
 	flex: 1;
 	height: .75rem;
@@ -677,13 +677,13 @@ body:not([data-состояние="8"]) .дляповтора,
 		transform: none
 	}
 }
-.обновлениерасширения {
+.extensionupdate {
 /* .extensionupdate */
 	left: 0;
 	bottom: 2.125rem;
 	max-width: 38em
 }
-.обновлениерасширения-закрыть {
+.extensionupdate-close {
 /* .extensionupdate-close */
 	float: right;
 	margin-left: .5rem;
@@ -691,18 +691,18 @@ body:not([data-состояние="8"]) .дляповтора,
 	padding-right: 0;
 	width: 3.217ex
 }
-.обновлениерасширения p {
+.extensionupdate p {
 /* .extensionupdate p */
 	margin: 0;
 	white-space: normal
 }
-.обновлениерасширения strong {
+.extensionupdate strong {
 /* .extensionupdate strong */
 	font-weight: inherit;
 	color: rgb(var(--сЦветЗаголовка))
 	/* color: rgb(var(--sHeaderColor)) */
 }
-.скрытиерекламы {
+.adhiding {
 /* .adblock */
 	position: absolute;
 	top: calc(1.25rem + 2.125rem);
@@ -716,7 +716,7 @@ body:not([data-состояние="8"]) .дляповтора,
 	/* background: rgba(var(--sBackgroundColor),.8); */
 	z-index: 5
 }
-.анимацияинтерфейса .скрытиерекламы-текст {
+.анимацияинтерфейса .adhiding-text {
 /* .interfaceanimation .adblock-text */
 	animation: 2s linear infinite реклама
 	/* animation: 2s linear infinite ad */
@@ -730,7 +730,7 @@ body:not([data-состояние="8"]) .дляповтора,
 		opacity: 0
 	}
 }
-body:not(.реклама) .скрытиерекламы {
+body:not(.реклама) .adhiding {
 /* body:not(.ad) .adblock */
 	display: none
 }
@@ -814,7 +814,7 @@ th.канал-аватар {
 	flex-flow: column;
 	align-items: stretch
 }
-.меню-секция {
+.menu-section {
 /* .menu-section */
 	padding: 0 .625rem
 }
@@ -841,7 +841,7 @@ th.канал-аватар {
 	opacity: .4;
 	pointer-events: none
 }
-.меню-значок {
+.menu-icon {
 /* .menu-icon */
 	position: absolute;
 	left: .125rem;
@@ -850,23 +850,23 @@ th.канал-аватар {
 	height: 1.125rem;
 	pointer-events: none
 }
-.меню-текст {
+.menu-text {
 /* .menu-text */
 	pointer-events: none
 }
-.меню-клавиши {
+.menu-keys {
 /* .menu-keys */
 	margin-left: 1.5em;
 	color: rgb(var(--сЦветЗаголовка));
 	/* color: rgb(var(--sHeaderColor)); */
 	pointer-events: none
 }
-.меню-пункт:hover .меню-клавиши {
+.меню-пункт:hover .menu-keys {
 /* .menu-item:hover .menu-keys */
 	color: inherit;
 	opacity: .7
 }
-.поддержать {
+.support {
 /* .support */
 	color: rgb(var(--сЦветВыделения))
 	/* color: rgb(var(--sHighlightColor)) */
@@ -876,7 +876,7 @@ th.канал-аватар {
 	flex-flow: row;
 	right: 0
 }
-.ужатьглавноеменю .меню-секция:first-child {
+.ужатьглавноеменю .menu-section:first-child {
 /* .compressmainmenu .menu-section:first-child */
 	border-right: 1px solid;
 	border-image: linear-gradient(to bottom, transparent, rgb(var(--сЦветЗаголовка)) 30%, rgb(var(--сЦветЗаголовка)) 70%, transparent) 1
@@ -891,7 +891,7 @@ th.канал-аватар {
 	right: 0;
 	bottom: 2.125rem
 }
-.заголовокнастроек {
+.settingsheading {
 /* .settingsheader */
 	display: block;
 	margin-top: .3125rem;
@@ -907,53 +907,53 @@ th.канал-аватар {
 	/* background: rgb(var(--sButtonColor)); */
 	cursor: pointer
 }
-.заголовокнастроек:first-of-type {
+.settingsheading:first-of-type {
 /* .settingsheader:first-of-type */
 	margin-top: 0
 }
-input:checked+.заголовокнастроек {
+input:checked+.settingsheading {
 /* input:checked+.settingsheader */
 	background: rgb(var(--сЦветВыделения));
 	/* background: rgb(var(--sHighlightColor)); */
 	cursor: default
 }
-.группанастроек {
+.groupofsettings {
 /* .settingsgroup */
 	height: 16.667em;
 	overflow: hidden
 }
-input:not(:checked)+.заголовокнастроек+.группанастроек {
+input:not(:checked)+.settingsheading+.groupofsettings {
 /* input:not(:checked)+.settingsheader+.settingsgroup */
 	height: 0
 }
-.анимацияинтерфейса .заголовокнастроек,
-.анимацияинтерфейса .группанастроек {
+.анимацияинтерфейса .settingsheading,
+.анимацияинтерфейса .groupofsettings {
 /* .interfaceanimation .settingsheader, */
 /* .interfaceanimation .settingsgroup */
 	transition: .3s cubic-bezier(.22, .61, .36, 1);
 	transition-property: background-color, height
 }
-.настройка {
+.setting {
 /* .setting */
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
 	margin: .5rem 0 0
 }
-.настройка-имя {
+.setting-name {
 /* .setting-name */
 	flex: 1;
 	margin-right: 2em;
 	color: rgb(var(--сЦветЗаголовка))
 	/* color: rgb(var(--sHeaderColor)) */
 }
-.настройка-данные {
+.setting-data {
 /* .setting-data */
 	color: #fff
 }
-.настройка-данные input[type=color],
-.настройка-данные button,
-.настройка-данные select {
+.setting-data input[type=color],
+.setting-data button,
+.setting-data select {
 /* .setting-data input[type=color], */
 /* .setting-data button, */
 /* .setting-data select */
@@ -967,7 +967,7 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 	text-align: right
 }
 .вводчисла-минус.вводчисла-минус,
-.вводчисла-плюс.вводчисла-плюс {
+.numberinput-plus.numberinput-plus {
 /* .numberinput-minus.numberinput-minus, */
 /* .numberinput-plus.numberinput-plus */
 	min-width: 3em
@@ -980,7 +980,7 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 	border-right-style: solid;
 	border-right-color: rgba(0, 0, 0, .12)
 }
-.вводчисла-плюс {
+.numberinput-plus {
 /* .numberinput-plus */
 	border-top-left-radius: 0;
 	border-bottom-left-radius: 0;
@@ -1028,16 +1028,16 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 	transform: translateY(-50%);
 	margin: 0
 }
-.ужатьнастройки .заголовокнастроек {
+.ужатьнастройки .settingsheading {
 /* .compresssettings .settingsheader */
 	margin-top: 2px;
 	padding: .0625rem 0
 }
-.ужатьнастройки .группанастроек {
+.ужатьнастройки .groupofsettings {
 /* .compresssettings .settingsgroup */
 	height: 14.917em
 }
-.ужатьнастройки .настройка {
+.ужатьнастройки .setting {
 /* .compresssettings .setting */
 	margin-top: .3125rem
 }
@@ -1049,7 +1049,7 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 	flex-direction: column;
 	max-height: calc(100% - 2.125rem*2 - .25rem*2)
 }
-.новости-текст {
+.news-text {
 /* .news-text */
 	max-width: 42em;
 	overflow: auto;
@@ -1057,7 +1057,7 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 	padding-right: .3em;
 	white-space: normal
 }
-.новости-текст>h4 {
+.news-text>h4 {
 /* .news-text>h4 */
 	display: flex;
 	justify-content: space-between;
@@ -1074,29 +1074,29 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 /* .news-translate:not(:hover) */
 	opacity: .8
 }
-.новости-текст>h4,
-.новости-текст>p,
-.новости-текст ol,
-.новости-текст ul {
+.news-text>h4,
+.news-text>p,
+.news-text ol,
+.news-text ul {
 /* .news-text>h4, */
 /* .news-text>p, */
 /* .news-text ol, */
 /* .news-text ul */
 	margin: 1em 0
 }
-.новости-текст>h4:first-child,
-.новости-текст>p:last-child {
+.news-text>h4:first-child,
+.news-text>p:last-child {
 /* .news-text>h4:first-child, */
 /* .news-text>p:last-child */
 	margin: 0
 }
-.новости-текст ol,
-.новости-текст ul {
+.news-text ol,
+.news-text ul {
 /* .news-text ol, */
 /* .news-text ul */
 	padding-left: 1.5em
 }
-.новости-текст b {
+.news-text b {
 /* .news-text b */
 	font-weight: inherit;
 	color: rgb(var(--сЦветЗаголовка))
@@ -1188,13 +1188,13 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 /* #statistics:not(.dragger):not(:hover) .statistics-detailed */
 	display: none
 }
-.статистика-кнопка {
+.statistics-button {
 /* .statistics-button */
 	position: absolute;
 	top: 0;
 	padding: .5rem .3125rem
 }
-.статистика-кнопка>svg {
+.statistics-button>svg {
 /* .statistics-button>svg */
 	width: 1.2rem;
 	height: 1.2rem
@@ -1204,7 +1204,7 @@ input:not(:checked)+.заголовокнастроек+.группанастр�
 	left: 0;
 	cursor: pointer
 }
-.статистика-переместить {
+.statistics-move {
 /* .statistics-move */
 	left: 1.825rem;
 	cursor: move
@@ -1213,16 +1213,16 @@ th[data-тащилка=статистика] {
 /* th[data-dragger=statistics] */
 	cursor: move
 }
-.статистика-прокрутка {
+.statistics-scroll {
 /* .statistics-scroll */
 	overflow: auto;
 	padding: .5em
 }
-.статистика-главнаятаблица {
+.statistics-maintable {
 /* .statistics-maintable */
 	border-spacing: 0
 }
-.статистика-главнаятаблица>tbody>tr>th {
+.statistics-maintable>tbody>tr>th {
 /* .statistics-maintable>tbody>tr>th */
 	border-right: 1px solid #777;
 	padding: 0 .5em 0 0;
@@ -1230,11 +1230,11 @@ th[data-тащилка=статистика] {
 	text-align: right;
 	color: #b0c5ee
 }
-.статистика-главнаятаблица>tbody>tr>td {
+.statistics-maintable>tbody>tr>td {
 /* .statistics-maintable>tbody>tr>td */
 	padding: 0
 }
-.статистика-главнаятаблица>tbody>tr>th+td {
+.statistics-maintable>tbody>tr>th+td {
 /* .statistics-maintable>tbody>tr>th+td */
 	padding-left: .5em
 }
@@ -1248,21 +1248,21 @@ th[data-тащилка=статистика] {
 	font-weight: 700;
 	color: #ff6
 }
-.статистика-анализ {
+.statistics-analysis {
 /* .statistics-analysis */
 	border-spacing: .0625rem 0;
 	text-align: right
 }
-.статистика-анализ td {
+.statistics-analysis td {
 /* .statistics-analysis td */
 	border: .0625rem solid transparent;
 	padding: 0
 }
-.статистика-анализ>tbody>tr:not(:last-child)>td {
+.statistics-analysis>tbody>tr:not(:last-child)>td {
 /* .statistics-analysis>tbody>tr:not(:last-child)>td */
 	border-bottom: 0
 }
-.статистика-анализ>tbody>tr:not(:first-child)>td {
+.statistics-analysis>tbody>tr:not(:first-child)>td {
 /* .statistics-analysis>tbody>tr:not(:first-child)>td */
 	border-top: 0
 }
