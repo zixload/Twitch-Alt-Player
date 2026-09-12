@@ -3,7 +3,7 @@
 // Listener for `content.js` to get a list of other installed extensions.
 // This allows the player's chat iframe to load support for BetterTTV and FrankerFaceZ.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.sQuery === 'ВставитьСторонниеРасширения') {
+    if (message.sQuery === 'InsertThirdPartyExtensions') {
     // if (message.sRequest === 'InsertThirdPartyExtensions') {
         // This must return true to indicate that sendResponse will be called asynchronously.
         chrome.management.getAll().then(extensions => {
@@ -32,7 +32,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse(response);
             } catch (e) {
                 // This can happen if the original tab was closed. Ignore the error.
-                console.log("Could not send response for 'ВставитьСторонниеРасширения', tab may have closed.", e);
+                console.log("Could not send response for 'InsertThirdPartyExtensions', tab may have closed.", e);
                 // console.log("Could not send response for 'InsertThirdPartyExtensions', tab may have closed.", e);
             }
         });
@@ -43,7 +43,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Listener for `player.js` to check if the same channel is already open.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.sQuery === 'ЭтотКаналУжеОткрыт') {
+    if (message.sQuery === 'ThisChannelIsAlreadyOpen') {
     // if (message.sRequest === 'IsThisChannelAlreadyOpen') {
         // Query all tabs for one that matches the extension's player URL and channel.
         const playerUrl = `chrome-extension://${chrome.runtime.id}/player.html`;
@@ -61,7 +61,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 try {
                     sendResponse(true);
                 } catch (e) {
-                    console.log("Could not send response for 'ЭтотКаналУжеОткрыт', tab may have closed.", e);
+                    console.log("Could not send response for 'ThisChannelIsAlreadyOpen', tab may have closed.", e);
                     // console.log("Could not send response for 'IsThisChannelAlreadyOpen', tab may have closed.", e);
                 }
             } else {
@@ -70,7 +70,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 try {
                     sendResponse(false);
                 } catch(e) {
-                    console.log("Could not send response for 'ЭтотКаналУжеОткрыт', tab may have closed.", e);
+                    console.log("Could not send response for 'ThisChannelIsAlreadyOpen', tab may have closed.", e);
                     // console.log("Could not send response for 'IsThisChannelAlreadyOpen', tab may have closed.", e);
                 }
             }

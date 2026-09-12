@@ -38,7 +38,7 @@ function finishWork(pExceptionOrMessageCode) {
     try {
       g_bWorkFinished = true;
       // g_bWorkFinished = true;
-      m_Log.Окак("[content.js] Работа завершена");
+      m_Log.Окак("[content.js] Работа ended");
       // m_Log.Wow('[content.js] Work finished');
     } catch (_) {}
   }
@@ -116,7 +116,7 @@ function parseAddress(oAddress) {
   // function parseAddress(oAddress) {
   let bMobileVersion = false;
   // let bMobileVersion = false;
-  let sPage = "НЕИЗВЕСТНАЯ";
+  let sPage = "UNKNOWN";
   // let sPage = 'UNKNOWN';
   let sChannelCode = "";
   // let sChannelCode = '';
@@ -135,7 +135,7 @@ function parseAddress(oAddress) {
       // if (msParts.length <= 3 && msParts[1] && !msParts[2]) {
       if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(msParts[1])) {
         // if (!parseAddress.THIS_IS_NOT_A_CHANNEL_CODE.has(msParts[1])) {
-        sPage = "ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ";
+        sPage = "POSSIBLY_LIVE_BROADCAST";
         // sPage = 'POSSIBLY_LIVE_STREAM';
         sChannelCode = decodeURIComponent(msParts[1]);
         // sChannelCode = decodeURIComponent(msParts[1]);
@@ -148,7 +148,7 @@ function parseAddress(oAddress) {
       msParts[3] === "chat"
     ) {
       // } else if ((msParts[1] === 'embed' || msParts[1] === 'popout') && msParts[2] && msParts[3] === 'chat') {
-      sPage = "ЧАТ_КАНАЛА";
+      sPage = "CHANNEL_CHAT";
       // sPage = 'CHANNEL_CHAT';
       sChannelCode = decodeURIComponent(msParts[2]);
       // sChannelCode = decodeURIComponent(msParts[2]);
@@ -450,7 +450,7 @@ function handleLaunchOurPlayer(oEvent) {
   // oEvent.preventDefault();
   if (
     oEvent.button === LEFT_BUTTON &&
-    g_oParsedAddress.sPage === "ВОЗМОЖНО_ПРЯМАЯ_ТРАНСЛЯЦИЯ"
+    g_oParsedAddress.sPage === "POSSIBLY_LIVE_BROADCAST"
   ) {
     // if (oEvent.button === LEFT_BUTTON && g_oParsedAddress.sPage === 'POSSIBLY_LIVE_STREAM') {
     launchOurPlayer(g_oParsedAddress.sChannelCode);
@@ -814,7 +814,7 @@ function insertThirdPartyExtensions() {
   // function insertThirdPartyExtensions() {
   chrome.runtime.sendMessage(
     {
-      sQuery: "ВставитьСторонниеРасширения",
+      sQuery: "InsertThirdPartyExtensions",
       // sRequest: 'InsertThirdPartyExtensions'
     },
     (oMessage) => {
@@ -941,7 +941,7 @@ AddExceptionHandler(() => {
     `[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`
   );
   // m_Log.Wow(`[content.js] Launched ${performance.now().toFixed()}ms ${location.href}`);
-  if (parseAddress(location).sPage === "ЧАТ_КАНАЛА") {
+  if (parseAddress(location).sPage === "CHANNEL_CHAT") {
     // if (parseAddress(location).sPage === 'CHANNEL_CHAT') {
     insertOnPage();
     // insertOnPage();

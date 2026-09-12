@@ -11,27 +11,27 @@ function Check(pCondition) {
 }
 
 function getBrowserEngineVersion() {
-	if (!getBrowserEngineVersion.hasOwnProperty('_чРезультат')) {
+	if (!getBrowserEngineVersion.hasOwnProperty('_nResult')) {
 		if (navigator.userAgentData) {
 			for (const {brand, version} of navigator.userAgentData.brands) {
 				if (brand === 'Chromium' || brand === 'Google Chrome') {
-					getBrowserEngineVersion._чРезультат = Number.parseInt(version, 10);
+					getBrowserEngineVersion._nResult = Number.parseInt(version, 10);
 					break;
 				}
 			}
 		}
-		if (!getBrowserEngineVersion._чРезультат) {
-			getBrowserEngineVersion._чРезультат = navigator.userAgent ? Number.parseInt(/Chrome\/(\d+)/.exec(navigator.userAgent)[1], 10) : 89;
+		if (!getBrowserEngineVersion._nResult) {
+			getBrowserEngineVersion._nResult = navigator.userAgent ? Number.parseInt(/Chrome\/(\d+)/.exec(navigator.userAgent)[1], 10) : 89;
 		}
 	}
-	return getBrowserEngineVersion._чРезультат;
+	return getBrowserEngineVersion._nResult;
 }
 
 function isMobileDevice() {
-	if (!isMobileDevice.hasOwnProperty('_лРезультат')) {
-		isMobileDevice._лРезультат = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
+	if (!isMobileDevice.hasOwnProperty('_bResult')) {
+		isMobileDevice._bResult = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
 	}
-	return isMobileDevice._лРезультат;
+	return isMobileDevice._bResult;
 }
 
 if (getBrowserEngineVersion() < 58) {
@@ -584,7 +584,7 @@ var m_Log = (() => {
 	}
 	function Reject(pCondition) {
 		if (!pCondition) {
-			throw new Error('БРАКОВАТЬ');
+			throw new Error('REJECT');
 		}
 	}
 	function Ms(nTpTime, sUnits = 'мс') {
@@ -1535,9 +1535,9 @@ var m_Log = (() => {
 			});
 		});
 	}
-	function CreateMediaSegment(мбМедиасегмент) {
-		var dvMediaSegment = CreateDataView(мбМедиасегмент);
-		var oSegment = new IsoBaseMedia(мбМедиасегмент, dvMediaSegment, 0);
+	function CreateMediaSegment(mbMediaSegment) {
+		var dvMediaSegment = CreateDataView(mbMediaSegment);
+		var oSegment = new IsoBaseMedia(mbMediaSegment, dvMediaSegment, 0);
 		var uVideoDataOffset, uAudioDataOffset;
 		oSegment.AddBox('moof', () => {
 			oSegment.AddFullBox('mfhd', 0, 0, 4);
@@ -1547,7 +1547,7 @@ var m_Log = (() => {
 					oSegment.AddFullBox('tfhd', 0, 131072, 4);
 					dvMediaSegment.setUint32(oSegment.uEnd - 4, VIDEO_TRACK_NUMBER);
 					oSegment.AddFullBox('tfdt', 1, 0, 8);
-					мбМедиасегмент.setUint64(oSegment.uEnd - 8, _trVideo.nStartDTS);
+					mbMediaSegment.setUint64(oSegment.uEnd - 8, _trVideo.nStartDTS);
 					oSegment.AddFullBox('trun', 1, 3841, () => {
 						dvMediaSegment.setUint32(oSegment.uEnd, _trVideo.GetSampleCount());
 						uVideoDataOffset = oSegment.uEnd + 4;
@@ -1560,7 +1560,7 @@ var m_Log = (() => {
 					oSegment.AddFullBox('tfhd', 0, 131072, 4);
 					dvMediaSegment.setUint32(oSegment.uEnd - 4, AUDIO_TRACK_NUMBER);
 					oSegment.AddFullBox('tfdt', 1, 0, 8);
-					мбМедиасегмент.setUint64(oSegment.uEnd - 8, Math.round(_trAudio.nStartDTS / TS_TIMESCALE * _nSampleRate));
+					mbMediaSegment.setUint64(oSegment.uEnd - 8, Math.round(_trAudio.nStartDTS / TS_TIMESCALE * _nSampleRate));
 					oSegment.AddFullBox('trun', 1, 513, () => {
 						dvMediaSegment.setUint32(oSegment.uEnd, _trAudio.GetSampleCount());
 						uAudioDataOffset = oSegment.uEnd + 4;
@@ -1581,7 +1581,7 @@ var m_Log = (() => {
 		});
 		return oSegment.Finish();
 	}
-	function SendConvertedSegment(мбМедиасегмент) {
+	function SendConvertedSegment(mbMediaSegment) {
 		var mbufTransfer = void 0;
 		var oData = {
 			nConvertedIn: _nConvertedIn,
@@ -1596,11 +1596,11 @@ var m_Log = (() => {
 			nBroadcastPosition: _nBroadcastPosition,
 			nEncodingTime: _nEncodingTime
 		};
-		if (мбМедиасегмент) {
-			oData.мбМедиасегмент = CreateMediaSegment(мбМедиасегмент);
+		if (mbMediaSegment) {
+			oData.mbMediaSegment = CreateMediaSegment(mbMediaSegment);
 			oData.bHasVideo = !_trVideo.Empty();
 			oData.bHasAudio = !_trAudio.Empty();
-			mbufTransfer = [ oData.мбМедиасегмент.buffer ];
+			mbufTransfer = [ oData.mbMediaSegment.buffer ];
 			if (_bDiscontinuity) {
 				oData.mbInitializationSegment = CreateInitSegment();
 				oData.sCodecs = GetCodecNames();
@@ -1619,7 +1619,7 @@ var m_Log = (() => {
 				mbufTransfer.push(oData.mbInitializationSegment.buffer);
 			}
 			_oSourceSegment.bDiscontinuity = _bDiscontinuity;
-			m_Log.Вот(`Отправляю сегмент Разрыв=${_bDiscontinuity} Размер=${(oData.мбМедиасегмент.length / 1024 / 1024).toFixed(2)}мб`);
+			m_Log.Вот(`Отправляю сегмент Разрыв=${_bDiscontinuity} Размер=${(oData.mbMediaSegment.length / 1024 / 1024).toFixed(2)}мб`);
 		}
 		_oSourceSegment.pData = oData;
 		m_Log.Send();
@@ -1696,7 +1696,7 @@ var m_Log = (() => {
 				}
 			}
 		} catch (pException) {
-			if (pException instanceof Error && pException.message === 'БРАКОВАТЬ') {
+			if (pException instanceof Error && pException.message === 'REJECT') {
 				m_Log.Ой(`Сегмент забракован: ${pException.stack}`);
 				ClearStatistics();
 				_bRejected = true;
@@ -1746,7 +1746,7 @@ var m_Log = (() => {
 		try {
 			if (_mUnprocessedMessages !== null) {
 				_mUnprocessedMessages.push(oEvent.data);
-				m_Log.Ой('Обработка сообщения отложена: компиляция не завершена');
+				m_Log.Ой('Обработка сообщения отложена: компиляция не ended');
 				m_Log.Send();
 			} else {
 				HandleMessage(oEvent.data);
@@ -1759,7 +1759,7 @@ var m_Log = (() => {
 		throw new Error(`Произошло событие ${oEvent.type}`);
 	});
 	_oAssembler.Compile().then(() => {
-		m_Log.Вот(`Компиляция завершена: ${performance.now().toFixed()}мс Необработанных сообщений: ${_mUnprocessedMessages.length}`);
+		m_Log.Вот(`Компиляция ended: ${performance.now().toFixed()}мс Необработанных сообщений: ${_mUnprocessedMessages.length}`);
 		while (_mUnprocessedMessages.length !== 0) {
 			HandleMessage(_mUnprocessedMessages.shift());
 		}

@@ -181,35 +181,35 @@ function LimitStringLength(sString, nMaxLength) {
 
 function getBrowserEngineVersion() {
 // function getBrowserEngineVersion() {
-	if (!getBrowserEngineVersion._чРезультат) {
+	if (!getBrowserEngineVersion._nResult) {
 	// if (!getBrowserEngineVersion._nResult) {
 		if (navigator.userAgentData) {
 			for (const {brand, version} of navigator.userAgentData.brands) {
 				if (brand === 'Chromium' || brand === 'Google Chrome') {
-					getBrowserEngineVersion._чРезультат = Number.parseInt(version, 10);
+					getBrowserEngineVersion._nResult = Number.parseInt(version, 10);
 					// getBrowserEngineVersion._nResult = Number.parseInt(version, 10);
 					break;
 				}
 			}
 		}
-		if (!getBrowserEngineVersion._чРезультат) {
+		if (!getBrowserEngineVersion._nResult) {
 		// if (!getBrowserEngineVersion._nResult) {
-			getBrowserEngineVersion._чРезультат = Number(/Chrome\/(\d+)/.exec(navigator.userAgent)[1]);
+			getBrowserEngineVersion._nResult = Number(/Chrome\/(\d+)/.exec(navigator.userAgent)[1]);
 			// getBrowserEngineVersion._nResult = Number(/Chrome\/(\d+)/.exec(navigator.userAgent)[1]);
 		}
 	}
-	return getBrowserEngineVersion._чРезультат;
+	return getBrowserEngineVersion._nResult;
 	// return getBrowserEngineVersion._nResult;
 }
 
 function isMobileDevice() {
 // function isMobileDevice() {
-	if (!isMobileDevice.hasOwnProperty('_лРезультат')) {
+	if (!isMobileDevice.hasOwnProperty('_bResult')) {
 	// if (!isMobileDevice.hasOwnProperty('_bResult')) {
-		isMobileDevice._лРезультат = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
+		isMobileDevice._bResult = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
 		// isMobileDevice._bResult = navigator.userAgentData ? navigator.userAgentData.mobile : navigator.userAgent.includes('Android');
 	}
-	return isMobileDevice._лРезультат;
+	return isMobileDevice._bResult;
 	// return isMobileDevice._bResult;
 }
 
@@ -632,7 +632,7 @@ const m_Settings = (() => {
 		// sFilled: 'bPresetFilled_buffering',
 		sList: 'preset-buffering',
 		// sList: 'preset-buffering',
-		sEvent: 'настройки-измениласьпредустановка-буферизация'
+		sEvent: 'settings-presetchanged-buffering'
 		// sEvent: 'settings-presetChanged-buffering'
 	}, {
 		amData: _amAppearancePresets,
@@ -645,7 +645,7 @@ const m_Settings = (() => {
 		// sFilled: 'bPresetFilled_appearance',
 		sList: 'preset-appearance',
 		// sList: 'preset-appearance',
-		sEvent: 'настройки-измениласьпредустановка-оформление'
+		sEvent: 'settings-presetchanged-appearance'
 		// sEvent: 'settings-presetChanged-appearance'
 	} ];
 	const _mnoPermanentSettings = new Set([ 'чВерсияНастроек', 'чСлучайноеЧисло', 'сПредыдущаяВерсия', 'чПоследняяПроверкаОбновленияРасширения', 'лАвтоперенаправлениеЗамечено' ]);
@@ -1147,7 +1147,7 @@ const m_Settings = (() => {
 	}
 	function Get(sName) {
 	// function Get(sName) {
-		if (sName === 'чМаксРазмерБуфера') {
+		if (sName === 'nMaxBufferSize') {
 		// if (sName === 'nMaxBufferSize') {
 			return Math.max(Get2('чНачалоВоспроизведения'), Get2('чРазмерБуфера'));
 			// return Math.max(Get2('nPlaybackStart'), Get2('nBufferSize'));

@@ -847,7 +847,7 @@ class PromiseCancellation {
   }
 }
 
-PromiseCancellation.REASON = new Error("ОБЕЩАНИЕ_ОТМЕНЕНО");
+PromiseCancellation.REASON = new Error("PROMISE_CANCELLED");
 
 function Wait(oPromiseCancellation, nMilliseconds) {
   if (oPromiseCancellation && oPromiseCancellation.bCancelled) {
@@ -1007,7 +1007,7 @@ g_maQueue.Remove = function (pElement, nAmount = 1) {
       case PROCESSING_CONVERTED:
         if (IsObject(this[nIndex].pData)) {
           m_GarbageCollector.Discard(this[nIndex].pData.mbInitializationSegment);
-          m_GarbageCollector.Discard(this[nIndex].pData.мбМедиасегмент);
+          m_GarbageCollector.Discard(this[nIndex].pData.mbMediaSegment);
         }
     }
     m_Log.Вот(`[Очередь] Удаляю ${this[nIndex]}`);
@@ -1190,7 +1190,7 @@ const m_GarbageCollector = (() => {
       this._oWorkerThread = null;
       this._kbInGarbage = 0;
       m_Events.AddHandler(
-        "управление-изменилосьсостояние",
+        "controls-statechanged",
         (nState) => {
           if (
             nState === STATE_BROADCAST_END ||
@@ -1270,7 +1270,7 @@ const m_FocusManager = (() => {
         `[Фокусник] Новое состояние ${m_Log.O(oNewState)}`
       );
       _oState = oNewState;
-      m_Events.SendEvent("фокусник-изменилосьсостояние", oNewState);
+      m_Events.SendEvent("focus-statechanged", oNewState);
     }
   });
   m_Log.Вот(`[Фокусник] Начальное состояние ${m_Log.O(_oState)}`);
@@ -1337,7 +1337,7 @@ const m_Heartbeat = (() => {
     return _nMaximumDeviation;
   }
   m_Events.AddHandler(
-    "управление-изменилосьсостояние",
+    "controls-statechanged",
     HandleStateChange
   );
   return {
@@ -1397,7 +1397,7 @@ const m_Statistics = (() => {
     return (
       nCount < HIGHLIGHT_UNWATCHED_MIN ||
       nCount >=
-      m_Settings.Get("чМаксРазмерБуфера") +
+      m_Settings.Get("nMaxBufferSize") +
       m_Settings.Get("чРастягиваниеБуфера") *
       HIGHLIGHT_UNWATCHED_MAX
     );
@@ -1619,7 +1619,7 @@ const m_Statistics = (() => {
     let node = UpdateValue( // let node = UpdateValue(
       "statistics-queue", // "statistics-queue",
       nAwaitingDownload.toFixed(1), // nWaitingForDownload.toFixed(1),
-      nAwaitingDownload > m_Settings.Get("чМаксРазмерБуфера") // nWaitingForDownload > m_Settings.Get("nMaxBufferSize")
+      nAwaitingDownload > m_Settings.Get("nMaxBufferSize") // nWaitingForDownload > m_Settings.Get("nMaxBufferSize")
     );
     node = node.nextElementSibling.nextElementSibling;
     node.textContent = nDownloading.toFixed(1); // node.textContent = nDownloading.toFixed(1);
@@ -1728,7 +1728,7 @@ const m_Statistics = (() => {
     );
     UpdateStatistics();
     m_Events.AddHandler(
-      "тащилка-перетаскивание-статистика",
+      "dragger-drag-statistics",
       HandleWindowDrag
     );
     ShowElement("statistics", true);
@@ -1983,7 +1983,7 @@ const m_Statistics = (() => {
       }
       return;
     }
-    if (oData.hasOwnProperty("мбМедиасегмент")) {
+    if (oData.hasOwnProperty("mbMediaSegment")) {
       if (oSegment.bDiscontinuity) {
         if (oData.bHasVideo) {
           let sVideoCompression =
@@ -2151,7 +2151,7 @@ const m_Statistics = (() => {
     }
     return sResult;
   }
-  m_Events.AddHandler("список-началорекламы", () => {
+  m_Events.AddHandler("playlist-adstart", () => {
     Check(_nAdStartTimes.length === _nAdEndTimes.length);
     _nAdCount++;
     _nAdStartTimes.push(performance.now());
@@ -2160,7 +2160,7 @@ const m_Statistics = (() => {
       GetNode("statistics-adfrequency").textContent = getAdFrequency();
     }
   });
-  m_Events.AddHandler("список-конецрекламы", () => {
+  m_Events.AddHandler("playlist-adend", () => {
     if (_nAdStartTimes.length !== _nAdEndTimes.length) {
       if (_nAdEndTimes.length === AD_HISTORY_SIZE) {
         _nAdStartTimes.shift();
@@ -2174,7 +2174,7 @@ const m_Statistics = (() => {
     }
   });
   m_Events.AddHandler(
-    "проигрыватель-переполненбуфер",
+    "player-bufferoverflow",
     (nSkipped) => {
       ++_nBufferOverflows;
       _nSkippedInBuffer += nSkipped;
@@ -2189,7 +2189,7 @@ const m_Statistics = (() => {
     }
   );
   m_Events.AddHandler(
-    "управление-изменилосьсостояние",
+    "controls-statechanged",
     (nState) => {
       if (nState === STATE_START) {
         ClearHistory();
@@ -2197,7 +2197,7 @@ const m_Statistics = (() => {
     }
   );
   m_Events.AddHandler(
-    "список-выбранварианттрансляции",
+    "playlist-broadcastvariantselected",
     ([moVariants]) => {
       if (moVariants) {
         ClearHistory();
@@ -2287,7 +2287,7 @@ const m_Window = (() => {
     updateScrollIndicator(oEvent.target);
   });
   m_Events.AddHandler(
-    "управление-левыйщелчок",
+    "controls-leftclick",
     ({ target: elClick }) => {
       const sWindowId = elClick.getAttribute("data-окно-переключить");
       if (sWindowId) {
@@ -2320,7 +2320,7 @@ const m_Menu = (() => {
     oEvent.preventDefault();
     m_Window.toggle("mainmenu");
   });
-  m_Events.AddHandler("управление-левыйщелчок", (oEvent) => {
+  m_Events.AddHandler("controls-leftclick", (oEvent) => {
     if (oEvent.target.classList.contains("menu-item")) {
       m_Window.close(false);
     }
@@ -2342,7 +2342,7 @@ const m_FullscreenMode = (() => {
     _sFullscreenchange = "webkitfullscreenchange";
   }
   const HandleModeChange = AddExceptionHandler(() => {
-    m_Events.SendEvent("полноэкранныйрежим-изменен", Update());
+    m_Events.SendEvent("fullscreen-changed", Update());
   });
   const HandleDoubleClick = AddExceptionHandler((oEvent) => {
     if (oEvent.button === LEFT_BUTTON) {
@@ -2516,7 +2516,7 @@ const m_Dragger = (() => {
       HandlePointerUpAndCancel
     );
     m_Events.AddHandler(
-      "фокусник-изменилосьсостояние",
+      "focus-statechanged",
       HandleTabLeave
     );
     m_FullscreenMode
@@ -2613,7 +2613,7 @@ const m_Dragger = (() => {
         HandlePointerUpAndCancel
       );
       m_Events.RemoveHandler(
-        "фокусник-изменилосьсостояние",
+        "focus-statechanged",
         HandleTabLeave
       );
       _nPointerId = NaN;
@@ -2863,7 +2863,7 @@ const m_Appearance = (() => {
     document.addEventListener("input", HandleColourInput);
     document.addEventListener("change", HandleColourChange);
     m_Events.AddHandler(
-      "настройки-измениласьпредустановка-оформление",
+      "settings-presetchanged-appearance",
       HandleAppearancePresetChange
     );
     HandleAppearancePresetChange();
@@ -3177,7 +3177,7 @@ const m_News = (() => {
       ShowElement("postponenews", false);
     }
     m_Events.AddHandler(
-      "управление-левыйщелчок",
+      "controls-leftclick",
       HandleLeftClick
     );
     m_Window.open("news");
@@ -3489,7 +3489,7 @@ const m_Controls = (() => {
     }
     oEvent.nodeCallsign = nodeCallsign;
     oEvent.sCallsign = sCallsign;
-    m_Events.SendEvent("управление-левыйщелчок", oEvent);
+    m_Events.SendEvent("controls-leftclick", oEvent);
     switch (sCallsign) {
       case "togglebroadcast":
         ToggleWatchingBroadcast();
@@ -3546,7 +3546,7 @@ const m_Controls = (() => {
         m_Chat.ApplyPanelPosition();
         break;
 
-      case "горизонтальноеположениечата":
+      case "horizontalchatposition":
         Check(nodeClick.checked);
         m_Settings.Change(
           "чГоризонтальноеПоложениеЧата",
@@ -3555,7 +3555,7 @@ const m_Controls = (() => {
         m_Chat.ApplyPanelPosition();
         break;
 
-      case "вертикальноеположениечата":
+      case "verticalchatposition":
         Check(nodeClick.checked);
         m_Settings.Change(
           "чВертикальноеПоложениеЧата",
@@ -3955,8 +3955,8 @@ const m_Controls = (() => {
         }
         nodeSide.name =
           nSide === RIGHT_SIDE || nSide === LEFT_SIDE
-            ? "горизонтальноеположениечата"
-            : "вертикальноеположениечата";
+            ? "horizontalchatposition"
+            : "verticalchatposition";
       }
       nodeHorizontalPosition.checked =
         nodeVerticalPosition.checked = true;
@@ -4161,37 +4161,37 @@ const m_Controls = (() => {
     m_News.Start();
     m_Chat.Restore();
     m_Events.AddHandler(
-      "окно-открыто-главноеменю",
+      "window-opened-mainmenu",
       HandleMainMenuOpen
     );
     m_Events.AddHandler(
-      "список-выбранварианттрансляции",
+      "playlist-broadcastvariantselected",
       UpdateBroadcastVariantList
     );
     m_Events.AddHandler(
-      "список-началорекламы",
+      "playlist-adstart",
       handleAdStart
     );
-    m_Events.AddHandler("список-конецрекламы", handleAdEnd);
+    m_Events.AddHandler("playlist-adend", handleAdEnd);
     m_Events.AddHandler(
-      "проигрыватель-переполненбуфер",
+      "player-bufferoverflow",
       handleBufferOverflow
     );
-    m_Events.AddHandler("проигрыватель-пауза", HandlePause);
+    m_Events.AddHandler("player-paused", HandlePause);
     m_Events.AddHandler(
-      "настройки-измениласьпредустановка-буферизация",
+      "settings-presetchanged-buffering",
       HandleBufferingPresetChange
     );
     m_Events.AddHandler(
-      "twitch-полученыметаданныеканала",
+      "twitch-channelmetadatareceived",
       ShowChannelMetadata
     );
     m_Events.AddHandler(
-      "twitch-полученыметаданныезрителя",
+      "twitch-viewermetadatareceived",
       ShowViewerMetadata
     );
     m_Events.AddHandler(
-      "twitch-полученыметаданныетрансляции",
+      "twitch-broadcastmetadatareceived",
       ShowBroadcastMetadata
     );
     document.documentElement.addEventListener("click", HandleLeftClick);
@@ -4235,7 +4235,7 @@ const m_Controls = (() => {
       nNewState === STATE_STOP ||
       nNewState === STATE_REPEAT
     );
-    m_Events.SendEvent("управление-изменилосьсостояние", nNewState);
+    m_Events.SendEvent("controls-statechanged", nNewState);
     switch (nNewState) {
       case STATE_START:
         ShowBroadcastMetadata({
@@ -4263,7 +4263,7 @@ const m_Controls = (() => {
 
       case STATE_BROADCAST_END:
         ShowBroadcastMetadata({
-          sBroadcastType: "завершена",
+          sBroadcastType: "ended",
           kViewers: null,
           nBroadcastDuration: null,
         });
@@ -4387,10 +4387,16 @@ const m_Controls = (() => {
       }
     }
   }
+  /*
+		Cles de valeurs internes, pas de valeurs de Twitch. Twitch envoie « live » ou « rerun » ;
+		le producteur plus bas les traduit en « live », « replay » ou null, et la fin de diffusion
+		pose « ended ». Ces trois cles doivent donc suivre le producteur lettre pour lettre --
+		elles sont des identifiants d'objet, qu'un renommage de chaines ne voit pas.
+	*/
   const _oBroadcastTypes = {
-    завершена: ["J0145", "J0100", false],
-    прямая: ["J0146", "J0149", true],
-    повтор: ["J0147", "J0150", false],
+    ended: ["J0145", "J0100", false],
+    live: ["J0146", "J0149", true],
+    replay: ["J0147", "J0150", false],
   };
   function ShowBroadcastMetadata(oMetadata) {
     if (oMetadata.sBroadcastType !== void 0) {
@@ -4777,11 +4783,11 @@ const m_Chat = (() => {
     ApplyPanelState();
     ApplyPanelPosition();
     m_Events.AddHandler(
-      "тащилка-перетаскивание-размерчата",
+      "dragger-drag-chatsize",
       HandlePanelDrag
     );
     m_Events.AddHandler(
-      "полноэкранныйрежим-изменен",
+      "fullscreen-changed",
       HandleFullscreenChange
     );
   }
@@ -4867,7 +4873,7 @@ const m_AudioDevice = (() => {
               ShowElement(nodeDeviceList, false);
               ShowElement("audiodevices", true);
               m_Events.AddHandler(
-                "управление-левыйщелчок",
+                "controls-leftclick",
                 handleClickAndRequestAudioDeviceAccess
               );
             }
@@ -5420,7 +5426,7 @@ const m_Player = (() => {
     let sSeekReason = "";
     const nUnwatched = oBuffer.end(nLastRegion) - nSeekTo;
     if (nCheckSource === CHECK_SEGMENT_ADDITION) {
-      const чРазмерБуфера = m_Settings.Get("чМаксРазмерБуфера");
+      const чРазмерБуфера = m_Settings.Get("nMaxBufferSize");
       const nOverflow =
         чРазмерБуфера + m_Settings.Get("чРастягиваниеБуфера");
       if (nUnwatched <= nOverflow) {
@@ -5428,7 +5434,7 @@ const m_Player = (() => {
       }
       if (_nPlaybackStarted === 2) {
         m_Events.SendEvent(
-          "проигрыватель-переполненбуфер",
+          "player-bufferoverflow",
           nUnwatched - чРазмерБуфера
         );
       }
@@ -5443,7 +5449,7 @@ const m_Player = (() => {
     ) {
       _nPlaybackStarted = 2;
       const nOverflow =
-        m_Settings.Get("чМаксРазмерБуфера") +
+        m_Settings.Get("nMaxBufferSize") +
         m_Statistics.GetTargetDuration() / 2;
       if (nUnwatched > nOverflow) {
         sSeekReason += `Превышена задержка трансляции ${nUnwatched.toFixed(
@@ -5555,7 +5561,7 @@ const m_Player = (() => {
     Check(nToLastRangeEnd < MIN_BUFFER_SIZE);
     const bEarly = nUnwatched > 1;
     m_Statistics.PlayerBufferExhausted(bEarly);
-    _sBufferSize = "чМаксРазмерБуфера";
+    _sBufferSize = "nMaxBufferSize";
     const чРазмерБуфера = m_Settings.Get(_sBufferSize);
     if (
       nToLastRangeEnd + nWillBeAdded >= MIN_BUFFER_SIZE &&
@@ -5666,8 +5672,8 @@ const m_Player = (() => {
   function AppendMediaSegment(oSegment) {
     return AppendSegment(
       oSegment,
-      oSegment.pData.мбМедиасегмент,
-      "медиасегмент"
+      oSegment.pData.mbMediaSegment,
+      "mediasegment"
     );
   }
   function AppendSegment(oSegment, mbAppend, sAppend) {
@@ -5873,16 +5879,16 @@ const m_Player = (() => {
   function TogglePause() {
     Check(m_Controls.GetState() === STATE_REPEAT);
     if ((_oReplay.bPause = !_oReplay.bPause)) {
-      m_Log.Окак("[Проигрыватель] Ставлю повтор на паузу");
+      m_Log.Окак("[Проигрыватель] Ставлю replay на паузу");
       _oMediaElement.pause();
     } else {
-      m_Log.Окак("[Проигрыватель] Снимаю повтор с паузы");
+      m_Log.Окак("[Проигрыватель] Снимаю replay с паузы");
       _oReplay.CheckPlaybackPosition(
         CHECK_PLAYBACK_START
       );
       _oMediaElement.play();
     }
-    m_Events.SendEvent("проигрыватель-пауза", _oReplay.bPause);
+    m_Events.SendEvent("player-paused", _oReplay.bPause);
   }
   function SetReplaySpeed(nSpeed) {
     Check(nSpeed > 0);
@@ -5910,7 +5916,7 @@ const m_Player = (() => {
       return;
     }
     ShowState("Окак", "Запуск повтора");
-    m_Events.SendEvent("проигрыватель-пауза", _oReplay.bPause);
+    m_Events.SendEvent("player-paused", _oReplay.bPause);
     m_Scale.SetStartAndEnd(
       _oMediaElement.buffered.start(0),
       _oMediaElement.buffered.end(_oMediaElement.buffered.length - 1)
@@ -6187,7 +6193,7 @@ const m_Playlist = (() => {
           ) {
             m_Statistics.SegmentsQueued(0, 0);
             if (oSegmentList.bEndOfList) {
-              throw "КОНЕЦ_СПИСКА";
+              throw "END_OF_LIST";
             }
             nUpdateInterval = AD_LIST_UPDATE_INTERVAL;
           } else {
@@ -6361,7 +6367,7 @@ const m_Playlist = (() => {
           ) || bShortenedInterval;
       }
       if (this.oSegmentList.bEndOfList) {
-        throw "КОНЕЦ_СПИСКА";
+        throw "END_OF_LIST";
       }
       setAdState(bListEndsWithAd);
       return bListEndsWithAd
@@ -6372,12 +6378,12 @@ const m_Playlist = (() => {
         );
     }
     _listNotUpdated(oPromiseCancellation, sReason) {
-      if (sReason === "ОТКАЗАНО_В_ДОСТУПЕ") {
+      if (sReason === "ACCESS_DENIED") {
         m_Controls.StopWatchingBroadcast();
         m_Notification.ShowAss();
       } else {
-        m_Log[sReason === "КОНЕЦ_СПИСКА" ? "Окак" : "Ой"](
-          `[Список] Трансляция завершена. ${sReason}`
+        m_Log[sReason === "END_OF_LIST" ? "Окак" : "Ой"](
+          `[Список] Трансляция ended. ${sReason}`
         );
         EndBroadcast();
         this._update(
@@ -6465,7 +6471,7 @@ const m_Playlist = (() => {
         ) || bShortenedInterval; // bShortenedInterval
 
       if (this.oSegmentList.bEndOfList) { // oSegmentList.bEndOfList
-        throw "КОНЕЦ_СПИСКА"; // END_OF_LIST
+        throw "END_OF_LIST"; // END_OF_LIST
       }
 
       return getSegmentListUpdateInterval( // getSegmentListUpdateInterval
@@ -6927,7 +6933,7 @@ const m_Playlist = (() => {
       } catch (pException) {
         if (
           pException instanceof Error &&
-          pException.message === "БРАКОВАТЬ"
+          pException.message === "REJECT"
         ) {
           throw `Error parsing playlist line:\n${ExceptionToString(
             pException
@@ -6999,7 +7005,7 @@ const m_Playlist = (() => {
   }
   function reject(pCondition) {
     if (!pCondition) {
-      throw new Error("БРАКОВАТЬ");
+      throw new Error("REJECT");
     }
   }
   function ParseAttributeList(sSourceText) {
@@ -7052,10 +7058,10 @@ const m_Playlist = (() => {
       _bAdInProgress = bAdInProgress;
       if (bAdInProgress) {
         _oListsWithoutAds.start();
-        m_Events.SendEvent("список-началорекламы");
+        m_Events.SendEvent("playlist-adstart");
       } else {
         _oListsWithoutAds.stop();
-        m_Events.SendEvent("список-конецрекламы");
+        m_Events.SendEvent("playlist-adend");
       }
     }
     if (!bAdInProgress) {
@@ -7318,7 +7324,7 @@ const m_Playlist = (() => {
       g_maQueue.Add(
         new Segment(PROCESSING_DOWNLOADED, STATE_BROADCAST_START)
       );
-      m_Events.SendEvent("список-выбранварианттрансляции", [
+      m_Events.SendEvent("playlist-broadcastvariantselected", [
         _oListsWithAds.oVariantList.moVariants,
         _oListsWithAds.oSelectedVariant,
       ]);
@@ -7331,7 +7337,7 @@ const m_Playlist = (() => {
       g_maQueue.Add(
         new Segment(PROCESSING_DOWNLOADED, STATE_BROADCAST_END)
       );
-      m_Events.SendEvent("список-выбранварианттрансляции", [null, null]);
+      m_Events.SendEvent("playlist-broadcastvariantselected", [null, null]);
     }
     _oListsWithAds.очистить();
     setAdState(false);
@@ -7545,7 +7551,7 @@ const m_Transcoder = (() => {
     const sCodecs = oSegment.sCodecs;
     const oData = {
       bPassthrough: true,
-      мбМедиасегмент: new Uint8Array(oSegment.pData),
+      mbMediaSegment: new Uint8Array(oSegment.pData),
       bHasVideo: /avc1|avc3|hvc1|hev1|av01|vp09/.test(sCodecs),
       bHasAudio: /mp4a|ac-3|ec-3|opus|fLaC/.test(sCodecs),
       nConvertedIn: 0,
@@ -7584,7 +7590,7 @@ const m_Transcoder = (() => {
           );
           if (typeof oSegment.pData != "number") {
             m_Statistics.ConvertedSegmentReceived(oSegment);
-            if (!oSegment.pData.hasOwnProperty("мбМедиасегмент")) {
+            if (!oSegment.pData.hasOwnProperty("mbMediaSegment")) {
               return;
             }
             m_Debug.SaveConvertedSegment(oSegment);
@@ -8026,7 +8032,7 @@ const m_Downloader = (() => {
         }
       }
       const nQueueOverflow =
-        m_Settings.Get("чМаксРазмерБуфера") +
+        m_Settings.Get("nMaxBufferSize") +
         m_Settings.Get("чРастягиваниеБуфера");
       if (nAllDownloadsDuration > nQueueOverflow) {
         m_Log.Ой(
@@ -8228,7 +8234,7 @@ const m_Twitch = (() => {
         m_Log.Окак("[Twitch] Вставляю фрейм для перехвата токена GQL");
         const elFrame = document.createElement("iframe");
         elFrame.src = "https://www.twitch.tv/popout/";
-        elFrame.id = "токенgql";
+        elFrame.id = "gqltoken";
         elFrame.hidden = true;
         Check(!document.getElementById(elFrame.id));
         document.body.appendChild(elFrame);
@@ -8238,7 +8244,7 @@ const m_Twitch = (() => {
             elFrame.remove();
             getGqlToken._oPromise = getGqlToken.fGqlTokenChanged =
               null;
-            fReject("ОТКАЗАНО_В_ДОСТУПЕ");
+            fReject("ACCESS_DENIED");
           }),
           WAIT_FOR_TOKEN
         );
@@ -8331,7 +8337,7 @@ const m_Twitch = (() => {
             clearGqlToken();
           }
           if (!bSendGqlToken || bFreshToken) {
-            throw "ОТКАЗАНО_В_ДОСТУПЕ";
+            throw "ACCESS_DENIED";
           }
           if (
             oRequestHeaders["Client-Integrity"] !== _sGqlToken &&
@@ -8390,7 +8396,7 @@ const m_Twitch = (() => {
                 ) {
                   clearGqlToken();
                 }
-                throw "ОТКАЗАНО_В_ДОСТУПЕ";
+                throw "ACCESS_DENIED";
               }
               m_Log.Ой(
                 oResult.errors.some(
@@ -8443,7 +8449,7 @@ const m_Twitch = (() => {
         ) {
           throw "Server could not complete the operation";
         }
-        m_Events.SendEvent("twitch-полученыметаданныезрителя", {
+        m_Events.SendEvent("twitch-viewermetadatareceived", {
           nSubscription: SUBSCRIPTION_NOT_SUBSCRIBED,
         });
       })
@@ -8451,7 +8457,7 @@ const m_Twitch = (() => {
         if (typeof pReason == "string") {
           m_Log.Ой(`[Twitch] Не удалось не отслеживать channel. ${pReason}`);
           m_Notification.ShowAss();
-          m_Events.SendEvent("twitch-полученыметаданныезрителя", {
+          m_Events.SendEvent("twitch-viewermetadatareceived", {
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
           });
         } else {
@@ -8496,7 +8502,7 @@ const m_Twitch = (() => {
         ) {
           throw "Server could not complete the operation";
         }
-        m_Events.SendEvent("twitch-полученыметаданныезрителя", {
+        m_Events.SendEvent("twitch-viewermetadatareceived", {
           nSubscription,
         });
       })
@@ -8504,7 +8510,7 @@ const m_Twitch = (() => {
         if (typeof pReason == "string") {
           m_Log.Ой(`[Twitch] Не удалось отслеживать channel. ${pReason}`);
           m_Notification.ShowAss();
-          m_Events.SendEvent("twitch-полученыметаданныезрителя", {
+          m_Events.SendEvent("twitch-viewermetadatareceived", {
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
           });
         } else {
@@ -8946,7 +8952,7 @@ const m_Twitch = (() => {
             : oUser.self.follower.disableNotifications
               ? SUBSCRIPTION_DO_NOT_NOTIFY
               : SUBSCRIPTION_NOTIFY;
-        m_Events.SendEvent("twitch-полученыметаданныеканала", {
+        m_Events.SendEvent("twitch-channelmetadatareceived", {
           sName: oUser.displayName || _sChannelLogin,
           sAvatar: oUser.profileImageURL || "player.svg#svg-missingavatar",
           sDescription: oUser.description,
@@ -8955,7 +8961,7 @@ const m_Twitch = (() => {
           nChannelCreated: Date.parse(oUser.createdAt),
           moTeams,
         });
-        m_Events.SendEvent("twitch-полученыметаданныезрителя", {
+        m_Events.SendEvent("twitch-viewermetadatareceived", {
           sName: _sViewerName,
           nSubscription,
         });
@@ -8965,14 +8971,14 @@ const m_Twitch = (() => {
           m_Log.Ой(
             `[Twitch] Не удалось получить метаданные канала. ${pReason}`
           );
-          m_Events.SendEvent("twitch-полученыметаданныеканала", {
+          m_Events.SendEvent("twitch-channelmetadatareceived", {
             sName: _sChannelLogin,
             sAvatar: "player.svg#svg-missingavatar",
             sLanguageCode: null,
             kSubscribers: null,
             nChannelCreated: null,
           });
-          m_Events.SendEvent("twitch-полученыметаданныезрителя", {
+          m_Events.SendEvent("twitch-viewermetadatareceived", {
             sName: _sViewerName,
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
           });
@@ -9046,9 +9052,9 @@ const m_Twitch = (() => {
           const sBroadcastType = chain(oUser, "stream", "type");
           oMetadata.sBroadcastType =
             sBroadcastType === "live"
-              ? "прямая"
+              ? "live"
               : sBroadcastType === "rerun"
-                ? "повтор"
+                ? "replay"
                 : null;
         }
         if (_sBroadcastId === "" || _sBroadcastId === sBroadcastId) {
@@ -9082,7 +9088,7 @@ const m_Twitch = (() => {
             Date.parse(chain(oUser, "stream", "createdAt"));
         }
         m_Events.SendEvent(
-          "twitch-полученыметаданныетрансляции",
+          "twitch-broadcastmetadatareceived",
           oMetadata
         );
         UpdateBroadcastMetadata(
@@ -9238,7 +9244,7 @@ const m_Twitch = (() => {
   }
   const handleChatMessage = AddExceptionHandler(
     (oMessage, oSender, fRespond) => {
-      if (oMessage.sQuery !== "ВставитьСторонниеРасширения") {
+      if (oMessage.sQuery !== "InsertThirdPartyExtensions") {
         return false;
       }
       if (
@@ -9330,7 +9336,7 @@ function Terminate(bFast) {
       m_Player.Stop();
       m_GarbageCollector.Burn();
     }
-    m_Log.Окак("[Запускалка] Работа завершена");
+    m_Log.Окак("[Запускалка] Работа ended");
   } catch (_) { }
 }
 
@@ -9339,7 +9345,7 @@ AddExceptionHandler(() => {
     Check(IsNonEmptyString(sChannel));
     chrome.runtime.sendMessage(
       {
-        sQuery: "ЭтотКаналУжеОткрыт",
+        sQuery: "ThisChannelIsAlreadyOpen",
         sChannel,
       },
       (pResponse) => {
@@ -9350,7 +9356,7 @@ AddExceptionHandler(() => {
     );
     chrome.runtime.onMessage.addListener(
       AddExceptionHandler((oMessage, _, fRespond) => {
-        if (oMessage.sQuery === "ЭтотКаналУжеОткрыт") {
+        if (oMessage.sQuery === "ThisChannelIsAlreadyOpen") {
           m_Log.Ой(
             `[Запускалка] В другой вкладке открыт channel ${oMessage.sChannel}`
           );

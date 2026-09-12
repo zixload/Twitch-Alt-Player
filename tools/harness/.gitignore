@@ -18,3 +18,8 @@ errors-out.txt
 settingscheck-*/
 settingscheck-out.txt
 verify-out.txt
+
+# Captures brutes d'admeasure.py : le journal du lecteur y recopie les balises publicitaires
+# entieres, jetons RADS et identifiants de session compris. Jamais dans git. Seul le resume
+# chiffre, sans journal, est versionne (perf-reference.json).
+admeasure-*.json

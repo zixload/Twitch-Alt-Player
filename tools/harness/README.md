@@ -27,7 +27,7 @@ l'extension**, et parce qu'ils encodent des connaissances qui coûtent cher à r
 | Script | Rôle |
 |---|---|
 | `probe2.py` | Charge l'extension, ouvre une chaîne, échantillonne l'état de lecture. Le plus utile. |
-| `admeasure.py` + `analyse.py` | Mesure sur la durée : temps de lecture, tampon, images décodées, périodes de pub. Produit la chronologie des gels et des coupures. |
+| `admeasure.py` + `analyse.py` | Référence de performance : démarrage, images perdues, gels, image figée, tampon, publicités, sur la durée. Relève aussi la charge et les autres essais concurrents, et dit si la mesure est propre. `analyse.py` en tire la chronologie. |
 | `shot.py` | Charge, ouvre une chaîne, sonde le DOM et fait une capture d'écran. |
 | `compare.py` | Le même relevé sur deux navigateurs, pour trancher un doute de moteur. |
 | `entrycheck.py` | Vérifie l'insertion du bouton de l'extension dans le DOM actuel de twitch.tv. |
