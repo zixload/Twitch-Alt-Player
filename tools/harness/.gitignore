@@ -15,3 +15,5 @@ fscheck-*/
 fscheck-out.txt
 errors-*/
 errors-out.txt
+settingscheck-*/
+settingscheck-out.txt
