@@ -6444,31 +6444,6 @@ const м_Список = (() => {
       }
       // --- FIX END ---
 
-      // [NEW] DYNAMIC DECOMPOSITION: TEMPORAL VALIDITY CHECK
-      if (this.оСписокСегментов && this.оСписокСегментов.моСегменты) {
-        const чСейчас = Date.now();
-        const чТочноеВремя = г_чТочноеВремя || 0; // Global ExactTime offset
-
-        this.оСписокСегментов.моСегменты.forEach((оСегмент, i) => {
-          if (оСегмент.programDateTime) {
-            const чВремяСегмента = Date.parse(оСегмент.programDateTime);
-
-            if (!isNaN(чВремяСегмента)) {
-              // Calculate Skew
-              // We use Date.now() as the primary reference vs ProgramDateTime (Wall Clock)
-              const чСдвиг = Math.abs(чСейчас - чВремяСегмента);
-
-              // Log if skew > 30s
-              if (чСдвиг > 30000) {
-                м_Журнал.Ой(
-                  `[TemporalValidity] Skew detected. Segment=${i} Skew=${чСдвиг}ms SegTime=${new Date(чВремяСегмента).toISOString()} LocalTime=${new Date(чСейчас).toISOString()} ExactTimeOffset=${чТочноеВремя}`
-                );
-              }
-            }
-          }
-        });
-      }
-      // [END NEW]
 
       // --- REMOVED THE "THROW IF AD FOUND" CHECK ---
       // We process the segments as normal content now.
@@ -6534,8 +6509,7 @@ const м_Список = (() => {
       моВарианты, // variants
       оНовыйВариант, // newVariant
       сИдТрансляции, // broadcast id
-      сАдресСлеженияЗаПросмотром, // viewingTrackingUrl
-      сДатаВремени; // // dateTime
+      сАдресСлеженияЗаПросмотром; // viewingTrackingUrl
     let nTargetDuration,
       чПорядковыйНомер, // sequence number
       лКонецСписка, // endOfList
@@ -6573,7 +6547,6 @@ const м_Список = (() => {
       оНовыйСегмент = null;
       лРазрыв = false;
       чВремя = NaN;
-      сДатаВремени = null; // [NEW] Track Program Date Time
     }
     // URI of the #EXT-X-MAP initialisation segment. Empty for MPEG-TS playlists.
     let sInitSegmentUrl = "";
@@ -6634,10 +6607,6 @@ const м_Список = (() => {
             }
             // --- ZOMBIE SEGMENT OVERRIDE END ---
 
-            // [NEW] Assign Captured Date Time from preceding tag
-            if (сДатаВремени) {
-              оНовыйСегмент.programDateTime = сДатаВремени;
-            }
 
             if (оНовыйСегмент.лРеклама) {
               чВремя = NaN;
@@ -6670,9 +6639,11 @@ const м_Список = (() => {
             лРазрыв = true;
             break;
 
+          // Reconnu sans etre exploite. La branche doit exister : le cas par defaut de cet
+          // analyseur fait Проверить(false), donc une balise non citee ferait echouer la lecture
+          // de toute playlist qui la porte — c'est-a-dire toutes.
           case "-X-PROGRAM-DATE-TIME":
             Проверить(!лЭтоСписокВариантов);
-            сДатаВремени = сЗначениеТега; // [NEW] Capture the value
             break;
 
           // #EXT-X-MAP is not encryption. It names the initialisation segment of an

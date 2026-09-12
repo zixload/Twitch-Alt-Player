@@ -1,0 +1,13 @@
+# Profils de navigateur fabriques par le harnais, jamais du code source.
+#
+# Chaque script lance son propre Chrome avec --user-data-dir pointant ici, et
+# efface le dossier au demarrage suivant. Ce que Chrome y depose -- journaux
+# leveldb, caches de shaders, extensions preinstallees par Google -- pesait
+# 75 Mo et 449 fichiers au premier commit. C'est de la sortie, pas de l'entree.
+ad-profile/
+entry-profile/
+follow-profile/
+report-profile/
+shot-profile/
+tip-profile/
+probe2-*/
