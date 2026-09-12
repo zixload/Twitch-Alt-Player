@@ -124,7 +124,7 @@ kbd {
 	transition: .15s ease-out;
 	transition-property: visibility, opacity, transform
 }
-.индикаторпрокрутки {
+.scrollindicator {
 /* .scrollindicator */
 	width: 100%;
 	height: 3.217ex;
@@ -132,12 +132,12 @@ kbd {
 	top: -.625rem;
 	background: url(player.svg#svg-scrolldown) center no-repeat
 }
-.windowopen .индикаторпрокрутки {
+.windowopen .scrollindicator {
 /* .windowopen .scrollindicator */
-	animation: 2.5s linear infinite индикаторпрокрутки
+	animation: 2.5s linear infinite scrollindicator
 	/* animation: 2.5s linear infinite scrollindicator */
 }
-@keyframes индикаторпрокрутки {
+@keyframes scrollindicator {
 /* @keyframes scrollindicator */
 	85% {
 		transform: translateY(0)
@@ -159,7 +159,7 @@ kbd {
 	height: 100%;
 	z-index: 1000
 }
-[data-тащилка] {
+[data-dragger] {
 /* [data-dragger] */
 	touch-action: none;
 	-webkit-user-select: none;
@@ -202,7 +202,7 @@ body {
 	position: relative;
 	flex: 1
 }
-.autohide:not([data-состояние="3"]):not([data-состояние="7"]):not([data-окно-открыто]):not(.speedpick):not(.novideo) #player {
+.autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-opened]):not(.speedpick):not(.novideo) #player {
 /* .autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-open]):not(.speedchoice):not(.novideo) #player */
 	cursor: none
 }
@@ -402,8 +402,8 @@ a:hover {
 	animation: 0s step-end showdelayed
 	/* animation: 0s step-end showimmediately */
 }
-body[data-состояние="4"] .spinner,
-body[data-состояние="5"] .spinner {
+body[data-state="4"] .spinner,
+body[data-state="5"] .spinner {
 /* body[data-state="4"] .spinner, */
 /* body[data-state="5"] .spinner */
 	animation-duration: .5s
@@ -417,10 +417,10 @@ body[data-состояние="5"] .spinner {
 .interfaceanimation .svg-busy {
 /* .interfaceanimation .svg-busy */
 	transform-origin: center;
-	animation: 2s cubic-bezier(.46, .03, .52, .96) infinite загрузка
+	animation: 2s cubic-bezier(.46, .03, .52, .96) infinite loading
 	/* animation: 2s cubic-bezier(.46,.03,.52,.96) infinite loading */
 }
-@keyframes загрузка {
+@keyframes loading {
 /* @keyframes loading */
 	80% {
 		transform: scaleX(1)
@@ -429,7 +429,7 @@ body[data-состояние="5"] .spinner {
 		transform: scaleX(0)
 	}
 }
-.панель {
+.panel {
 /* .panel */
 	position: absolute;
 	z-index: 3;
@@ -442,18 +442,18 @@ body[data-состояние="5"] .spinner {
 	background: linear-gradient(to right, rgba(var(--sGradientColour), 0) 10%, rgba(var(--sGradientColour), .15) 40%, rgba(var(--sGradientColour), .15) 60%, rgba(var(--sGradientColour), 0) 90%), rgba(var(--sBackgroundColour), var(--nOpacity))
 	/* background: linear-gradient(to right,rgba(var(--sGradientColor),0) 10%,rgba(var(--sGradientColor),.15) 40%,rgba(var(--sGradientColor),.15) 60%,rgba(var(--sGradientColor),0) 90%),rgba(var(--sBackgroundColor),var(--nOpacity)) */
 }
-.autohide:not([data-состояние="3"]):not([data-состояние="7"]):not([data-окно-открыто]):not(.speedpick):not(.novideo) .панель {
+.autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-opened]):not(.speedpick):not(.novideo) .panel {
 /* .autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-open]):not(.speedchoice):not(.novideo) .panel */
 	pointer-events: none;
 	visibility: hidden;
 	opacity: 0
 }
-.interfaceanimation.panelanimation .панель {
+.interfaceanimation.panelanimation .panel {
 /* .interfaceanimation.panelanimation .panel */
 	transition: .3s ease-out;
 	transition-property: visibility, opacity
 }
-.верхняя {
+.top {
 /* .top */
 	top: 0
 }
@@ -500,19 +500,19 @@ body[data-состояние="5"] .spinner {
 /* .filler */
 	flex: 1 1000 0
 }
-.кнопка {
+.button {
 /* .button */
 	flex: none;
 	border-radius: 0;
 	color: inherit;
 	background: 0 0!important
 }
-.кнопка>svg {
+.button>svg {
 /* .button>svg */
 	width: 1.375rem;
 	height: 1.375rem
 }
-.кнопка:enabled:active>svg {
+.button:enabled:active>svg {
 /* .button:enabled:active>svg */
 	transform: scale(.85)
 }
@@ -589,18 +589,18 @@ body[data-состояние="5"] .spinner {
 /* .backgroundcolorcheck #player */
 	background: repeating-linear-gradient(to right, #fff, #fff 5px, transparent 5px, transparent 10px), repeating-linear-gradient(to bottom, #fff, #fff 5px, transparent 5px, transparent 10px), #000
 }
-body[data-состояние="6"]:not(.novideo):not(.colourcheck) .spinner,
-body[data-состояние="8"]:not(.novideo):not(.colourcheck) .spinner,
-body:not([data-состояние="1"]):not([data-состояние="2"]):not([data-состояние="4"]):not([data-состояние="5"]) .svg-busy,
-body:not([data-состояние="3"]) .svg-end,
-body:not([data-состояние="7"]) .svg-stop,
-body:not([data-состояние="6"]):not([data-состояние="8"]) .svg-mute-false,
+body[data-state="6"]:not(.novideo):not(.colourcheck) .spinner,
+body[data-state="8"]:not(.novideo):not(.colourcheck) .spinner,
+body:not([data-state="1"]):not([data-state="2"]):not([data-state="4"]):not([data-state="5"]) .svg-busy,
+body:not([data-state="3"]) .svg-end,
+body:not([data-state="7"]) .svg-stop,
+body:not([data-state="6"]):not([data-state="8"]) .svg-mute-false,
 body:not(.novideo) .svg-mute-false,
 body:not(.colourcheck) .svg-settings,
 .colourcheck .spinner>use:not(.svg-settings),
 .colourcheckbackground #eye,
-body[data-состояние="8"] .notforreplay,
-body:not([data-состояние="8"]) .forreplay,
+body[data-state="8"] .notforreplay,
+body:not([data-state="8"]) .forreplay,
 .novideo #togglepictureinpicture,
 .noaudio #togglemute,
 .noaudio #volume {
@@ -793,10 +793,10 @@ th.channel-avatar {
 /* .viewer-notify */
 	margin-right: 1em
 }
-#viewer-subscription[data-подписка="0"],
-#viewer-subscription:not([data-подписка="1"]) #viewer-follow,
-#viewer-subscription:not([data-подписка="2"]):not([data-подписка="3"]) #viewer-unfollow,
-#viewer-subscription:not([data-подписка="2"]):not([data-подписка="3"]) .viewer-notify {
+#viewer-subscription[data-subscription="0"],
+#viewer-subscription:not([data-subscription="1"]) #viewer-follow,
+#viewer-subscription:not([data-subscription="2"]):not([data-subscription="3"]) #viewer-unfollow,
+#viewer-subscription:not([data-subscription="2"]):not([data-subscription="3"]) .viewer-notify {
 /* #viewer-subscription[data-subscription="0"], */
 /* #viewer-subscription:not([data-subscription="1"]) #viewer-subscribe, */
 /* #viewer-subscription:not([data-subscription="2"]):not([data-subscription="3"]) #viewer-unsubscribe, */
@@ -958,7 +958,7 @@ input:not(:checked)+.settingsheading+.groupofsettings {
 	min-width: 11.2em;
 	max-width: 16em
 }
-.вводчисла-число.вводчисла-число {
+.numberinput-number.numberinput-number {
 /* .numberinput-number.numberinput-number */
 	min-width: 5.2em;
 	max-width: 5.2em;
@@ -1110,7 +1110,7 @@ input:not(:checked)+.settingsheading+.groupofsettings {
 	transform-origin: 50% 10%;
 	animation: 12.5s linear .5s infinite unread
 }
-.autohide:not([data-состояние="3"]):not([data-состояние="7"]):not([data-окно-открыто]):not(.speedpick):not(.novideo) .unread>svg {
+.autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-opened]):not(.speedpick):not(.novideo) .unread>svg {
 /* .autohide:not([data-state="3"]):not([data-state="7"]):not([data-window-open]):not(.speedchoice):not(.novideo) .unread>svg */
 	animation: none
 }
@@ -1206,7 +1206,7 @@ input:not(:checked)+.settingsheading+.groupofsettings {
 	left: 1.825rem;
 	cursor: move
 }
-th[data-тащилка=statistics] {
+th[data-dragger=statistics] {
 /* th[data-dragger=statistics] */
 	cursor: move
 }
@@ -1266,7 +1266,7 @@ th[data-тащилка=statistics] {
 .analysis-minimum,
 .analysis-average,
 .analysis-maximum,
-#statistics:not(.dragger):not(:hover) .анализ-история:not(.statistics-detailed) {
+#statistics:not(.dragger):not(:hover) .analysis-history:not(.statistics-detailed) {
 /* .analysis-minimum, */
 /* .analysis-average, */
 /* .analysis-maximum, */
@@ -1278,16 +1278,16 @@ th[data-тащилка=statistics] {
 /* .analysis-maximum.analysis-maximum */
 	padding-right: .5em
 }
-.анализ-история.анализ-история {
+.analysis-history.analysis-history {
 /* .analysis-history.analysis-history */
 	border-color: #777;
 	padding: 0 .125rem
 }
-.анализ-история:not(.statistics-detailed) {
+.analysis-history:not(.statistics-detailed) {
 /* .analysis-history:not(.statistics-detailed) */
 	border-color: #f40
 }
-.анализ-история:empty {
+.analysis-history:empty {
 /* .analysis-history:empty */
 	display: none
 }

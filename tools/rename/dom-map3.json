@@ -1,0 +1,17 @@
+{
+  "// note": "Derniers noms d'element partages. Les formes data-* figurent a part : le tiret empeche le decoupage de mots de les atteindre depuis le nom nu. Les formes nues okno-otkryto, podpiska et tachilka n'existent nulle part seules : seules leurs formes data-* subsistent.",
+  "data-окно-открыто": "data-window-opened",
+  "data-окно-переключить": "data-window-toggle",
+  "data-состояние": "data-state",
+  "data-подписка": "data-subscription",
+  "data-тащилка": "data-dragger",
+  "вводчисла-число": "numberinput-number",
+  "индикаторпрокрутки": "scrollindicator",
+  "анализ-история": "analysis-history",
+  "панель": "panel",
+  "кнопка": "button",
+  "верхняя": "top",
+  "состояние": "state",
+  "загрузка": "loading",
+  "чНепрозрачность": "nOpacity"
+}

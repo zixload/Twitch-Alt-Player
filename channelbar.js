@@ -25,10 +25,10 @@ const m_ChannelBar = (() => {
 	};
 
 	/** The player's own channel-info button, still inside the (hidden) top panel. */
-	const INFO_BUTTON_SELECTOR = '#toppanel [data-окно-переключить="channel"]';
+	const INFO_BUTTON_SELECTOR = '#toppanel [data-window-toggle="channel"]';
 
 	/**
-	 * `data-подписка` values, straight from the ПОДПИСКА_* constants in player.js.
+	 * `data-subscription` values, straight from the ПОДПИСКА_* constants in player.js.
 	 * They are not a boolean: 0 means following is unavailable — the viewer is not
 	 * signed in — and the player hides its own row for it in CSS. 1 means "not
 	 * following yet", 2 and 3 mean following, without and with notifications.
@@ -135,7 +135,7 @@ const m_ChannelBar = (() => {
 
 		// State 0 means the viewer cannot follow at all; the player hides its own row
 		// through CSS rather than the hidden property, so read the attribute instead.
-		const sState = elState.getAttribute('data-подписка');
+		const sState = elState.getAttribute('data-subscription');
 		if (elState.hidden || sState === FOLLOW_UNAVAILABLE || sState === null) {
 			elButton.hidden = true;
 			return;
@@ -162,7 +162,7 @@ const m_ChannelBar = (() => {
 		if (elState === null || elState.classList.contains(UPDATING_CLASS)) {
 			return;
 		}
-		const sState = elState.getAttribute('data-подписка');
+		const sState = elState.getAttribute('data-subscription');
 		if (sState === FOLLOW_UNAVAILABLE || sState === null) {
 			return;
 		}

@@ -482,3 +482,22 @@ tourne** (8.9) ; A ne doit pas lancer `verify.py` pendant ces 20 minutes.
 
 **Reste pour B à sa reprise :** référence de performance propre ; reporter `nettoyage` → `public`
 (procédure 8.6, depuis `a88d587`) ; mettre à jour `fscheck`/`probe2` quand A renomme `data-состояние`.
+
+---
+
+## Journal des incursions dans les fichiers de l'autre
+
+Consigne d'agent B : ne pas modifier ses fichiers sans l'ecrire ici.
+
+- **2026-09-13, agent A, `tools/rename/crosscheck-selftest.js`.** Deux cas d'auto-test s'ancraient
+  sur des noms que le dernier lot vient de traduire : `.вводчисла-число` est devenu
+  `.numberinput-number`, et `data-окно-переключить` est devenu `data-window-toggle`. Les deux cas
+  se declaraient invalides et arretaient toute la verification. Ils sont reancres sur les nouveaux
+  noms, avec une valeur de panne differente pour le second, puisque l'ancienne panne porte
+  desormais le nom reel. L'auto-test repasse 8/8.
+- **2026-09-13, agent A, `tools/harness/`.** `migrationcheck.py` ajoute — l'essai de reprise des
+  reglages. Une ligne ajoutee au `.gitignore` du harnais pour ses profils. Signale ici parce que le
+  dossier appartient a l'agent B, meme si le fichier est neuf.
+- **2026-09-13, agent A, commit `6b19491`.** Un `git add -A` a embarque trois fichiers du harnais
+  en cours de modification chez l'agent B (`.gitignore`, `README.md`, `admeasure.py`). Le contenu
+  est intact, il se trouve seulement dans un commit qui parle d'autre chose.

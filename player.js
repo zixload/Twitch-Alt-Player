@@ -988,7 +988,7 @@ class NumberInput {
       `тащилка-перетаскивание-${sNodeId}`,
       (oParameters) => this._HandleDrag(oParameters)
     );
-    this._nodeNumber = document.querySelector(`#${sNodeId} > .вводчисла-число`);
+    this._nodeNumber = document.querySelector(`#${sNodeId} > .numberinput-number`);
     this.Update();
   }
   Update(nValue = m_Settings.Get(this._sSettingName)) {
@@ -1206,7 +1206,7 @@ const m_FocusManager = (() => {
   }
   const HandleEvent = AddExceptionHandler((oEvent) => {
     m_Log.Вот(
-      `[Фокусник] Событие ${oEvent.type}, старое состояние ${m_Log.O(
+      `[Фокусник] Событие ${oEvent.type}, старое state ${m_Log.O(
         _oState
       )}`
     );
@@ -1219,13 +1219,13 @@ const m_FocusManager = (() => {
       _oState.bActive !== oNewState.bActive
     ) {
       m_Log.Окак(
-        `[Фокусник] Новое состояние ${m_Log.O(oNewState)}`
+        `[Фокусник] Новое state ${m_Log.O(oNewState)}`
       );
       _oState = oNewState;
       m_Events.SendEvent("focus-statechanged", oNewState);
     }
   });
-  m_Log.Вот(`[Фокусник] Начальное состояние ${m_Log.O(_oState)}`);
+  m_Log.Вот(`[Фокусник] Начальное state ${m_Log.O(_oState)}`);
   document.addEventListener("visibilitychange", HandleEvent);
   window.addEventListener("focus", HandleEvent);
   window.addEventListener("blur", HandleEvent);
@@ -1471,7 +1471,7 @@ const m_Statistics = (() => {
         "analysis-maximum";
       for (let idx = this._mnHistory.length; --idx >= 0;) {
         nodeFragment.appendChild(document.createElement("td")).className =
-          "анализ-история statistics-detailed";
+          "analysis-history statistics-detailed";
       }
       this._nodeTable.textContent = "";
       this._nodeTable.appendChild(nodeFragment);
@@ -2182,13 +2182,13 @@ const m_Statistics = (() => {
 
 const m_Window = (() => {
   function getOpen() {
-    return document.body.getAttribute("data-окно-открыто") || "";
+    return document.body.getAttribute("data-window-opened") || "";
   }
   function openWindow(sWindowId) {
     const elWindow = GetNode(sWindowId);
     Check(elWindow.classList.contains("window"));
     elWindow.classList.add("windowopen", "windowanimation");
-    document.body.setAttribute("data-окно-открыто", sWindowId);
+    document.body.setAttribute("data-window-opened", sWindowId);
     m_Events.SendEvent(`окно-открыто-${sWindowId}`);
   }
   function closeWindow(sWindowId, bWithAnimation = true) {
@@ -2196,7 +2196,7 @@ const m_Window = (() => {
     Check(elWindow.classList.contains("window"));
     elWindow.classList.remove("windowopen");
     elWindow.classList.toggle("windowanimation", bWithAnimation);
-    document.body.removeAttribute("data-окно-открыто");
+    document.body.removeAttribute("data-window-opened");
   }
   function open(sWindowId) {
     Check(IsNonEmptyString(sWindowId));
@@ -2241,7 +2241,7 @@ const m_Window = (() => {
   m_Events.AddHandler(
     "controls-leftclick",
     ({ target: elClick }) => {
-      const sWindowId = elClick.getAttribute("data-окно-переключить");
+      const sWindowId = elClick.getAttribute("data-window-toggle");
       if (sWindowId) {
         toggle(sWindowId);
         return;
@@ -2438,14 +2438,14 @@ const m_Dragger = (() => {
     if (!Number.isNaN(_nPointerId) || oEvent.button !== LEFT_BUTTON) {
       return;
     }
-    const nodePressed = oEvent.target.closest("[data-тащилка]");
+    const nodePressed = oEvent.target.closest("[data-dragger]");
     if (nodePressed === null) {
       return;
     }
     _nPointerId = oEvent.pointerId;
     _oParameters = new Параметры(
       nodePressed,
-      GetNode(nodePressed.getAttribute("data-тащилка"))
+      GetNode(nodePressed.getAttribute("data-dragger"))
     );
     _nLastDragTime = 0;
     _nInitialX = _nLastX = oEvent.clientX;
@@ -2488,7 +2488,7 @@ const m_Dragger = (() => {
   const HandlePointerMove = AddExceptionHandler((oEvent) => {
     if (_nPointerId === oEvent.pointerId) {
       if ((oEvent.buttons & LEFT_BUTTON_PRESSED) == 0) {
-        FinishDrag("кнопка отпущена");
+        FinishDrag("button отпущена");
       } else {
         const nTime = performance.now();
         if (
@@ -2793,14 +2793,14 @@ const m_Appearance = (() => {
         Number.parseInt(nodeButton.value.slice(5, 7), 16)
       );
     }
-    const чНепрозрачность = Round(
+    const nOpacity = Round(
       1 - m_Settings.Get("nOpacity") / 100,
       2
     );
-    oStyle.setProperty("--nOpacity", чНепрозрачность);
+    oStyle.setProperty("--nOpacity", nOpacity);
     oStyle.setProperty(
       "--nWindowOpacity",
-      Clamp(чНепрозрачность, 0.85, 1)
+      Clamp(nOpacity, 0.85, 1)
     );
   }
   function ApplyInterfaceSize() {
@@ -4181,7 +4181,7 @@ const m_Controls = (() => {
       `[Управление] Состояние трансляции изменилось с ${_nState} на ${nNewState}`
     );
     _nState = nNewState;
-    document.body.setAttribute("data-состояние", nNewState);
+    document.body.setAttribute("data-state", nNewState);
     ChangeButton(
       "togglebroadcast",
       nNewState === STATE_STOP ||
@@ -4333,7 +4333,7 @@ const m_Controls = (() => {
         node.classList.add("updating");
       } else {
         node.classList.remove("updating");
-        node.setAttribute("data-подписка", oMetadata.nSubscription);
+        node.setAttribute("data-subscription", oMetadata.nSubscription);
         GetNode("viewer-notify").checked =
           oMetadata.nSubscription === SUBSCRIPTION_NOTIFY;
       }
@@ -4485,7 +4485,7 @@ const m_Chat = (() => {
   }
   function ApplyPanelState() {
     const nState = m_Settings.Get("nChatState");
-    m_Log.Окак(`[Чат] Новое состояние панели: ${nState}`);
+    m_Log.Окак(`[Чат] Новое state панели: ${nState}`);
     CancelPanelDrag();
     switch (nState) {
       case CHAT_UNLOADED:
@@ -8021,7 +8021,7 @@ const m_Downloader = (() => {
             LoadNextSegment();
           } else if (pReason === PromiseCancellation.REASON) {
             m_Log.Вот(
-              `[Загрузчик] Отменена загрузка сегмента ${oSegment.nNumber}`
+              `[Загрузчик] Отменена loading сегмента ${oSegment.nNumber}`
             );
             Check(!g_maQueue.includes(oSegment));
           } else {
