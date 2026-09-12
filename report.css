@@ -1,15 +1,15 @@
 @charset "utf-8";
-.отладка-сообщение {
+.debug-message {
 /* .debug-message */
 	color: #fff;
 	background: #6441a5
 }
-.отладка-отзыв {
+.debug-feedback {
 /* .debug-feedback */
 	color: #fff;
 	background: linear-gradient(#1f5cad, #3171c4 18px, #0f2e57) fixed
 }
-.отладка-ошибка,
+.debug-error,
 .debug-sendfailed {
 /* .debug-error, */
 /* .debug-sendfailure */
@@ -33,9 +33,9 @@ form {
 	padding: 0 1em;
 	text-align: center
 }
-#отладка-сообщение,
-#отладка-отзыв,
-#отладка-ошибка {
+#debug-message,
+#debug-feedback,
+#debug-error {
 /* #debug-message, */
 /* #debug-feedback, */
 /* #debug-error */
@@ -65,15 +65,15 @@ input[type=email] {
 	width: 100%;
 	line-height: inherit
 }
-textarea[name=отладка-отчет] {
+textarea[name=debug-report] {
 /* textarea[name=debug-report] */
 	font: 13px/1.5 Consolas, Monaco, "Liberation Mono", "Lucida Console", monospace
 }
-input[type=checkbox]:not(:checked)+[name=отладка-отчет] {
+input[type=checkbox]:not(:checked)+[name=debug-report] {
 /* input[type=checkbox]:not(:checked)+[name=debug-report] */
 	display: none
 }
-#отладка-текстсообщения {
+#debug-messagetext {
 /* #debug-messagetext */
 	white-space: pre-wrap
 }

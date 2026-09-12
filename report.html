@@ -5,15 +5,15 @@
 <title></title>
 <link rel=stylesheet href=common.css>
 <link rel=stylesheet href=report.css>
-<form id=отладка-сообщение hidden>
+<form id=debug-message hidden>
 <!-- <form id=debug-message hidden> -->
 	<p>
-		<span id=отладка-текстсообщения></span>
+		<span id=debug-messagetext></span>
 		<!-- <span id=debug-messagetext></span> -->
-		<a id=отладка-ссылкасообщения target=_top rel="noopener noreferrer"></a>
+		<a id=debug-messagelink target=_top rel="noopener noreferrer"></a>
 		<!-- <a id=debug-messagelink target=_top rel="noopener noreferrer"></a> -->
 </form>
-<form id=отладка-отзыв hidden>
+<form id=debug-feedback hidden>
 <!-- <form id=debug-feedback hidden> -->
 	<h3 data-i18n=F1912></h3>
 	<div data-i18n=F1501></div>
@@ -24,7 +24,7 @@
 	<p>
 		<label for=debug-feedback-message data-i18n=F0702></label>
 		<!-- <label for=debug-feedback-message data-i18n=F0702></label> -->
-		<textarea id=debug-feedback-message name=отладка-сообщение rows=6 minlength=4 maxlength=10000 spellcheck=true required autofocus></textarea>
+		<textarea id=debug-feedback-message name=debug-message rows=6 minlength=4 maxlength=10000 spellcheck=true required autofocus></textarea>
 		<!-- <textarea id=debug-feedback-message name=debug-message rows=6 minlength=4 maxlength=10000 spellcheck=true required autofocus></textarea> -->
 	<p>
 		<label>
@@ -39,7 +39,7 @@
 		<!-- <label for=debug-feedback-showreport class=debug-linkbutton data-i18n=F0705></label>. -->
 		<input id=debug-feedback-showreport type=checkbox hidden>
 		<!-- <input id=debug-feedback-showreport type=checkbox hidden> -->
-		<textarea name=отладка-отчет rows=15 spellcheck=false required readonly></textarea>
+		<textarea name=debug-report rows=15 spellcheck=false required readonly></textarea>
 		<!-- <textarea name=debug-report rows=15 spellcheck=false required readonly></textarea> -->
 		<span data-i18n=F1914></span>
 	<p>
@@ -49,7 +49,7 @@
 	<input name=debug-datatype type=hidden value=отзыв>
 	<!-- <input name=debug-datatype type=hidden value=feedback> -->
 </form>
-<form id=отладка-ошибка hidden>
+<form id=debug-error hidden>
 <!-- <form id=debug-error hidden> -->
 	<h3 data-i18n=F1913></h3>
 	<p>
@@ -58,14 +58,14 @@
 		<!-- <label for=debug-error-showreport class=debug-linkbutton data-i18n=F0705></label>. -->
 		<input id=debug-error-showreport type=checkbox hidden>
 		<!-- <input id=debug-error-showreport type=checkbox hidden> -->
-		<textarea name=отладка-отчет rows=15 spellcheck=false required readonly></textarea>
+		<textarea name=debug-report rows=15 spellcheck=false required readonly></textarea>
 		<!-- <textarea name=debug-report rows=15 spellcheck=false required readonly></textarea> -->
 		<span data-i18n=F1914></span>
 	<p data-i18n=F0710>
 	<p>
 		<label for=debug-error-message data-i18n=F0715></label>
 		<!-- <label for=debug-error-message data-i18n=F0715></label> -->
-		<textarea id=debug-error-message name=отладка-сообщение rows=3 maxlength=10000 spellcheck=true></textarea>
+		<textarea id=debug-error-message name=debug-message rows=3 maxlength=10000 spellcheck=true></textarea>
 		<!-- <textarea id=debug-error-message name=debug-message rows=3 maxlength=10000 spellcheck=true></textarea> -->
 	<p>
 		<label>

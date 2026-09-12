@@ -52,7 +52,7 @@
 
 /* ----------------------------------------------------------------- windows */
 
-.окно {
+.window {
 	border: .0625rem solid rgba(var(--gl-line), .1);
 	border-radius: var(--gl-radius);
 	background:
@@ -69,11 +69,11 @@
 
 /* ------------------------------------------------------------------- menus */
 
-.меню-пункт {
+.menu-item {
 	border-radius: var(--gl-radius-small);
 }
 
-.меню-пункт:hover {
+.menu-item:hover {
 	text-shadow: inherit;
 	color: rgb(var(--сЦветВыделения));
 	background: rgba(var(--gl-line), .09);
@@ -166,7 +166,7 @@ select>optgroup {
 }
 
 .numberinput-plus.numberinput-plus,
-.вводчисла-минус {
+.numberinput-minus {
 	border-radius: var(--gl-radius-small);
 }
 
@@ -244,42 +244,42 @@ kbd,
 	pill radius is wrong here — at "1" the box is narrow enough that it renders as
 	a circle, which is the very thing the bare icon row avoids.
 */
-#скорость {
+#speed {
 	border: .0625rem solid rgba(var(--gl-line), .14);
 	border-radius: var(--gl-radius-small);
 	color: rgb(var(--gl-ink));
 	background: rgba(var(--gl-field), .8);
 }
 
-#скорость:not(:disabled):hover {
+#speed:not(:disabled):hover {
 	border-color: rgba(var(--gl-line), .3);
 	color: rgb(var(--сЦветВыделения));
 	background-image: none;
 }
 
-.типтрансляции {
+.broadcasttype {
 	border-radius: 999rem;
 	padding: .125rem .4375rem;
 	font-weight: 600;
 	letter-spacing: .03em;
 }
 
-.прямаятрансляция {
+.livebroadcast {
 	background: rgb(236, 62, 62);
 }
 
-.категориятрансляции {
+.broadcastcategory {
 	color: rgb(var(--gl-ink-dim));
 }
 
-#шкала,
+#scale,
 .scale-background,
-#шкала-просмотрено,
-#громкость::-webkit-slider-runnable-track {
+#scale-watched,
+#volume::-webkit-slider-runnable-track {
 	border-radius: 999rem;
 }
 
-#громкость::-webkit-slider-thumb {
+#volume::-webkit-slider-thumb {
 	border-radius: 50%;
 	background: currentColor;
 	box-shadow: 0 .0625rem .1875rem rgba(0, 0, 0, .5);
@@ -287,7 +287,7 @@ kbd,
 
 /* ------------------------------------------------------ statistics overlay */
 
-#статистика {
+#statistics {
 	border: .0625rem solid rgba(var(--gl-line), .1);
 	border-radius: var(--gl-radius);
 	overflow: hidden;
@@ -297,11 +297,11 @@ kbd,
 	box-shadow: 0 .75rem 1.75rem rgba(0, 0, 0, .4);
 }
 
-#статистика:not(.тащилка):hover {
+#statistics:not(.dragger):hover {
 	background: rgba(10, 10, 14, .82);
 }
 
-#статистика.тащилка {
+#statistics.dragger {
 	outline: .0625rem solid rgb(var(--сЦветВыделения));
 }
 
@@ -312,11 +312,11 @@ kbd,
 
 /* ------------------------------------------------------------ misc surfaces */
 
-#уведомление {
+#notification {
 	filter: drop-shadow(0 .25rem .75rem rgba(0, 0, 0, .55));
 }
 
-.новости {
+.news {
 	border-radius: var(--gl-radius);
 }
 
@@ -324,13 +324,13 @@ kbd,
 	border-radius: var(--gl-radius-small);
 }
 
-#размерчата {
+#chatsize {
 	background: 0 0;
 	box-shadow: inset .1875rem 0 0 rgba(var(--gl-line), .07);
 }
 
-#размерчата:hover,
-#размерчата.тащилка {
+#chatsize:hover,
+#chatsize.dragger {
 	box-shadow: inset .1875rem 0 0 rgb(var(--сЦветВыделения));
 }
 

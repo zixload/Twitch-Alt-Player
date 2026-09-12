@@ -43,17 +43,6 @@
    ]
   ],
   [
-   "крутилка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
    "уведомление",
    [
     "id",
@@ -95,51 +84,6 @@
    ]
   ],
   [
-   "статистика-кнопка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "статистика-переместить",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "статистика-прокрутка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "статистика-главнаятаблица",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
    "статистика-разрешениевидео",
    [
     "id",
@@ -175,15 +119,6 @@
    ]
   ],
   [
-   "статистика-сжатиевидео",
-   [
-    "id"
-   ],
-   [
-    "player.html"
-   ]
-  ],
-  [
    "статистика-сжатиезвука",
    [
     "id",
@@ -203,15 +138,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "статистика-сервер",
-   [
-    "id"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -258,35 +184,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "статистика-анализ",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "статистика-интервалобновления",
-   [
-    "id"
-   ],
-   [
-    "player.html"
-   ]
-  ],
-  [
-   "статистика-сегментовдобавлено",
-   [
-    "id"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -491,17 +388,6 @@
    ]
   ],
   [
-   "элементпанели",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
    "типтрансляции",
    [
     "id",
@@ -673,18 +559,6 @@
    ]
   ],
   [
-   "шкала-фон",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
    "шкала-просмотрено",
    [
     "id",
@@ -709,15 +583,6 @@
     "player.html",
     "player.css",
     "player.js"
-   ]
-  ],
-  [
-   "переключитьглавноеменю",
-   [
-    "id"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -764,52 +629,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "скрытиерекламы",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "скрытиерекламы-текст",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "обновлениерасширения",
-   [
-    "id",
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
-   "обновлениерасширения-закрыть",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
    ]
   ],
   [
@@ -864,17 +683,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "метка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
    ]
   ],
   [
@@ -989,29 +797,6 @@
    ]
   ],
   [
-   "флажок-значок",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
-   "радио-текст",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
    "новости",
    [
     "id",
@@ -1038,39 +823,6 @@
    ]
   ],
   [
-   "новости-текст",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "горизвырав",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "горизвырав-лево",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
    "закрытьновости",
    [
     "id",
@@ -1082,38 +834,7 @@
    ]
   ],
   [
-   "горизвырав-середина",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "индикаторпрокрутки-текстновостей",
-   [
-    "id"
-   ],
-   [
-    "player.html"
-   ]
-  ],
-  [
    "индикаторпрокрутки",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "горизвырав-право",
    [
     "classe",
     "selecteur"
@@ -1149,17 +870,6 @@
    ]
   ],
   [
-   "меню-секция",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
    "меню-пункт",
    [
     "classe",
@@ -1171,28 +881,6 @@
     "glass.css",
     "player.css",
     "player.js"
-   ]
-  ],
-  [
-   "меню-значок",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "меню-текст",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
    ]
   ],
   [
@@ -1240,18 +928,6 @@
    ]
   ],
   [
-   "меню-клавиши",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
    "отправитьотзыв",
    [
     "id",
@@ -1296,74 +972,6 @@
     "player.html",
     "player.css",
     "player.js"
-   ]
-  ],
-  [
-   "группаосновные",
-   [
-    "id",
-    "for"
-   ],
-   [
-    "player.html"
-   ]
-  ],
-  [
-   "группанастроек",
-   [
-    "name",
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "заголовокнастроек",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
-   "настройка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
-   "настройка-имя",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
-   "настройка-данные",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
    ]
   ],
   [
@@ -1459,29 +1067,6 @@
    ]
   ],
   [
-   "вводчисла-плюс",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
-   "радио-метка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "player.css"
-   ]
-  ],
-  [
    "масштабироватьизображение",
    [
     "id",
@@ -1490,16 +1075,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "группачат",
-   [
-    "id",
-    "for"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -1529,18 +1104,6 @@
    ]
   ],
   [
-   "радио-значок",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "player.html",
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
    "состояниезакрытогочата",
    [
     "name",
@@ -1560,16 +1123,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "группаинтерфейс",
-   [
-    "id",
-    "for"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -1628,16 +1181,6 @@
     "player.css",
     "sidebar.css",
     "player.js"
-   ]
-  ],
-  [
-   "группацвета",
-   [
-    "id",
-    "for"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -1716,16 +1259,6 @@
    ]
   ],
   [
-   "группабуферизация",
-   [
-    "id",
-    "for"
-   ],
-   [
-    "player.html"
-   ]
-  ],
-  [
    "одновременныхзагрузок",
    [
     "name",
@@ -1767,16 +1300,6 @@
    [
     "player.html",
     "player.js"
-   ]
-  ],
-  [
-   "группавсенастройки",
-   [
-    "id",
-    "for"
-   ],
-   [
-    "player.html"
    ]
   ],
   [
@@ -1889,46 +1412,6 @@
    ]
   ],
   [
-   "отладка-отзыв-сообщение",
-   [
-    "for",
-    "id"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-почта",
-   [
-    "name"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-отзыв-показатьотчет",
-   [
-    "for",
-    "id"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-ссылкакнопка",
-   [
-    "classe",
-    "selecteur"
-   ],
-   [
-    "report.html",
-    "report.css"
-   ]
-  ],
-  [
    "отладка-отчет",
    [
     "name",
@@ -1939,15 +1422,6 @@
     "report.html",
     "report.css",
     "player.js"
-   ]
-  ],
-  [
-   "отладка-типданных",
-   [
-    "name"
-   ],
-   [
-    "report.html"
    ]
   ],
   [
@@ -1964,77 +1438,6 @@
    ]
   ],
   [
-   "отладка-ошибка-показатьотчет",
-   [
-    "for",
-    "id"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-ошибка-сообщение",
-   [
-    "for",
-    "id"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-идетотправка",
-   [
-    "id"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-ходотправки",
-   [
-    "id"
-   ],
-   [
-    "report.html"
-   ]
-  ],
-  [
-   "отладка-сбойотправки",
-   [
-    "id",
-    "selecteur"
-   ],
-   [
-    "report.html",
-    "report.css"
-   ]
-  ],
-  [
-   "отладка-браузерустарел",
-   [
-    "id",
-    "selecteur"
-   ],
-   [
-    "report.html",
-    "report.css"
-   ]
-  ],
-  [
-   "отладка-версияустарела",
-   [
-    "id",
-    "selecteur"
-   ],
-   [
-    "report.html",
-    "report.css"
-   ]
-  ],
-  [
    "чНепрозрачность",
    [
     "selecteur"
@@ -2045,16 +1448,6 @@
   ],
   [
    "верхняя",
-   [
-    "selecteur"
-   ],
-   [
-    "glass.css",
-    "player.css"
-   ]
-  ],
-  [
-   "нижняя",
    [
     "selecteur"
    ],
@@ -2262,15 +1655,6 @@
    ]
   ],
   [
-   "показатьнесразу",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
-   ]
-  ],
-  [
    "загрузка",
    [
     "selecteur"
@@ -2291,42 +1675,6 @@
    ]
   ],
   [
-   "многоточие",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
-   ]
-  ],
-  [
-   "можнотыкать",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
-   ]
-  ],
-  [
-   "пара",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
-   ]
-  ],
-  [
-   "дляповтора",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
-   ]
-  ],
-  [
    "проверкацветафон",
    [
     "selecteur",
@@ -2335,15 +1683,6 @@
    [
     "player.css",
     "player.js"
-   ]
-  ],
-  [
-   "недляповтора",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
    ]
   ],
   [
@@ -2404,15 +1743,6 @@
   ],
   [
    "подписка",
-   [
-    "selecteur"
-   ],
-   [
-    "player.css"
-   ]
-  ],
-  [
-   "поддержать",
    [
     "selecteur"
    ],

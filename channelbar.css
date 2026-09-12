@@ -21,14 +21,14 @@
 	flex-direction: column;
 }
 
-#alt-stage>#проигрыватель {
+#alt-stage>#player {
 	flex: 1;
 	min-height: 0;
 }
 
 /* Fullscreen covers the video only; the bar has no place there. */
-#проигрывательичат:fullscreen #alt-channelbar,
-#проигрывательичат:-webkit-full-screen #alt-channelbar {
+#playerandchat:fullscreen #alt-channelbar,
+#playerandchat:-webkit-full-screen #alt-channelbar {
 	display: none;
 }
 
@@ -41,12 +41,12 @@
 	the stream title still carries the channel URL the "leave" button navigates to,
 	and the info button in the bar delegates its click to the one inside it.
 */
-#верхняяпанель {
+#toppanel {
 	display: none !important;
 }
 
 /* Broadcast uptime in the bottom bar. */
-#позиция {
+#position {
 	display: none !important;
 }
 

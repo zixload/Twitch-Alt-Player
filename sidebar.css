@@ -380,8 +380,8 @@
 	background: rgba(var(--sb-line), .08);
 }
 
-.анимацияинтерфейса .alt-sb-skeleton::before,
-.анимацияинтерфейса .alt-sb-skeleton::after {
+.interfaceanimation .alt-sb-skeleton::before,
+.interfaceanimation .alt-sb-skeleton::after {
 	animation: alt-sb-pulse 1.4s ease-in-out infinite;
 }
 
@@ -428,7 +428,7 @@ body.alt-fullscreen #alt-sidebar {
 
 /*
 	Layout host. `common.css` already gives html/body a full-size box; turning the
-	body into a flex row lets the sidebar sit beside `#проигрывательичат` without
+	body into a flex row lets the sidebar sit beside `#playerandchat` without
 	touching that element's own flex-direction, which the chat module reads to work
 	out which side the chat panel is on.
 */
@@ -437,7 +437,7 @@ body {
 	align-items: stretch;
 }
 
-body>#проигрывательичат {
+body>#playerandchat {
 	flex: 1;
 	min-width: 0;
 }

@@ -457,7 +457,7 @@ function handleLaunchOurPlayer(oEvent) {
     // launchOurPlayer(g_oParsedAddress.sChannelCode);
   } else {
     m_Log.Окак(
-      `[content.js] Не запускать проигрыватель Кнопка=${oEvent.button} Страница=${g_oParsedAddress.sPage}`
+      `[content.js] Не запускать player Кнопка=${oEvent.button} Страница=${g_oParsedAddress.sPage}`
     );
     // m_Log.Wow(`[content.js] Do not launch player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`);
   }

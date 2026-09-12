@@ -14,18 +14,18 @@
 const m_ChannelBar = (() => {
 	/** Nodes the player writes to, mirrored into the bar. */
 	const SOURCE = {
-		avatar: 'канал-аватар',
-		name: 'канал-имя',
-		title: 'названиетрансляции',
-		viewers: 'количествозрителей',
-		streamType: 'типтрансляции',
-		subscription: 'зритель-подписка',
-		subscribe: 'зритель-подписаться',
-		unsubscribe: 'зритель-отписаться'
+		avatar: 'channel-avatar',
+		name: 'channel-name',
+		title: 'broadcasttitle',
+		viewers: 'viewercount',
+		streamType: 'broadcasttype',
+		subscription: 'viewer-subscription',
+		subscribe: 'viewer-follow',
+		unsubscribe: 'viewer-unfollow'
 	};
 
 	/** The player's own channel-info button, still inside the (hidden) top panel. */
-	const INFO_BUTTON_SELECTOR = '#верхняяпанель [data-окно-переключить="канал"]';
+	const INFO_BUTTON_SELECTOR = '#toppanel [data-окно-переключить="channel"]';
 
 	/**
 	 * `data-подписка` values, straight from the ПОДПИСКА_* constants in player.js.
@@ -37,7 +37,7 @@ const m_ChannelBar = (() => {
 	const FOLLOW_NOT_YET = '1';
 	const FOLLOWING_QUIET = '2';
 	const FOLLOWING_NOTIFY = '3';
-	const UPDATING_CLASS = 'обновляется';
+	const UPDATING_CLASS = 'updating';
 
 	/** @param {string} sState @returns {boolean} */
 	function isFollowing(sState) {
@@ -108,7 +108,7 @@ const m_ChannelBar = (() => {
 		// "Live" is whatever the player decided for its own badge in the top panel.
 		const elType = get('streamType');
 		const bLive = elType !== null
-			&& elType.classList.contains('прямаятрансляция')
+			&& elType.classList.contains('livebroadcast')
 			&& elType.parentElement !== null
 			&& !elType.parentElement.hidden;
 		_elBar.classList.toggle('alt-cb-islive', bLive);

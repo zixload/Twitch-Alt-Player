@@ -40,12 +40,12 @@
 		</div>
 		<div class=alt-sb-status hidden></div>
 	</aside>
-	<div id=проигрывательичат>
+	<div id=playerandchat>
 	<!-- <div id=playerandchat> -->
 		<div id=alt-stage>
-		<div id=проигрыватель>
+		<div id=player>
 		<!-- <div id=player> -->
-			<video id=глаз playsinline tabindex=-1></video>
+			<video id=eye playsinline tabindex=-1></video>
 			<!-- <video id=eye playsinline tabindex=-1></video> -->
 			<svg class=spinner xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 			<!-- <svg class=spinner xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink> -->
@@ -55,19 +55,19 @@
 				<use class=svg-mute-false xlink:href=#svg-mute-false />
 				<use class=svg-settings xlink:href=#svg-settings />
 			</svg>
-			<svg id=уведомление xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink hidden>
+			<svg id=notification xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink hidden>
 			<!-- <svg id=notification xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink hidden> -->
 				<use/>
 			</svg>
-			<div id=статистика hidden>
+			<div id=statistics hidden>
 			<!-- <div id=statistics hidden> -->
-				<div id=закрытьстатистику class=statistics-button data-i18n=^A0666>
+				<div id=closestatistics class=statistics-button data-i18n=^A0666>
 				<!-- <div id=closestatistics class=statistics-button data-i18n=^A0666> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-close />
 					</svg>
 				</div>
-				<div class="statistics-move statistics-button" data-тащилка=статистика data-i18n=^A0667>
+				<div class="statistics-move statistics-button" data-тащилка=statistics data-i18n=^A0667>
 				<!-- <div class="statistics-move statistics-button" data-dragger=statistics data-i18n=^A0667> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-move />
@@ -78,59 +78,59 @@
 					<table class=statistics-maintable>
 					<!-- <table class=statistics-maintable> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0539>
+							<th data-тащилка=statistics data-i18n=F0539>
 							<!-- <th data-dragger=statistics data-i18n=F0539> -->
 								<td>
 									<!-- <span title="Ширина исходного видео X Высота исходного видео @ Средняя частота кадров исходного видео ± Максимальное отклонение от средней частоты кадров. Частота кадров и отклонение рассчитываются отдельно для каждого сегмента."> -->
 <span title="Source video width X Source video height @ Average source video frame rate ± Maximum deviation from average frame rate. Frame rate and deviation are calculated separately for each segment.">
-										<span id=статистика-разрешениевидео></span>
+										<span id=statistics-videoresolution></span>
 										<!-- <span id=statistics-videoresolution></span> -->
-										<span id=статистика-частотакадров data-очистить=""></span>
+										<span id=statistics-framerate data-очистить=""></span>
 										<!-- <span id=statistics-framerate data-clear=""></span> -->
 									</span>
-						<tr class=статистика-подробно>
+						<tr class=statistics-detailed>
 						<!-- <tr class=statistics-detailed> -->
-							<th data-тащилка=статистика data-i18n=F0540>
+							<th data-тащилка=statistics data-i18n=F0540>
 							<!-- <th data-dragger=statistics data-i18n=F0540> -->
 								<td>
 									<!-- <span id=statistics-videocompression title="Параметры сжатия видео: стандарт сжатия, профиль, уровень, максимальное количество опорных кадров, диапазон, частота кадров"></span> -->
 									<span id=statistics-videocompression title="Video compression parameters: compression standard, profile, level, maximum number of reference frames, range, frame rate"></span>
-						<tr class=статистика-подробно>
+						<tr class=statistics-detailed>
 						<!-- <tr class=statistics-detailed> -->
-							<th data-тащилка=статистика data-i18n=F0541>
+							<th data-тащилка=statistics data-i18n=F0541>
 							<!-- <th data-dragger=statistics data-i18n=F0541> -->
 								<td>
 									<span title="Audio compression parameters: compression standard, sample rate, number of channels, audio bitrate. The bitrate is calculated separately for each segment.
 
 If the HE-AAC compression standard is used, then all compression parameters except for the bitrate show nonsense, but this does not interfere with playback. Chrome supports HE-AAC starting from version 50.">
-										<span id=статистика-сжатиезвука></span>
+										<span id=statistics-audiocompression></span>
 										<!-- <span id=statistics-audiocompression></span> -->
-										<span id=статистика-битрейтзвука data-очистить=""></span>
+										<span id=statistics-audiobitrate data-очистить=""></span>
 										<!-- <span id=statistics-audiobitrate data-clear=""></span> -->
 									</span>
-						<tr class=статистика-подробно>
+						<tr class=statistics-detailed>
 						<!-- <tr class=statistics-detailed> -->
-							<th data-тащилка=статистика data-i18n=F0542>
+							<th data-тащилка=statistics data-i18n=F0542>
 							<!-- <th data-dragger=statistics data-i18n=F0542> -->
 								<td>
 									<!-- <span id=statistics-server data-очистить="" title="Сервер, с которого загружается видео"></span> -->
 									<span id=statistics-server data-clear="" title="The server from which the video is downloaded"></span>
-						<tr class=статистика-подробно>
+						<tr class=statistics-detailed>
 						<!-- <tr class=statistics-detailed> -->
-							<th data-тащилка=статистика data-i18n=F0544>
+							<th data-тащилка=statistics data-i18n=F0544>
 							<!-- <th data-dragger=statistics data-i18n=F0544> -->
 								<td>
 									<!-- <span title="Количество сегментов в списке × Средняя длительность сегментов в списке = Длительность списка - Количество рекламных сегментов в списке < Заявленная максимальная длительность сегмента (target duration)"> -->
 <span title="Number of segments in the list × Average duration of segments in the list = List duration - Number of ad segments in the list < Declared maximum segment duration (target duration)">
-										<span id=статистика-список data-очистить=""></span>
+										<span id=statistics-list data-очистить=""></span>
 										<!-- <span id=statistics-list data-clear=""></span> -->
-										<span class=статистика-символ> &lt;</span>
+										<span class=statistics-symbol> &lt;</span>
 										<!-- <span class=statistics-symbol> <</span> -->
-										<span id=статистика-targetduration data-очистить=""></span>
+										<span id=statistics-targetduration data-очистить=""></span>
 										<!-- <span id=statistics-targetduration data-clear=""></span> -->
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0543>
+							<th data-тащилка=statistics data-i18n=F0543>
 							<!-- <th data-dragger=statistics data-i18n=F0543> -->
 								<td>
 									<span title="Video duration at different processing stages:
@@ -138,17 +138,17 @@ If the HE-AAC compression standard is used, then all compression parameters exce
 Waiting for download from the network + Downloading from the network
 Waiting to be added to the player
 Unwatched in player buffer + Watched in player buffer">
-										<span id=статистика-очередь></span>
+										<span id=statistics-queue></span>
 										<!-- <span id=statistics-queue></span> -->
-										<span class=статистика-символ>+</span>
+										<span class=statistics-symbol>+</span>
 										<!-- <span class=statistics-symbol>+</span> -->
 										<span></span>   <span></span>   <span></span>
-										<span class=статистика-символ>+</span>
+										<span class=statistics-symbol>+</span>
 										<!-- <span class=statistics-symbol>+</span> -->
 										<span></span>
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0545>
+							<th data-тащилка=statistics data-i18n=F0545>
 							<!-- <th data-dragger=statistics data-i18n=F0545> -->
 								<td rowspan=3>
 									<table class=statistics-analysis>
@@ -170,13 +170,13 @@ Legend: minimum < average < maximum [table with the latest values, the last adde
 Legend: minimum < average < maximum [table with the latest values, the last added value is highlighted in red].">
 									</table>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0546>
+							<th data-тащилка=statistics data-i18n=F0546>
 							<!-- <th data-dragger=statistics data-i18n=F0546> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0547>
+							<th data-тащилка=statistics data-i18n=F0547>
 							<!-- <th data-dragger=statistics data-i18n=F0547> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0548>
+							<th data-тащилка=statistics data-i18n=F0548>
 							<!-- <th data-dragger=statistics data-i18n=F0548> -->
 								<td rowspan=3>
 									<table class=statistics-analysis>
@@ -194,13 +194,13 @@ Legend: minimum < average < maximum [table with the latest values, the last adde
 Legend: minimum < average < maximum [table with the latest values, the last added value is highlighted in red]. The absence of a value means that a response from the server was not received.">
 									</table>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0549>
+							<th data-тащилка=statistics data-i18n=F0549>
 							<!-- <th data-dragger=statistics data-i18n=F0549> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0550>
+							<th data-тащилка=statistics data-i18n=F0550>
 							<!-- <th data-dragger=statistics data-i18n=F0550> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0573>
+							<th data-тащилка=statistics data-i18n=F0573>
 							<!-- <th data-dragger=statistics data-i18n=F0573> -->
 								<td>
 									<table class=statistics-analysis>
@@ -209,59 +209,59 @@ Legend: minimum < average < maximum [table with the latest values, the last adde
 
 Legend: minimum < average < maximum [table with the latest values, the last added value is highlighted in red].">
 									</table>
-						<tr class=статистика-подробно>
+						<tr class=statistics-detailed>
 						<!-- <tr class=statistics-detailed> -->
-							<th data-тащилка=статистика data-i18n=F0551>
+							<th data-тащилка=statistics data-i18n=F0551>
 							<!-- <th data-dragger=statistics data-i18n=F0551> -->
 								<td>
-									<span id=статистика-преобразованза data-очистить="" title="Time taken to convert the penultimate segment from TS to MP4. Increases when all processor cores are heavily loaded."></span>
+									<span id=statistics-convertedin data-очистить="" title="Time taken to convert the penultimate segment from TS to MP4. Increases when all processor cores are heavily loaded."></span>
 									<!-- <span id=statistics-convertedin data-clear="" title="Time taken to convert the penultimate segment from TS to MP4. Increases when all processor cores are heavily loaded."></span> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0552>
+							<th data-тащилка=statistics data-i18n=F0552>
 							<!-- <th data-dragger=statistics data-i18n=F0552> -->
 								<td>
-																		<span id=статистика-задержкатрансляции data-очистить="" title="The time between capturing video on the streamer's computer and you watching this video. The streamer will see your reaction to their actions in the chat only after the specified time has elapsed. This is an inaccurate value. The real delay may be a few seconds longer."></span>
+																		<span id=statistics-broadcastlatency data-очистить="" title="The time between capturing video on the streamer's computer and you watching this video. The streamer will see your reaction to their actions in the chat only after the specified time has elapsed. This is an inaccurate value. The real delay may be a few seconds longer."></span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0554>
+							<th data-тащилка=statistics data-i18n=F0554>
 							<!-- <th data-dragger=statistics data-i18n=F0554> -->
 								<td>
-									<span id=статистика-длительностьпросмотра title="Time elapsed since this page was opened"></span>
+									<span id=statistics-viewingduration title="Time elapsed since this page was opened"></span>
 									<!-- <span id=statistics-viewingduration title="Time elapsed since this page was opened"></span> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0670>
+							<th data-тащилка=statistics data-i18n=F0670>
 							<!-- <th data-dragger=statistics data-i18n=F0670> -->
 								<td>
 									<span data-i18n=^A0671>
-										<span id=статистика-количестворекламы></span>
+										<span id=statistics-adcount></span>
 										<!-- <span id=statistics-adcount></span> -->
-										<span class="статистика-символ статистика-подробно"> [</span>
+										<span class="statistics-symbol statistics-detailed"> [</span>
 										<!-- <span class="statistics-symbol statistics-detailed"> [</span> -->
-										<span id=статистика-частотарекламы class=статистика-подробно></span>
+										<span id=statistics-adfrequency class=statistics-detailed></span>
 										<!-- <span id=statistics-adfrequency class=statistics-detailed></span> -->
-										<span class="статистика-символ статистика-подробно">]</span>
+										<span class="statistics-symbol statistics-detailed">]</span>
 										<!-- <span class="statistics-symbol statistics-detailed">]</span> -->
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0555>
+							<th data-тащилка=statistics data-i18n=F0555>
 							<!-- <th data-dragger=statistics data-i18n=F0555> -->
 								<td>
-									<span id=статистика-скачано data-очистить="" title="Approximate size of data that the player has downloaded from the network since this page was opened"></span>
+									<span id=statistics-downloaded data-очистить="" title="Approximate size of data that the player has downloaded from the network since this page was opened"></span>
 									<!-- <span id=statistics-downloaded data-clear="" title="Approximate size of data that the player has downloaded from the network since this page was opened"></span> -->
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0556>
+							<th data-тащилка=statistics data-i18n=F0556>
 							<!-- <th data-dragger=statistics data-i18n=F0556> -->
 								<td>
 									<span title="Number of frames that the browser could not display / Total number of frames.
 
 The behavior of this parameter differs in different browsers or even different versions of the same browser. It’s okay if the number of dropped frames increases while you are torturing the browser: for example, switching tabs or changing the window size. Other, more unpleasant reasons: the processor does not have time to decode the video, unstable frame rate in the downloaded video, a large difference between the frame rate in the downloaded video and the vertical refresh rate of your monitor, an insufficient amount of video in the player’s buffer with hardware decoding enabled (see the description of the “Buffer size” setting).">
-										<span id=статистика-пропущено></span>
+										<span id=statistics-skipped></span>
 										<!-- <span id=statistics-skipped></span> -->
-										<span class=статистика-символ> / </span>
+										<span class=statistics-symbol> / </span>
 										<!-- <span class=statistics-symbol> / </span> -->
 										<span></span>
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0557>
+							<th data-тащилка=statistics data-i18n=F0557>
 							<!-- <th data-dragger=statistics data-i18n=F0557> -->
 								<td>
 									<span title="Number of downloaded segments in which part of the frames may be lost + Number of downloaded segments in which part of the audio is lost + Number of segments that are corrupted / Number of downloaded segments.
@@ -269,23 +269,23 @@ The behavior of this parameter differs in different browsers or even different v
 Video or audio loss leads to freezing of the picture, the appearance of artifacts on it, loss of sound, and playback stops. Losses are a problem with the server or the streamer, not your Internet connection. If the server is to blame (see its name above), then there is a small chance that after reloading the page you will connect to a less problematic server.
 
 Segment corruption is a more serious error. Theoretically, the segment could have been corrupted on your computer. Another rather rare reason: the segment was incorrectly created by the server.">
-										<span id=статистика-потерьвидео></span>
+										<span id=statistics-videolosses></span>
 										<!-- <span id=statistics-videoloss></span> -->
-										<span class=статистика-символ>+</span>
+										<span class=statistics-symbol>+</span>
 										<!-- <span class=statistics-symbol>+</span> -->
-										<span id=статистика-потерьзвука></span>
+										<span id=statistics-audiolosses></span>
 										<!-- <span id=statistics-audioloss></span> -->
-										<span class=статистика-символ>+</span>
+										<span class=statistics-symbol>+</span>
 										<!-- <span class=statistics-symbol>+</span> -->
-										<span id=статистика-забракованных></span>
+										<span id=statistics-rejected></span>
 										<!-- <span id=statistics-rejected></span> -->
-										<span class=статистика-символ> / </span>
+										<span class=statistics-symbol> / </span>
 										<!-- <span class=statistics-symbol> / </span> -->
-										<span id=статистика-исходных></span>
+										<span id=statistics-source></span>
 										<!-- <span id=statistics-source></span> -->
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0558>
+							<th data-тащилка=statistics data-i18n=F0558>
 							<!-- <th data-dragger=statistics data-i18n=F0558> -->
 								<td>
 									<span title="Number of errors during segment download from the network + How many times it was decided not to start downloading segments (Number of undownloaded segments due to these errors).
@@ -309,21 +309,21 @@ Possible reasons not to start downloading:
 • Problems on the server.
 
 If you are not satisfied with the large number of failures, then try to increase the “Buffer size” setting (or worsen the “Connection quality”).">
-										<span id=статистика-ошибокзагрузки></span>
+										<span id=statistics-downloaderrors></span>
 										<!-- <span id=statistics-loaderrors></span> -->
-										<span class=статистика-символ>+</span>
+										<span class=statistics-symbol>+</span>
 										<!-- <span class=statistics-symbol>+</span> -->
-										<span id=статистика-пропущенныхсегментов></span>
+										<span id=statistics-skippedsegments></span>
 										<!-- <span id=statistics-skippedsegments></span> -->
-										<span class=статистика-символ>  (</span>
+										<span class=statistics-symbol>  (</span>
 										<!-- <span class=statistics-symbol>  (</span> -->
-										<span id=статистика-незагруженныхсегментов></span>
+										<span id=statistics-unloadedsegments></span>
 										<!-- <span id=statistics-undownloadedsegments></span> -->
-										<span class=статистика-символ>)</span>
+										<span class=statistics-symbol>)</span>
 										<!-- <span class=statistics-symbol>)</span> -->
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0559>
+							<th data-тащилка=statistics data-i18n=F0559>
 							<!-- <th data-dragger=statistics data-i18n=F0559> -->
 								<td>
 									<span title="Number of player buffer overflows (Duration of deleted video in seconds due to these overflows). Depends on the player settings “Buffer size” and “Buffer overflow”.
@@ -334,42 +334,42 @@ Possible causes of buffer overflow:
 • Frequent audio loss (see above).
 • Feature of a specific broadcast.
 • Player error.">
-										<span id=статистика-переполнено></span>
+										<span id=statistics-overflowed></span>
 										<!-- <span id=statistics-overflowed></span> -->
-										<span class=статистика-символ>  (</span>
+										<span class=statistics-symbol>  (</span>
 										<!-- <span class=statistics-symbol>  (</span> -->
 										<span></span>
-										<span class=статистика-символ>)</span>
+										<span class=statistics-symbol>)</span>
 										<!-- <span class=statistics-symbol>)</span> -->
 									</span>
 						<tr>
-							<th data-тащилка=статистика data-i18n=F0560>
+							<th data-тащилка=statistics data-i18n=F0560>
 							<!-- <th data-dragger=statistics data-i18n=F0560> -->
 								<td>
-									<span id=статистика-исчерпано title="The number of times the video in the player's buffer ran out and playback was paused until the buffer was filled. The lower the buffer size in the player settings, the higher the chance of it being exhausted. During buffer filling, an hourglass is drawn in the middle of the screen. Its absence during playback pause is a sign that something went wrong in the player."></span>
+									<span id=statistics-exhausted title="The number of times the video in the player's buffer ran out and playback was paused until the buffer was filled. The lower the buffer size in the player settings, the higher the chance of it being exhausted. During buffer filling, an hourglass is drawn in the middle of the screen. Its absence during playback pause is a sign that something went wrong in the player."></span>
 					</table>
 				</div>
 			</div>
-			<div id=верхняяпанель class="панель верхняя">
+			<div id=toppanel class="панель верхняя">
 			<!-- <div id=toppanel class="panel top"> -->
 				<div class=panelitem hidden>
 				<!-- <div class=panelelement hidden> -->
-					<div id=типтрансляции class=типтрансляции></div>
+					<div id=broadcasttype class=broadcasttype></div>
 					<!-- <div id=streamtype class=streamtype></div> -->
 				</div>
-				<a id=названиетрансляции class="panelitem ellipsis clickable label" rel="noopener noreferrer"></a>
+				<a id=broadcasttitle class="panelitem ellipsis clickable label" rel="noopener noreferrer"></a>
 				<!-- <a id=streamtitle class="panelelement ellipsis clickable label" rel="noopener noreferrer"></a> -->
-				<div id=заполнитель class=заполнитель></div>
+				<div id=filler class=filler></div>
 				<!-- <div id=filler class=filler></div> -->
 				<div class=panelitem data-i18n=F0501></div>
 				<!-- <div class=panelelement data-i18n=F0501></div> -->
-				<a id=категориятрансляции class="категориятрансляции panelitem ellipsis clickable label pair" rel="noopener noreferrer"></a>
+				<a id=broadcastcategory class="broadcastcategory panelitem ellipsis clickable label pair" rel="noopener noreferrer"></a>
 				<!-- <a id=streamcategory class="streamcategory panelelement ellipsis clickable label pair" rel="noopener noreferrer"></a> -->
 				<div class=panelitem data-i18n=F0502^A0503></div>
 				<!-- <div class=panelelement data-i18n=F0502^A0503></div> -->
-				<div id=количествозрителей class="panelitem label pair" data-i18n=^A0503></div>
+				<div id=viewercount class="panelitem label pair" data-i18n=^A0503></div>
 				<!-- <div id=viewercount class="panelelement label pair" data-i18n=^A0503></div> -->
-				<button class="кнопка panelitem clickable" type=button data-окно-переключить=канал data-i18n=^A0597>
+				<button class="кнопка panelitem clickable" type=button data-окно-переключить=channel data-i18n=^A0597>
 				<!-- <button class="button panelelement clickable" type=button data-window-toggle=channel data-i18n=^A0597> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-channel />
@@ -378,29 +378,29 @@ Possible causes of buffer overflow:
 			</div>
 			<div class="панель bottom">
 			<!-- <div class="panel bottom"> -->
-				<button id=переключитьтрансляцию class="кнопка panelitem clickable" type=button>
+				<button id=togglebroadcast class="кнопка panelitem clickable" type=button>
 				<!-- <button id=togglestream class="button panelelement clickable" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-pause xlink:title=J0106 />
 						<use xlink:href=#svg-live xlink:title=J0107 />
 					</svg>
 				</button>
-				<button id=переключитьприглушить class="кнопка panelitem clickable" type=button>
+				<button id=togglemute class="кнопка panelitem clickable" type=button>
 				<!-- <button id=togglemute class="button panelelement clickable" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-mute-false xlink:title=J0108 />
 						<use xlink:href=#svg-mute-true xlink:title=J0109 />
 					</svg>
 				</button>
-				<input id=громкость class="panelitem clickable" type=range max=100 step=1 value=0 data-i18n=^A0506>
+				<input id=volume class="panelitem clickable" type=range max=100 step=1 value=0 data-i18n=^A0506>
 				<!-- <input id=volume class="panelelement clickable" type=range max=100 step=1 value=0 data-i18n=^A0506> -->
-				<div id=позиция class="panelitem clickable label notforreplay" data-i18n=^A0507></div>
+				<div id=position class="panelitem clickable label notforreplay" data-i18n=^A0507></div>
 				<!-- <div id=position class="panelelement clickable label notforrepeat" data-i18n=^A0507></div> -->
-				<div class="заполнитель notforreplay"></div>
+				<div class="filler notforreplay"></div>
 				<!-- <div class="filler notforrepeat"></div> -->
-				<div class="заполнитель forreplay"></div>
+				<div class="filler forreplay"></div>
 				<!-- <div class="filler forrepeat"></div> -->
-				<select id=скорость class="panelitem clickable forreplay" data-i18n=^A0536>
+				<select id=speed class="panelitem clickable forreplay" data-i18n=^A0536>
 				<!-- <select id=speed class="panelelement clickable forrepeat" data-i18n=^A0536> -->
 					<option value=3>
 					<option value=2>
@@ -413,61 +413,61 @@ Possible causes of buffer overflow:
 					<option value=0.25>
 					<option value=0.1>
 				</select>
-				<button id=переключитьпаузу class="кнопка panelitem clickable forreplay" type=button>
+				<button id=togglepause class="кнопка panelitem clickable forreplay" type=button>
 				<!-- <button id=togglepause class="button panelelement clickable forrepeat" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-pause xlink:title=J0112 />
 						<use xlink:href=#svg-play xlink:title=J0113 />
 					</svg>
 				</button>
-				<div id=шкала class="panelitem clickable forreplay" data-i18n=^A0535>
+				<div id=scale class="panelitem clickable forreplay" data-i18n=^A0535>
 				<!-- <div id=scale class="panelelement clickable forrepeat" data-i18n=^A0535> -->
 					<div class=scale-background>
 					<!-- <div class=scale-background> -->
-						<div id=шкала-просмотрено></div>
+						<div id=scale-watched></div>
 						<!-- <div id=scale-viewed></div> -->
 					</div>
 				</div>
-				<div class="заполнитель forreplay"></div>
+				<div class="filler forreplay"></div>
 				<!-- <div class="filler forrepeat"></div> -->
-				<button id=открытьновости class="кнопка panelitem clickable" type=button hidden data-i18n=^A0508>
+				<button id=opennews class="кнопка panelitem clickable" type=button hidden data-i18n=^A0508>
 				<!-- <button id=opennews class="button panelelement clickable" type=button hidden data-i18n=^A0508> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-notification />
 					</svg>
 				</button>
-				<button id=togglemainmenu class="кнопка panelitem clickable" type=button data-окно-переключить=главноеменю data-i18n=^A0660>
+				<button id=togglemainmenu class="кнопка panelitem clickable" type=button data-окно-переключить=mainmenu data-i18n=^A0660>
 				<!-- <button id=togglemainmenu class="button panelelement clickable" type=button data-window-toggle=mainmenu data-i18n=^A0660> -->
 					<svg>
 						<use xlink:href=#svg-menu />
 					</svg>
 				</button>
-				<button id=переключитьчат class="кнопка panelitem clickable" type=button data-i18n=^A0509>
+				<button id=togglechat class="кнопка panelitem clickable" type=button data-i18n=^A0509>
 				<!-- <button id=togglechat class="button panelelement clickable" type=button data-i18n=^A0509> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-chat />
 					</svg>
 				</button>
-				<button class="кнопка panelitem clickable" type=button data-окно-переключить=настройки data-i18n=^A0510>
+				<button class="кнопка panelitem clickable" type=button data-окно-переключить=settings data-i18n=^A0510>
 				<!-- <button class="button panelelement clickable" type=button data-window-toggle=settings data-i18n=^A0510> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-settings />
 					</svg>
 				</button>
-				<button id=создатьклип class="кнопка panelitem clickable" type=button data-i18n=^A0504>
+				<button id=createclip class="кнопка panelitem clickable" type=button data-i18n=^A0504>
 				<!-- <button id=createclip class="button panelelement clickable" type=button data-i18n=^A0504> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-cut />
 					</svg>
 				</button>
-				<button id=переключитькартинкавкартинке class="кнопка panelitem clickable" type=button hidden data-i18n=^A0672>
+				<button id=togglepictureinpicture class="кнопка panelitem clickable" type=button hidden data-i18n=^A0672>
 				<!-- <button id=togglepictureinpicture class="button panelelement clickable" type=button hidden data-i18n=^A0672> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-pip-false />
 						<use xlink:href=#svg-pip-true />
 					</svg>
 				</button>
-				<button id=переключитьполноэкранный class="кнопка panelitem clickable" type=button data-i18n=^A0511>
+				<button id=togglefullscreen class="кнопка panelitem clickable" type=button data-i18n=^A0511>
 				<!-- <button id=togglefullscreen class="button panelelement clickable" type=button data-i18n=^A0511> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-fullscreen-false />
@@ -480,44 +480,44 @@ Possible causes of buffer overflow:
 				<div class=adhiding-text data-i18n=F0669></div>
 				<!-- <div class=adblock-text data-i18n=F0669></div> -->
 			</div>
-			<div id=extensionupdate class="extensionupdate окно">
+			<div id=extensionupdate class="extensionupdate window">
 			<!-- <div id=extensionupdate class="extensionupdate window"> -->
 				<button type=button class=extensionupdate-close data-окно-переключить=extensionupdate>X</button>
 				<!-- <button type=button class=extensionupdate-close data-window-toggle=extensionupdate>X</button> -->
 				<p data-i18n=F0668>
 			</div>
-			<div id=канал class="канал окно">
+			<div id=channel class="channel window">
 			<!-- <div id=channel class="channel window"> -->
 				<table>
 					<tr>
-						<th class=канал-аватар>
+						<th class=channel-avatar>
 						<!-- <th class=channel-avatar> -->
-							<img id=канал-аватар decoding=async>
+							<img id=channel-avatar decoding=async>
 							<!-- <img id=channel-avatar decoding=async> -->
 						<td>
-							<div id=канал-имя></div>
+							<div id=channel-name></div>
 							<!-- <div id=channel-name></div> -->
-							<div id=канал-описание></div>
+							<div id=channel-description></div>
 							<!-- <div id=channel-description></div> -->
 					<tr>
 						<th class=label data-i18n=F0582>
 						<!-- <th class=label data-i18n=F0582> -->
-							<td id=канал-язык>
+							<td id=channel-language>
 							<!-- <td id=channel-language> -->
 					<tr>
 						<th class=label data-i18n=F0583>
 						<!-- <th class=label data-i18n=F0583> -->
-							<td id=канал-подписчиков>
+							<td id=channel-subscribers>
 							<!-- <td id=channel-followers> -->
 					<tr>
 						<th class=label data-i18n=F0585>
 						<!-- <th class=label data-i18n=F0585> -->
-							<td id=канал-создан>
+							<td id=channel-created>
 							<!-- <td id=channel-created> -->
 					<tr hidden>
 						<th class=label data-i18n=F0588>
 						<!-- <th class=label data-i18n=F0588> -->
-							<td id=канал-команды>
+							<td id=channel-teams>
 							<!-- <td id=channel-teams> -->
 					<tr>
 						<td colspan=2>
@@ -526,19 +526,19 @@ Possible causes of buffer overflow:
 						<th class=label data-i18n=F0589>
 						<!-- <th class=label data-i18n=F0589> -->
 							<td>
-								<span id=зритель-имя></span>
+								<span id=viewer-name></span>
 								<!-- <span id=viewer-name></span> -->
-					<tr id=зритель-подписка data-подписка=0>
+					<tr id=viewer-subscription data-подписка=0>
 					<!-- <tr id=viewer-subscription data-subscription=0> -->
 						<th>
-							<button id=зритель-подписаться type=button data-i18n=F0591^A0592></button>
+							<button id=viewer-follow type=button data-i18n=F0591^A0592></button>
 							<!-- <button id=viewer-subscribe type=button data-i18n=F0591^A0592></button> -->
-							<button id=зритель-отписаться type=button data-i18n=F0593^A0594></button>
+							<button id=viewer-unfollow type=button data-i18n=F0593^A0594></button>
 							<!-- <button id=viewer-unsubscribe type=button data-i18n=F0593^A0594></button> -->
 						<td>
-							<label class="зритель-уведомлять radio-label" data-i18n=^A0595>
+							<label class="viewer-notify radio-label" data-i18n=^A0595>
 							<!-- <label class="viewer-notify radio-label" data-i18n=^A0595> -->
-								<input id=зритель-уведомлять type=checkbox hidden>
+								<input id=viewer-notify type=checkbox hidden>
 								<!-- <input id=viewer-notify type=checkbox hidden> -->
 								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
@@ -548,15 +548,15 @@ Possible causes of buffer overflow:
 							<a href=https://www.twitch.tv/settings/notifications rel="noopener noreferrer" data-i18n=F0646^A0647></a>
 				</table>
 			</div>
-			<div id=новости class="новости окно">
+			<div id=news class="news window">
 			<!-- <div id=news class="news window"> -->
-				<div id=текстновостей class=news-text></div>
+				<div id=newstext class=news-text></div>
 				<!-- <div id=newstext class=news-text></div> -->
 				<div class=halign>
 				<!-- <div class=horizalign> -->
 					<div class=halign-left>
 					<!-- <div class=horizalign-left> -->
-						<button id=закрытьновости type=button data-окно-переключить=новости></button>
+						<button id=closenews type=button data-окно-переключить=news></button>
 						<!-- <button id=closenews type=button data-window-toggle=news></button> -->
 					</div>
 					<div class=halign-centre>
@@ -566,20 +566,20 @@ Possible causes of buffer overflow:
 					</div>
 					<div class=halign-right>
 					<!-- <div class=horizalign-right> -->
-						<button id=отложитьновости type=button data-окно-переключить=новости data-i18n=F0621^A0622></button>
+						<button id=postponenews type=button data-окно-переключить=news data-i18n=F0621^A0622></button>
 						<!-- <button id=postponenews type=button data-window-toggle=news data-i18n=F0621^A0622></button> -->
 					</div>
 				</div>
 			</div>
-			<div id=главноеменю class="главноеменю окно">
+			<div id=mainmenu class="mainmenu window">
 			<!-- <div id=mainmenu class="mainmenu window"> -->
 				<section class=menu-section>
 				<!-- <section class=menu-section> -->
-					<a class=меню-пункт href=https://www.twitch.tv/ data-i18n=F0640></a>
+					<a class=menu-item href=https://www.twitch.tv/ data-i18n=F0640></a>
 					<!-- <a class=menu-item href=https://www.twitch.tv/ data-i18n=F0640></a> -->
-					<a class=меню-пункт href=https://www.twitch.tv/directory data-i18n=F0641></a>
+					<a class=menu-item href=https://www.twitch.tv/directory data-i18n=F0641></a>
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory data-i18n=F0641></a> -->
-					<a class=меню-пункт href=https://www.twitch.tv/directory/following>
+					<a class=menu-item href=https://www.twitch.tv/directory/following>
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory/following> -->
 						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
@@ -588,11 +588,11 @@ Possible causes of buffer overflow:
 						<span class=menu-text data-i18n=F0642></span>
 						<!-- <span class=menu-text data-i18n=F0642></span> -->
 					</a>
-					<a class=меню-пункт href=https://www.twitch.tv/directory/following/live data-i18n=F0643></a>
+					<a class=menu-item href=https://www.twitch.tv/directory/following/live data-i18n=F0643></a>
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory/following/live data-i18n=F0643></a> -->
-					<a class=меню-пункт href=https://www.twitch.tv/directory/following/games data-i18n=F0644></a>
+					<a class=menu-item href=https://www.twitch.tv/directory/following/games data-i18n=F0644></a>
 					<!-- <a class=menu-item href=https://www.twitch.tv/directory/following/games data-i18n=F0644></a> -->
-					<a class=меню-пункт href=https://dashboard.twitch.tv/content/clips/created>
+					<a class=menu-item href=https://dashboard.twitch.tv/content/clips/created>
 					<!-- <a class=menu-item href=https://dashboard.twitch.tv/content/clips/created> -->
 						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
@@ -602,7 +602,7 @@ Possible causes of buffer overflow:
 						<!-- <span class=menu-text data-i18n=F0645></span> -->
 					</a>
 					<hr>
-					<a class=меню-пункт id=адресзаписи data-i18n=^A0665>
+					<a class=menu-item id=recordingurl data-i18n=^A0665>
 					<!-- <a class=menu-item id=recordaddress data-i18n=^A0665> -->
 						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
@@ -612,7 +612,7 @@ Possible causes of buffer overflow:
 						<!-- <span class=menu-text data-i18n=F0664></span> -->
 					</a>
 					<hr>
-					<div class=меню-пункт tabindex=0 id=копироватьадрестрансляции data-i18n=^A0656>
+					<div class=menu-item tabindex=0 id=copybroadcasturl data-i18n=^A0656>
 					<!-- <div class=menu-item tabindex=0 id=copybroadcastaddress data-i18n=^A0656> -->
 						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
@@ -621,24 +621,24 @@ Possible causes of buffer overflow:
 						<span class=menu-text data-i18n=F0655></span>
 						<!-- <span class=menu-text data-i18n=F0655></span> -->
 					</div>
-					<div class=меню-пункт tabindex=0 id=копироватьадресканала data-i18n=F0653^A0654></div>
+					<div class=menu-item tabindex=0 id=copychannelurl data-i18n=F0653^A0654></div>
 					<!-- <div class=menu-item tabindex=0 id=copychanneladdress data-i18n=F0653^A0654></div> -->
 				</section>
 				<section class=menu-section>
 				<!-- <section class=menu-section> -->
 					<hr>
-					<div class=меню-пункт tabindex=0 id=переключитьстатистику data-i18n=F0526^A0527>
+					<div class=menu-item tabindex=0 id=togglestatistics data-i18n=F0526^A0527>
 					<!-- <div class=menu-item tabindex=0 id=togglestatistics data-i18n=F0526^A0527> -->
 						<span class=menu-keys>S</span>
 						<!-- <span class=menu-keys>S</span> -->
 					</div>
 					<hr>
-					<div class=меню-пункт tabindex=0 id=отправитьотзыв data-i18n=F0528^A0529></div>
+					<div class=menu-item tabindex=0 id=sendfeedback data-i18n=F0528^A0529></div>
 					<!-- <div class=menu-item tabindex=0 id=sendfeedback data-i18n=F0528^A0529></div> -->
 					<hr>
-					<div class=меню-пункт tabindex=0 id=открытьновости2 data-i18n=F0661^A0662></div>
+					<div class=menu-item tabindex=0 id=opennews2 data-i18n=F0661^A0662></div>
 					<!-- <div class=menu-item tabindex=0 id=opennews2 data-i18n=F0661^A0662></div> -->
-					<div class=меню-пункт tabindex=0 id=открытьсправку data-i18n=^A0599>
+					<div class=menu-item tabindex=0 id=openhelp data-i18n=^A0599>
 					<!-- <div class=menu-item tabindex=0 id=openhelp data-i18n=^A0599> -->
 						<svg class=menu-icon>
 						<!-- <svg class=menu-icon> -->
@@ -651,7 +651,7 @@ Possible causes of buffer overflow:
 					</div>
 				</section>
 			</div>
-			<div id=настройки class="настройки окно">
+			<div id=settings class="settings window">
 			<!-- <div id=settings class="settings window"> -->
 				<input id=groupgeneral name=groupofsettings type=radio hidden checked>
 				<!-- <input id=maingroup name=settingsgroup type=radio hidden checked> -->
@@ -665,7 +665,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-name data-i18n=F0512></div> -->
 						<div class=setting-data data-i18n=^A0513>
 						<!-- <div class=setting-data data-i18n=^A0513> -->
-							<select id=варианттрансляции disabled></select>
+							<select id=broadcastvariant disabled></select>
 							<!-- <select id=streamvariant disabled></select> -->
 						</div>
 					</div>
@@ -675,19 +675,19 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-name data-i18n=F0580></div> -->
 						<div class=setting-data data-i18n=^A0581>
 						<!-- <div class=setting-data data-i18n=^A0581> -->
-							<select id=предустановка-буферизация></select>
+							<select id=preset-buffering></select>
 							<!-- <select id=preset-buffering></select> -->
 						</div>
 					</div>
-					<div id=аудиоустройства class=setting hidden>
+					<div id=audiodevices class=setting hidden>
 					<!-- <div id=audiodevices class=setting hidden> -->
 						<div class=setting-name data-i18n=F0634></div>
 						<!-- <div class=setting-name data-i18n=F0634></div> -->
 						<div class=setting-data>
 						<!-- <div class=setting-data> -->
-							<button id=аудиоустройства-доступ type=button data-i18n=F0636^A0637></button>
+							<button id=audiodevices-access type=button data-i18n=F0636^A0637></button>
 							<!-- <button id=audiodevices-access type=button data-i18n=F0636^A0637></button> -->
-							<select id=аудиоустройства-список data-i18n=^A0635></select>
+							<select id=audiodevices-list data-i18n=^A0635></select>
 							<!-- <select id=audiodevices-list data-i18n=^A0635></select> -->
 						</div>
 					</div>
@@ -695,13 +695,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0533></div>
 						<!-- <div class=setting-name data-i18n=F0533></div> -->
-						<div id=длительностьповтора class=setting-data data-i18n=^A0534>
+						<div id=replayduration class=setting-data data-i18n=^A0534>
 						<!-- <div id=repeatduration class=setting-data data-i18n=^A0534> -->
-							<button type=button class=вводчисла-минус data-тащилка=длительностьповтора>−</button>
+							<button type=button class=numberinput-minus data-тащилка=replayduration>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=repeatduration>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=длительностьповтора>+</button>
+							<button type=button class=numberinput-plus data-тащилка=replayduration>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=repeatduration>+</button> -->
 						</div>
 					</div>
@@ -713,7 +713,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-data data-i18n=^A0658> -->
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input id=масштабироватьизображение type=checkbox hidden>
+								<input id=scaleimage type=checkbox hidden>
 								<!-- <input id=scaleimage type=checkbox hidden> -->
 								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
@@ -735,14 +735,14 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-data data-i18n=^A0624> -->
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input id=автоположениечата type=checkbox hidden>
+								<input id=autochatposition type=checkbox hidden>
 								<!-- <input id=autopositionchat type=checkbox hidden> -->
 								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
 								<span class=radio-text data-i18n=J0120></span>
 								<!-- <span class=radio-text data-i18n=J0120></span> -->
 							</label>
-							<div class=положениечата>
+							<div class=chatposition>
 							<!-- <div class=chatposition> -->
 								<label class=radio-label>
 								<!-- <label class=radio-label> -->
@@ -779,7 +779,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-data data-i18n=^A0630> -->
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input name=состояниезакрытогочата type=radio value=0 hidden>
+								<input name=closedchatstate type=radio value=0 hidden>
 								<!-- <input name=closedchatstate type=radio value=0 hidden> -->
 								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
@@ -788,7 +788,7 @@ Possible causes of buffer overflow:
 							</label>
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input name=состояниезакрытогочата type=radio value=1 hidden>
+								<input name=closedchatstate type=radio value=1 hidden>
 								<!-- <input name=closedchatstate type=radio value=1 hidden> -->
 								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
@@ -803,7 +803,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-name data-i18n=F0648></div> -->
 						<div class=setting-data data-i18n=^A0649>
 						<!-- <div class=setting-data data-i18n=^A0649> -->
-							<select id=адресчата>
+							<select id=chaturl>
 							<!-- <select id=chataddress> -->
 								<option data-i18n=F0650>
 								<option data-i18n=F0651>
@@ -824,7 +824,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-name data-i18n=F0564></div> -->
 						<div class=setting-data data-i18n=^A0565>
 						<!-- <div class=setting-data data-i18n=^A0565> -->
-							<select id=предустановка-оформление></select>
+							<select id=preset-appearance></select>
 							<!-- <select id=preset-appearance></select> -->
 						</div>
 					</div>
@@ -832,13 +832,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0610></div>
 						<!-- <div class=setting-name data-i18n=F0610></div> -->
-						<div id=размеринтерфейса class=setting-data data-i18n=^A0611>
+						<div id=interfacesize class=setting-data data-i18n=^A0611>
 						<!-- <div id=interfacesize class=setting-data data-i18n=^A0611> -->
-							<button type=button class=вводчисла-минус data-тащилка=размеринтерфейса>−</button>
+							<button type=button class=numberinput-minus data-тащилка=interfacesize>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=interfacesize>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=размеринтерфейса>+</button>
+							<button type=button class=numberinput-plus data-тащилка=interfacesize>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=interfacesize>+</button> -->
 						</div>
 					</div>
@@ -846,13 +846,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0627></div>
 						<!-- <div class=setting-name data-i18n=F0627></div> -->
-						<div id=интервалавтоскрытия class=setting-data data-i18n=^A0628>
+						<div id=autohideinterval class=setting-data data-i18n=^A0628>
 						<!-- <div id=autohideinterval class=setting-data data-i18n=^A0628> -->
-							<button type=button class=вводчисла-минус data-тащилка=интервалавтоскрытия>−</button>
+							<button type=button class=numberinput-minus data-тащилка=autohideinterval>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=autohideinterval>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=интервалавтоскрытия>+</button>
+							<button type=button class=numberinput-plus data-тащилка=autohideinterval>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=autohideinterval>+</button> -->
 						</div>
 					</div>
@@ -862,7 +862,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-name data-i18n=F0574></div> -->
 						<div class=setting-data data-i18n=^A0575>
 						<!-- <div class=setting-data data-i18n=^A0575> -->
-							<select id=менятьгромкостьколесом>
+							<select id=wheelvolume>
 							<!-- <select id=changevolumewithwheel> -->
 								<option value="" data-i18n=F0505>
 								<option value=0 data-i18n=F0679>
@@ -901,7 +901,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-data data-i18n=^A0613> -->
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input id=анимацияинтерфейса type=checkbox hidden>
+								<input id=interfaceanimation type=checkbox hidden>
 								<!-- <input id=interfaceanimation type=checkbox hidden> -->
 								<span class=checkbox-icon></span>
 								<!-- <span class=checkbox-icon></span> -->
@@ -969,13 +969,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0570></div>
 						<!-- <div class=setting-name data-i18n=F0570></div> -->
-						<div id=прозрачность class=setting-data>
+						<div id=opacity class=setting-data>
 						<!-- <div id=opacity class=setting-data> -->
-							<button type=button class=вводчисла-минус data-тащилка=прозрачность>−</button>
+							<button type=button class=numberinput-minus data-тащилка=opacity>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=opacity>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=прозрачность>+</button>
+							<button type=button class=numberinput-plus data-тащилка=opacity>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=opacity>+</button> -->
 						</div>
 					</div>
@@ -983,7 +983,7 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-data>
 						<!-- <div class=setting-data> -->
-							<button id=проверкацвета type=button data-i18n=F0571^A0572></button>
+							<button id=colourcheck type=button data-i18n=F0571^A0572></button>
 							<!-- <button id=colorcheck type=button data-i18n=F0571^A0572></button> -->
 						</div>
 					</div>
@@ -1002,7 +1002,7 @@ Possible causes of buffer overflow:
 						<!-- <div class=setting-data data-i18n=^A0515> -->
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input name=одновременныхзагрузок type=radio value=1 hidden>
+								<input name=concurrentdownloads type=radio value=1 hidden>
 								<!-- <input name=concurrentdownloads type=radio value=1 hidden> -->
 								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
@@ -1011,7 +1011,7 @@ Possible causes of buffer overflow:
 							</label>
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input name=одновременныхзагрузок type=radio value=2 hidden>
+								<input name=concurrentdownloads type=radio value=2 hidden>
 								<!-- <input name=concurrentdownloads type=radio value=2 hidden> -->
 								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
@@ -1020,7 +1020,7 @@ Possible causes of buffer overflow:
 							</label>
 							<label class=radio-label>
 							<!-- <label class=radio-label> -->
-								<input name=одновременныхзагрузок type=radio value=3 hidden>
+								<input name=concurrentdownloads type=radio value=3 hidden>
 								<!-- <input name=concurrentdownloads type=radio value=3 hidden> -->
 								<span class=radio-icon></span>
 								<!-- <span class=radio-icon></span> -->
@@ -1033,13 +1033,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0518></div>
 						<!-- <div class=setting-name data-i18n=F0518></div> -->
-						<div id=началовоспроизведения class=setting-data data-i18n=^A0519>
+						<div id=playbackstart class=setting-data data-i18n=^A0519>
 						<!-- <div id=playbackstart class=setting-data data-i18n=^A0519> -->
-							<button type=button class=вводчисла-минус data-тащилка=началовоспроизведения>−</button>
+							<button type=button class=numberinput-minus data-тащилка=playbackstart>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=playbackstart>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=началовоспроизведения>+</button>
+							<button type=button class=numberinput-plus data-тащилка=playbackstart>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=playbackstart>+</button> -->
 						</div>
 					</div>
@@ -1047,13 +1047,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0516></div>
 						<!-- <div class=setting-name data-i18n=F0516></div> -->
-						<div id=размербуфера class=setting-data data-i18n=^A0517>
+						<div id=buffersize class=setting-data data-i18n=^A0517>
 						<!-- <div id=buffersize class=setting-data data-i18n=^A0517> -->
-							<button type=button class=вводчисла-минус data-тащилка=размербуфера>−</button>
+							<button type=button class=numberinput-minus data-тащилка=buffersize>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=buffersize>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=размербуфера>+</button>
+							<button type=button class=numberinput-plus data-тащилка=buffersize>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=buffersize>+</button> -->
 						</div>
 					</div>
@@ -1061,13 +1061,13 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-name data-i18n=F0537></div>
 						<!-- <div class=setting-name data-i18n=F0537></div> -->
-						<div id=растягиваниебуфера class=setting-data data-i18n=^A0538>
+						<div id=bufferstretch class=setting-data data-i18n=^A0538>
 						<!-- <div id=bufferstretch class=setting-data data-i18n=^A0538> -->
-							<button type=button class=вводчисла-минус data-тащилка=растягиваниебуфера>−</button>
+							<button type=button class=numberinput-minus data-тащилка=bufferstretch>−</button>
 							<!-- <button type=button class=numberinput-minus data-dragger=bufferstretch>−</button> -->
 							<input class=вводчисла-число readonly tabindex=-1>
 							<!-- <input class=numberinput-number readonly tabindex=-1> -->
-							<button type=button class=numberinput-plus data-тащилка=растягиваниебуфера>+</button>
+							<button type=button class=numberinput-plus data-тащилка=bufferstretch>+</button>
 							<!-- <button type=button class=numberinput-plus data-dragger=bufferstretch>+</button> -->
 						</div>
 					</div>
@@ -1082,7 +1082,7 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-data>
 						<!-- <div class=setting-data> -->
-							<button id=экспортнастроек type=button data-i18n=F0605^A0606></button>
+							<button id=exportsettings type=button data-i18n=F0605^A0606></button>
 							<!-- <button id=exportsettings type=button data-i18n=F0605^A0606></button> -->
 						</div>
 					</div>
@@ -1090,7 +1090,7 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-data>
 						<!-- <div class=setting-data> -->
-							<button id=импортнастроек type=button data-i18n=F0607^A0608></button>
+							<button id=importsettings type=button data-i18n=F0607^A0608></button>
 							<!-- <button id=importsettings type=button data-i18n=F0607^A0608></button> -->
 						</div>
 					</div>
@@ -1098,7 +1098,7 @@ Possible causes of buffer overflow:
 					<!-- <div class=setting> -->
 						<div class=setting-data>
 						<!-- <div class=setting-data> -->
-							<button id=сброситьнастройки type=button data-i18n=F0524^A0525></button>
+							<button id=resetsettings type=button data-i18n=F0524^A0525></button>
 							<!-- <button id=resetsettings type=button data-i18n=F0524^A0525></button> -->
 						</div>
 					</div>
@@ -1131,10 +1131,10 @@ Possible causes of buffer overflow:
 			</div>
 		</div>
 		</div>
-		<div id=размерчата data-тащилка=размерчата data-i18n=^A0532></div>
+		<div id=chatsize data-тащилка=chatsize data-i18n=^A0532></div>
 		<!-- <div id=chatsize data-dragger=chatsize data-i18n=^A0532></div> -->
 	</div>
-	<input id=выборфайладляимпортанастроек type=file accept=application/json,.json hidden>
+	<input id=settingsimportfile type=file accept=application/json,.json hidden>
 	<!-- <input id=filechooserforimportingsettings type=file accept=application/json,.json hidden> -->
 	<svg display=none>
 		<symbol id=svg-end viewBox="0 0 24 24">

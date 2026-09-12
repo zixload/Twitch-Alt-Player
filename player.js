@@ -526,26 +526,26 @@ const m_Debug = (() => {
   }
   function ShowMessage(sMessage, sLinkCode, sLinkAddress) {
     ShowPage().then((oDocument) => {
-      oDocument.getElementById("отладка-текстсообщения").textContent =
+      oDocument.getElementById("debug-messagetext").textContent =
         sMessage;
       if (sLinkCode) {
-        const elLink = oDocument.getElementById("отладка-ссылкасообщения");
+        const elLink = oDocument.getElementById("debug-messagelink");
         elLink.textContent = GetText(sLinkCode);
         elLink.href = sLinkAddress;
       }
-      ShowForm(oDocument, "отладка-сообщение", true);
+      ShowForm(oDocument, "debug-message", true);
     });
   }
   function ShowAndSendReport(oReport, bufSend) {
     ShowPage().then((oDocument) => {
       let nodeForm;
       if (oReport.TerminationReason === "ОТПРАВИТЬ ОТЗЫВ") {
-        nodeForm = oDocument.getElementById("отладка-отзыв");
+        nodeForm = oDocument.getElementById("debug-feedback");
       } else {
-        nodeForm = oDocument.getElementById("отладка-ошибка");
+        nodeForm = oDocument.getElementById("debug-error");
         InsertFileDownloadLinks(nodeForm);
       }
-      nodeForm.elements["отладка-отчет"].value = JSON.stringify(oReport);
+      nodeForm.elements["debug-report"].value = JSON.stringify(oReport);
       ShowForm(oDocument, nodeForm.id, true);
       oDocument.addEventListener("reset", (oEvent) => {
         oEvent.preventDefault();
@@ -594,7 +594,7 @@ const m_Debug = (() => {
           })
         );
 
-        const nodeMessage = nodeForm.elements["отладка-сообщение"];
+        const nodeMessage = nodeForm.elements["debug-message"];
         if (nodeMessage && nodeMessage.value) {
           oReportForFile.Message = nodeMessage.value;
         }
@@ -1051,7 +1051,7 @@ class NumberInput {
   _HandleDrag(oParameters) {
     const VALUE_CHANGE_INTERVAL = 130;
     if (oParameters.nStep === 1) {
-      this._nToAdd = oParameters.nodePressed.classList.contains("вводчисла-минус")
+      this._nToAdd = oParameters.nodePressed.classList.contains("numberinput-minus")
         ? -this._nStep
         : this._nStep;
       this._nInterval = 0;
@@ -1432,7 +1432,7 @@ const m_Statistics = (() => {
       );
       if (this._kFilled !== 0) {
         this._nodeTable.children[HISTORY_START + this._nIndex].classList.add(
-          "статистика-подробно"
+          "statistics-detailed"
         );
       }
       if (this._kFilled !== this._mnHistory.length) {
@@ -1500,7 +1500,7 @@ const m_Statistics = (() => {
         this._nodeTable.children[HISTORY_START + this._nIndex],
         this._ToString(nCount),
         bHighlight
-      ).classList.remove("статистика-подробно");
+      ).classList.remove("statistics-detailed");
       return nAverageNumber;
     }
     _Clear() {
@@ -1508,18 +1508,18 @@ const m_Statistics = (() => {
       this._nIndex = -1;
       const nodeFragment = document.createDocumentFragment();
       nodeFragment.appendChild(document.createElement("td")).className =
-        "анализ-минимум";
+        "analysis-minimum";
       nodeFragment.appendChild(document.createElement("td")).textContent = " < ";
-      nodeFragment.lastChild.className = "статистика-символ";
+      nodeFragment.lastChild.className = "statistics-symbol";
       nodeFragment.appendChild(document.createElement("td")).className =
-        "анализ-среднее";
+        "analysis-average";
       nodeFragment.appendChild(document.createElement("td")).textContent = " < ";
-      nodeFragment.lastChild.className = "статистика-символ";
+      nodeFragment.lastChild.className = "statistics-symbol";
       nodeFragment.appendChild(document.createElement("td")).className =
-        "анализ-максимум";
+        "analysis-maximum";
       for (let idx = this._mnHistory.length; --idx >= 0;) {
         nodeFragment.appendChild(document.createElement("td")).className =
-          "анализ-история статистика-подробно";
+          "анализ-история statistics-detailed";
       }
       this._nodeTable.textContent = "";
       this._nodeTable.appendChild(nodeFragment);
@@ -1532,7 +1532,7 @@ const m_Statistics = (() => {
   }
   function UpdateValue(pElement, pValue, bHighlight) {
     const nodeElement = GetNode(pElement);
-    nodeElement.classList.toggle("статистика-выделить", bHighlight);
+    nodeElement.classList.toggle("statistics-highlight", bHighlight);
     nodeElement.textContent = pValue;
     return nodeElement;
   }
@@ -1581,12 +1581,12 @@ const m_Statistics = (() => {
     return `P${nProfileIndication}C${nConstraintSetFlag}`;
   }
   function UpdateStatistics() { // function UpdateStatistics() {
-    document.getElementById("статистика-длительностьпросмотра").textContent = // document.getElementById("statistics-viewingduration").textContent =
+    document.getElementById("statistics-viewingduration").textContent = // document.getElementById("statistics-viewingduration").textContent =
       m_i18n.SecondsToString(performance.now() / 1e3, true); // m_i18n.ConvertSecondsToString(performance.now() / 1e3, true);
     const { droppedVideoFrames, totalVideoFrames } =
       m_Player.GetDroppedFrameCount(); // m_Player.GetDroppedFramesCount();
     UpdateValue( // UpdateValue(
-      "статистика-пропущено", // "statistics-dropped",
+      "statistics-skipped", // "statistics-dropped",
       droppedVideoFrames,
       droppedVideoFrames >= HIGHLIGHT_DROPPED_FRAMES // droppedVideoFrames >= HIGHLIGHT_DROPPED_FRAMES
     ).nextElementSibling.nextElementSibling.textContent = totalVideoFrames;
@@ -1617,7 +1617,7 @@ const m_Statistics = (() => {
     const { nWatched, nUnwatched } = // const { nWatched, nNotWatched } =
       m_Player.GetBufferFill(); // m_Player.GetBufferFullness();
     let node = UpdateValue( // let node = UpdateValue(
-      "статистика-очередь", // "statistics-queue",
+      "statistics-queue", // "statistics-queue",
       nAwaitingDownload.toFixed(1), // nWaitingForDownload.toFixed(1),
       nAwaitingDownload > m_Settings.Get("чМаксРазмерБуфера") // nWaitingForDownload > m_Settings.Get("nMaxBufferSize")
     );
@@ -1681,43 +1681,43 @@ const m_Statistics = (() => {
       1
     );
     _nLastUpdateTime = NaN;
-    GetNode("статистика-количестворекламы").textContent = _nAdCount;
-    GetNode("статистика-частотарекламы").textContent = getAdFrequency();
-    GetNode("статистика-исходных").textContent = _nInitialSegments;
+    GetNode("statistics-adcount").textContent = _nAdCount;
+    GetNode("statistics-adfrequency").textContent = getAdFrequency();
+    GetNode("statistics-source").textContent = _nInitialSegments;
     UpdateValue(
-      "статистика-забракованных",
+      "statistics-rejected",
       _nRejectedSegments,
       _nRejectedSegments !== 0
     );
     UpdateValue(
-      "статистика-ошибокзагрузки",
+      "statistics-downloaderrors",
       _nDownloadErrors,
       _nDownloadErrors !== 0
     );
     UpdateValue(
-      "статистика-пропущенныхсегментов",
+      "statistics-skippedsegments",
       _nSkippedSegments,
       _nSkippedSegments !== 0
     );
-    GetNode("статистика-незагруженныхсегментов").textContent =
+    GetNode("statistics-unloadedsegments").textContent =
       _nUndownloadedSegments;
     UpdateValue(
-      "статистика-потерьвидео",
+      "statistics-videolosses",
       _nVideoLosses,
       _nVideoLosses !== 0
     );
     UpdateValue(
-      "статистика-потерьзвука",
+      "statistics-audiolosses",
       _nAudioLosses,
       _nAudioLosses !== 0
     );
     UpdateValue(
-      "статистика-исчерпано",
+      "statistics-exhausted",
       _nBufferExhaustions,
       _nBufferExhaustions >= HIGHLIGHT_BUFFER_EXHAUSTION
     );
     UpdateValue(
-      "статистика-переполнено",
+      "statistics-overflowed",
       _nBufferOverflows,
       _nBufferOverflows !== 0
     ).nextElementSibling.nextElementSibling.textContent =
@@ -1731,14 +1731,14 @@ const m_Statistics = (() => {
       "тащилка-перетаскивание-статистика",
       HandleWindowDrag
     );
-    ShowElement("статистика", true);
+    ShowElement("statistics", true);
     m_Settings.Change("лПоказатьСтатистику", true);
   }
   function CloseWindow() {
     if (!WindowOpened()) {
       return;
     }
-    ShowElement("статистика", false);
+    ShowElement("statistics", false);
     _oUpdateInterval.Free();
     _oUpdateInterval = null;
     _oSegmentsAdded.Free();
@@ -1803,20 +1803,20 @@ const m_Statistics = (() => {
       _nLastUpdateTime = NaN;
     }
     UpdateValue(
-      "статистика-ошибокзагрузки",
+      "statistics-downloaderrors",
       (_nDownloadErrors = 0),
       false
     );
     UpdateValue(
-      "статистика-пропущенныхсегментов",
+      "statistics-skippedsegments",
       (_nSkippedSegments = 0),
       false
     );
-    GetNode("статистика-незагруженныхсегментов").textContent =
+    GetNode("statistics-unloadedsegments").textContent =
       _nUndownloadedSegments = 0;
-    UpdateValue("статистика-исчерпано", (_nBufferExhaustions = 0), false);
+    UpdateValue("statistics-exhausted", (_nBufferExhaustions = 0), false);
     UpdateValue(
-      "статистика-переполнено",
+      "statistics-overflowed",
       (_nBufferOverflows = 0),
       false
     ).nextElementSibling.nextElementSibling.textContent =
@@ -1834,10 +1834,10 @@ const m_Statistics = (() => {
   function GetDataForReport() {
     return {
       VideoParameters:
-        GetNode("статистика-разрешениевидео").textContent +
+        GetNode("statistics-videoresolution").textContent +
         " " +
         GetNode("statistics-videocompression").textContent,
-      AudioParameters: GetNode("статистика-сжатиезвука").textContent,
+      AudioParameters: GetNode("statistics-audiocompression").textContent,
       RejectedSegments: _nRejectedSegments,
       SkippedSegments: _nSkippedSegments,
       DownloadErrors: _nDownloadErrors,
@@ -1863,11 +1863,11 @@ const m_Statistics = (() => {
         (nSum, { nDuration }) => nSum + nDuration,
         0
       );
-      GetNode("статистика-список").textContent = `${oList.moSegments.length
+      GetNode("statistics-list").textContent = `${oList.moSegments.length
         } × ${(nListDuration / oList.moSegments.length).toFixed(
           1
         )} = ${nListDuration.toFixed(1)} − ${oList.kAdSegments}`;
-      GetNode("статистика-targetduration").textContent = oList.nTargetDuration;
+      GetNode("statistics-targetduration").textContent = oList.nTargetDuration;
     }
   }
   function SegmentsQueued(kSegmentsAdded, kSecondsAdded) {
@@ -1888,7 +1888,7 @@ const m_Statistics = (() => {
   function SourceSegmentReceived() {
     ++_nInitialSegments;
     if (WindowOpened()) {
-      document.getElementById("статистика-исходных").textContent =
+      document.getElementById("statistics-source").textContent =
         _nInitialSegments;
     }
   }
@@ -1896,7 +1896,7 @@ const m_Statistics = (() => {
     ++_nRejectedSegments;
     if (WindowOpened()) {
       UpdateValue(
-        "статистика-забракованных",
+        "statistics-rejected",
         _nRejectedSegments,
         true
       );
@@ -1906,7 +1906,7 @@ const m_Statistics = (() => {
     if (Number.isFinite(kbDownloaded)) {
       _kbTotalDownloaded += kbDownloaded;
       if (WindowOpened()) {
-        document.getElementById("статистика-скачано").textContent = (
+        document.getElementById("statistics-downloaded").textContent = (
           _kbTotalDownloaded /
           1024 /
           1024
@@ -1942,8 +1942,8 @@ const m_Statistics = (() => {
     _nDownloadErrors++;
     _nUndownloadedSegments += kUnloadedSegments;
     if (WindowOpened()) {
-      UpdateValue("статистика-ошибокзагрузки", _nDownloadErrors, true);
-      GetNode("статистика-незагруженныхсегментов").textContent =
+      UpdateValue("statistics-downloaderrors", _nDownloadErrors, true);
+      GetNode("statistics-unloadedsegments").textContent =
         _nUndownloadedSegments;
     }
   }
@@ -1953,11 +1953,11 @@ const m_Statistics = (() => {
     _nUndownloadedSegments += kSkippedSegments;
     if (WindowOpened()) {
       UpdateValue(
-        "статистика-пропущенныхсегментов",
+        "statistics-skippedsegments",
         _nSkippedSegments,
         true
       );
-      GetNode("статистика-незагруженныхсегментов").textContent =
+      GetNode("statistics-unloadedsegments").textContent =
         _nUndownloadedSegments;
     }
   }
@@ -1972,14 +1972,14 @@ const m_Statistics = (() => {
         GetNode("statistics-videocompression").textContent = oData.bHasVideo
           ? oData.sCodecsDescription || "fMP4"
           : "—";
-        GetNode("статистика-разрешениевидео").textContent =
+        GetNode("statistics-videoresolution").textContent =
           oData.sResolution || "—";
-        GetNode("статистика-частотакадров").textContent = "";
-        GetNode("статистика-сжатиезвука").textContent = oData.bHasAudio
+        GetNode("statistics-framerate").textContent = "";
+        GetNode("statistics-audiocompression").textContent = oData.bHasAudio
           ? "fMP4"
           : "—";
-        GetNode("статистика-битрейтзвука").textContent = "";
-        GetNode("статистика-преобразованза").textContent = "—";
+        GetNode("statistics-audiobitrate").textContent = "";
+        GetNode("statistics-convertedin").textContent = "—";
       }
       return;
     }
@@ -2006,24 +2006,24 @@ const m_Statistics = (() => {
           }
           GetNode("statistics-videocompression").textContent = sVideoCompression;
           GetNode(
-            "статистика-разрешениевидео"
+            "statistics-videoresolution"
           ).textContent = `${oData.nPictureWidth}x${oData.nPictureHeight}`;
         } else {
           GetNode("statistics-videocompression").textContent = "—";
-          GetNode("статистика-разрешениевидео").textContent = "—";
+          GetNode("statistics-videoresolution").textContent = "—";
         }
-        GetNode("статистика-частотакадров").textContent = "";
+        GetNode("statistics-framerate").textContent = "";
         if (oData.bHasAudio) {
-          GetNode("статистика-сжатиезвука").textContent =
+          GetNode("statistics-audiocompression").textContent =
             ["AAC-Main", "AAC-LC", "AAC-SSR", "AAC-LTP"][
             oData.nAudioObjectType - 1
             ] +
             ` ${oData.nSampleRate} ${GetText("J0141")}` +
             ` ${oData.nChannelCount} ${GetText("J0142")}`;
         } else {
-          GetNode("статистика-сжатиезвука").textContent = "—";
+          GetNode("statistics-audiocompression").textContent = "—";
         }
-        GetNode("статистика-битрейтзвука").textContent = "";
+        GetNode("statistics-audiobitrate").textContent = "";
       }
       if (Number.isFinite(oData.nAvgVideoSampleDuration)) {
         _nMinVideoSampleDuration = oData.nMinVideoSampleDuration;
@@ -2077,7 +2077,7 @@ const m_Statistics = (() => {
               ).toFixed()}%`;
           }
           UpdateValue(
-            "статистика-частотакадров",
+            "statistics-framerate",
             sDeviation,
             nRelativeDeviation <= HIGHLIGHT_FRAME_RATE
           );
@@ -2085,12 +2085,12 @@ const m_Statistics = (() => {
       }
       if (Number.isFinite(oData.nAudioBitrate) && bWindowOpen) {
         GetNode(
-          "статистика-битрейтзвука"
+          "statistics-audiobitrate"
         ).textContent = `${oData.nAudioBitrate.toFixed()} ${GetText("J0143")}`;
       }
     }
     if (IsNumber(oData.nConvertedIn) && bWindowOpen) {
-      GetNode("статистика-преобразованза").textContent =
+      GetNode("statistics-convertedin").textContent =
         oData.nConvertedIn.toFixed();
     }
     if (oData.bRejected) {
@@ -2099,13 +2099,13 @@ const m_Statistics = (() => {
     if (oData.bVideoLoss) {
       ++_nVideoLosses;
       if (bWindowOpen) {
-        UpdateValue("статистика-потерьвидео", _nVideoLosses, true);
+        UpdateValue("statistics-videolosses", _nVideoLosses, true);
       }
     }
     if (oData.bAudioLoss) {
       ++_nAudioLosses;
       if (bWindowOpen) {
-        UpdateValue("статистика-потерьзвука", _nAudioLosses, true);
+        UpdateValue("statistics-audiolosses", _nAudioLosses, true);
       }
     }
   }
@@ -2125,7 +2125,7 @@ const m_Statistics = (() => {
     }
     if (WindowOpened()) {
       UpdateValue(
-        "статистика-исчерпано",
+        "statistics-exhausted",
         _nBufferExhaustions,
         _nBufferExhaustions >= HIGHLIGHT_BUFFER_EXHAUSTION
       );
@@ -2156,8 +2156,8 @@ const m_Statistics = (() => {
     _nAdCount++;
     _nAdStartTimes.push(performance.now());
     if (WindowOpened()) {
-      GetNode("статистика-количестворекламы").textContent = _nAdCount;
-      GetNode("статистика-частотарекламы").textContent = getAdFrequency();
+      GetNode("statistics-adcount").textContent = _nAdCount;
+      GetNode("statistics-adfrequency").textContent = getAdFrequency();
     }
   });
   m_Events.AddHandler("список-конецрекламы", () => {
@@ -2168,7 +2168,7 @@ const m_Statistics = (() => {
       }
       _nAdEndTimes.push(performance.now());
       if (WindowOpened()) {
-        GetNode("статистика-частотарекламы").textContent =
+        GetNode("statistics-adfrequency").textContent =
           getAdFrequency();
       }
     }
@@ -2180,7 +2180,7 @@ const m_Statistics = (() => {
       _nSkippedInBuffer += nSkipped;
       if (WindowOpened()) {
         UpdateValue(
-          "статистика-переполнено",
+          "statistics-overflowed",
           _nBufferOverflows,
           true
         ).nextElementSibling.nextElementSibling.textContent =
@@ -2234,16 +2234,16 @@ const m_Window = (() => {
   }
   function openWindow(sWindowId) {
     const elWindow = GetNode(sWindowId);
-    Check(elWindow.classList.contains("окно"));
-    elWindow.classList.add("окнооткрыто", "анимацияокна");
+    Check(elWindow.classList.contains("window"));
+    elWindow.classList.add("windowopen", "windowanimation");
     document.body.setAttribute("data-окно-открыто", sWindowId);
     m_Events.SendEvent(`окно-открыто-${sWindowId}`);
   }
   function closeWindow(sWindowId, bWithAnimation = true) {
     const elWindow = GetNode(sWindowId);
-    Check(elWindow.classList.contains("окно"));
-    elWindow.classList.remove("окнооткрыто");
-    elWindow.classList.toggle("анимацияокна", bWithAnimation);
+    Check(elWindow.classList.contains("window"));
+    elWindow.classList.remove("windowopen");
+    elWindow.classList.toggle("windowanimation", bWithAnimation);
     document.body.removeAttribute("data-окно-открыто");
   }
   function open(sWindowId) {
@@ -2274,7 +2274,10 @@ const m_Window = (() => {
   }
   function updateScrollIndicator(elScroll) {
     const bShow = !thisElementIsFullyScrolled(elScroll);
-    ShowElement(GetNode(`индикаторпрокрутки-${elScroll.id}`), bShow);
+    // Identifiant construit par prefixe : « scrollindicator- » suivi de l'id de la zone
+    // defilante. Un renommage qui ne voit que les noms entiers laisse ce prefixe derriere lui,
+    // et GetNode rend null sans que rien ne le signale avant l'execution.
+    ShowElement(GetNode(`scrollindicator-${elScroll.id}`), bShow);
     elScroll[bShow ? "addEventListener" : "removeEventListener"](
       "scroll",
       handleScroll
@@ -2295,7 +2298,7 @@ const m_Window = (() => {
       if (
         sOpenWindowId &&
         !GetNode(sOpenWindowId).contains(elClick) &&
-        GetNode("проигрыватель").contains(elClick)
+        GetNode("player").contains(elClick)
       ) {
         closeWindow(sOpenWindowId);
       }
@@ -2313,12 +2316,12 @@ const m_Menu = (() => {
   function setItemAvailability(pItem, bAvailable) {
     GetNode(pItem).tabIndex = bAvailable ? 0 : -1;
   }
-  GetNode("глаз").addEventListener("contextmenu", (oEvent) => {
+  GetNode("eye").addEventListener("contextmenu", (oEvent) => {
     oEvent.preventDefault();
-    m_Window.toggle("главноеменю");
+    m_Window.toggle("mainmenu");
   });
   m_Events.AddHandler("управление-левыйщелчок", (oEvent) => {
-    if (oEvent.target.classList.contains("меню-пункт")) {
+    if (oEvent.target.classList.contains("menu-item")) {
       m_Window.close(false);
     }
   });
@@ -2348,7 +2351,7 @@ const m_FullscreenMode = (() => {
     }
   });
   function GetElement() {
-    return GetNode("проигрывательичат");
+    return GetNode("playerandchat");
   }
   function Enabled() {
     return !!document[_sFullscreenElement];
@@ -2356,7 +2359,7 @@ const m_FullscreenMode = (() => {
   function Update() {
     const bEnabled = Enabled();
     m_Log.Окак(`[ПолноэкранныйРежим] Режим включен: ${bEnabled}`);
-    ChangeButton("переключитьполноэкранный", bEnabled);
+    ChangeButton("togglefullscreen", bEnabled);
     // Tell the stylesheets we are fullscreen. The sidebar is a sibling of the fullscreen
     // element, so in principle the browser stops painting it — but its `backdrop-filter`
     // promotes it to its own composited layer, and that layer survives on top of the video.
@@ -2388,7 +2391,7 @@ const m_FullscreenMode = (() => {
     Enable() || Disable();
   }
   document.addEventListener(_sFullscreenchange, HandleModeChange);
-  GetNode("глаз").addEventListener("dblclick", HandleDoubleClick);
+  GetNode("eye").addEventListener("dblclick", HandleDoubleClick);
   Update();
   return {
     Enabled,
@@ -2409,7 +2412,7 @@ const m_PictureInPicture = (() => {
   function update() {
     const bEnabled = enabled();
     m_Log.Окак(`[КартинкаВКартинке] Режим включен: ${bEnabled}`);
-    ChangeButton("переключитькартинкавкартинке", bEnabled);
+    ChangeButton("togglepictureinpicture", bEnabled);
   }
   function enable() {
     if (enabled()) {
@@ -2430,7 +2433,7 @@ const m_PictureInPicture = (() => {
   }
   function toggle() {
     _oMediaElement &&
-      !document.body.classList.contains("нетвидео") &&
+      !document.body.classList.contains("novideo") &&
       (enable() || disable());
   }
   function start(oMediaElement) {
@@ -2453,7 +2456,7 @@ const m_PictureInPicture = (() => {
       handleModeChange
     );
     update();
-    ShowElement("переключитькартинкавкартинке", true);
+    ShowElement("togglepictureinpicture", true);
   }
   return {
     start,
@@ -2523,8 +2526,8 @@ const m_Dragger = (() => {
         getComputedStyle(nodePressed).cursor,
         "important"
       );
-    m_FullscreenMode.GetElement().classList.add("тащилка-перехват");
-    _oParameters.nodeDragging.classList.add("тащилка");
+    m_FullscreenMode.GetElement().classList.add("dragger-capture");
+    _oParameters.nodeDragging.classList.add("dragger");
     m_Events.SendEvent(
       `тащилка-перетаскивание-${_oParameters.nodeDragging.id}`,
       _oParameters
@@ -2593,8 +2596,8 @@ const m_Dragger = (() => {
       m_FullscreenMode.GetElement().style.removeProperty("cursor");
       m_FullscreenMode
         .GetElement()
-        .classList.remove("тащилка-перехват");
-      _oParameters.nodeDragging.classList.remove("тащилка");
+        .classList.remove("dragger-capture");
+      _oParameters.nodeDragging.classList.remove("dragger");
       document.removeEventListener(
         "pointermove",
         HandlePointerMove,
@@ -2630,7 +2633,7 @@ const m_Dragger = (() => {
 const m_AutoHide = (() => {
   const MIN_MOVE_INTERVAL = 150;
   const MOVE_THRESHOLD = 3;
-  const _nodeAutoHide = document.getElementById("проигрыватель");
+  const _nodeAutoHide = document.getElementById("player");
   let _nTimer = 0;
   let _nHideAfter = 0;
   let _nDoNotShowUntil = 0;
@@ -2641,8 +2644,8 @@ const m_AutoHide = (() => {
   let _nSpeedPickTimerId = 0;
   function Show() {
     if (_nTimer === 0) {
-      document.body.classList.remove("автоскрытие");
-      document.body.classList.add("анимацияпанели");
+      document.body.classList.remove("autohide");
+      document.body.classList.add("panelanimation");
       _nTimer = setTimeout(
         handleTimer,
         m_Settings.Get("чИнтервалАвтоскрытия") * 1e3
@@ -2657,12 +2660,12 @@ const m_AutoHide = (() => {
     if (_nTimer !== 0) {
       clearTimeout(_nTimer);
       _nTimer = 0;
-      document.body.classList.add("автоскрытие");
+      document.body.classList.add("autohide");
     }
-    document.body.classList.toggle("анимацияпанели", bWithAnimation);
+    document.body.classList.toggle("panelanimation", bWithAnimation);
     if (!bWithAnimation) {
       document.body.clientTop;
-      document.body.classList.add("анимацияпанели");
+      document.body.classList.add("panelanimation");
       _nDoNotShowUntil = performance.now() + 500;
     }
   }
@@ -2718,17 +2721,17 @@ const m_AutoHide = (() => {
         clearTimeout(_nSpeedPickTimerId);
       }
       _nSpeedPickTimerId = setTimeout(
-        () => document.body.classList.remove("выборскорости"),
+        () => document.body.classList.remove("speedpick"),
         5e3
       );
-      document.body.classList.add("выборскорости");
+      document.body.classList.add("speedpick");
     }
   });
   function Start() {
     interceptPointerMove();
     _nodeAutoHide.addEventListener("click", handleClick);
     _nodeAutoHide.addEventListener("mouseleave", handlePointerLeave);
-    GetNode("скорость").addEventListener("pointerdown", handleSpeedPick);
+    GetNode("speed").addEventListener("pointerdown", handleSpeedPick);
   }
   return {
     Start,
@@ -2742,24 +2745,24 @@ const m_MediaQuery = (() => {
   const update = AddExceptionHandler(() => {
     Check(_nTimer !== 0);
     _nTimer = 0;
-    const elPlayer = GetNode("проигрыватель");
+    const elPlayer = GetNode("player");
     const nPlayerHeight =
       (elPlayer.clientHeight * 100) /
       m_Settings.Get("чРазмерИнтерфейса");
     Check(nPlayerHeight > 0);
     elPlayer.classList.toggle(
-      "ужатьглавноеменю",
+      "collapsemainmenu",
       nPlayerHeight <= 460
     );
     elPlayer.classList.toggle(
-      "ужатьнастройки",
+      "collapsesettings",
       nPlayerHeight <= 412
     );
     const FONT_SIZE_MIN = 100;
     const FONT_SIZE_MAX = 124;
     const FONT_SIZE_STEP = 8;
-    const oPanelStyle = GetNode("верхняяпанель").style;
-    const elFiller = GetNode("заполнитель");
+    const oPanelStyle = GetNode("toppanel").style;
+    const elFiller = GetNode("filler");
     for (
       let nFontSize = FONT_SIZE_MAX;
       ;
@@ -2855,7 +2858,7 @@ const m_Appearance = (() => {
   }
   function Start() {
     m_i18n.TranslateDocument(document);
-    _oOpacity = new NumberInput("чПрозрачность", 5, 0, "прозрачность");
+    _oOpacity = new NumberInput("чПрозрачность", 5, 0, "opacity");
     _oOpacity.AfterChange = UpdateStyles;
     document.addEventListener("input", HandleColourInput);
     document.addEventListener("change", HandleColourChange);
@@ -2868,7 +2871,7 @@ const m_Appearance = (() => {
       "чРазмерИнтерфейса",
       1,
       0,
-      "размеринтерфейса"
+      "interfacesize"
     ).AfterChange = ApplyInterfaceSize;
     ApplyInterfaceSize();
     ShowElement(document.body, true);
@@ -2883,8 +2886,8 @@ const m_Notification = (() => {
   let _nTimer = 0;
   function Show(sBadgeId, bTrouble) {
     Check(document.getElementById(sBadgeId) && typeof bTrouble == "boolean");
-    const nodeNotification = GetNode("уведомление");
-    nodeNotification.classList.toggle("жопа", bTrouble);
+    const nodeNotification = GetNode("notification");
+    nodeNotification.classList.toggle("trouble", bTrouble);
     ShowElement(nodeNotification, true);
     nodeNotification.firstElementChild.setAttributeNS(
       "http://www.w3.org/1999/xlink",
@@ -2903,7 +2906,7 @@ const m_Notification = (() => {
     Show("svg-fail", true);
   }
   const HideNotification = AddExceptionHandler(() => {
-    ShowElement("уведомление", false);
+    ShowElement("notification", false);
     _nTimer = 0;
   });
   return {
@@ -2926,7 +2929,7 @@ const m_Scale = (() => {
       Number.isFinite(_nEnd) &&
       Number.isFinite(_nWatched)
     );
-    GetNode("шкала-просмотрено").style.transform = `scaleX(${(
+    GetNode("scale-watched").style.transform = `scaleX(${(
       (_nWatched - _nStart) /
       (_nEnd - _nStart)
     ).toFixed(4)})`;
@@ -2957,7 +2960,7 @@ const m_Scale = (() => {
     _nStart = nStart;
     _nEnd = nEnd;
     document
-      .getElementById("шкала")
+      .getElementById("scale")
       .addEventListener("click", HandleClick);
   }
   function SetWatched(nWatched) {
@@ -3112,7 +3115,7 @@ const m_News = (() => {
     Check(
       Number.isFinite(nAddVersionsOlderThan) || sAddHelpVersion !== ""
     );
-    const elAddTo = GetNode("текстновостей");
+    const elAddTo = GetNode("newstext");
     elAddTo.textContent = "";
     for (let mNewsItem of _mNews) {
       const sVersion = mNewsItem[0];
@@ -3148,7 +3151,7 @@ const m_News = (() => {
     elAddTo.appendChild(nodeHeading);
     if (GetText("M0010") !== "ru") {
       const elLink = nodeHeading.appendChild(document.createElement("a"));
-      elLink.className = "новость-перевести";
+      elLink.className = "news-translate";
       elLink.href = "translate:";
       elLink.target = "_blank";
       elLink.title = GetText("J0148");
@@ -3160,31 +3163,31 @@ const m_News = (() => {
   function OpenWindow(bConfirmRead) {
     if (bConfirmRead) {
       m_i18n.InsertAdjacentHtmlMessage(
-        "закрытьновости",
+        "closenews",
         "content",
         "F0619"
       ).title = GetText("A0620");
-      ShowElement("отложитьновости", true);
+      ShowElement("postponenews", true);
     } else {
       m_i18n.InsertAdjacentHtmlMessage(
-        "закрытьновости",
+        "closenews",
         "content",
         "F0663"
       ).title = "";
-      ShowElement("отложитьновости", false);
+      ShowElement("postponenews", false);
     }
     m_Events.AddHandler(
       "управление-левыйщелчок",
       HandleLeftClick
     );
-    m_Window.open("новости");
+    m_Window.open("news");
   }
   function HandleLeftClick(oEvent) {
     if (
-      oEvent.sCallsign === "закрытьновости" &&
-      ElementIsShown("отложитьновости")
+      oEvent.sCallsign === "closenews" &&
+      ElementIsShown("postponenews")
     ) {
-      ShowElement("открытьновости", false);
+      ShowElement("opennews", false);
       m_Settings.Change("сПредыдущаяВерсия", EXTENSION_VERSION);
     } else if (oEvent.target.href === "translate:") {
       let sText = "";
@@ -3210,12 +3213,12 @@ const m_News = (() => {
     if (сПредыдущаяВерсия === sInitialVersion) {
       AddNewsItems(Infinity, SHOW_ONCE);
       OpenWindow(false);
-      ShowElement("открытьновости", false);
+      ShowElement("opennews", false);
       m_Settings.Change("сПредыдущаяВерсия", EXTENSION_VERSION);
     } else if (сПредыдущаяВерсия !== EXTENSION_VERSION) {
       AddNewsItems(ConvertVersionToMilliseconds(сПредыдущаяВерсия), "");
       OpenWindow(true);
-      GetNode("открытьновости").classList.remove("непрочитано");
+      GetNode("opennews").classList.remove("unread");
     } else {
       AddNewsItems(0, "");
       OpenWindow(false);
@@ -3237,7 +3240,7 @@ const m_News = (() => {
         сПредыдущаяВерсия === sInitialVersion ||
         HasNewsWithVersionOlderThan(сПредыдущаяВерсия)
       ) {
-        ShowElement("открытьновости", true).classList.add("непрочитано");
+        ShowElement("opennews", true).classList.add("unread");
       } else {
         m_Settings.Change("сПредыдущаяВерсия", EXTENSION_VERSION);
       }
@@ -3318,14 +3321,14 @@ const m_Controls = (() => {
     }
   });
   function ApplyImageScaling() {
-    GetNode("глаз").classList.toggle(
-      "масштабировать",
+    GetNode("eye").classList.toggle(
+      "scaled",
       m_Settings.Get("лМасштабироватьИзображение")
     );
   }
   function ApplyInterfaceAnimation() {
     document.body.classList.toggle(
-      "анимацияинтерфейса",
+      "interfaceanimation",
       m_Settings.Get("лАнимацияИнтерфейса")
     );
   }
@@ -3360,11 +3363,11 @@ const m_Controls = (() => {
     }
   }
   function ToggleColourCheck(oEvent) {
-    if (document.body.classList.toggle("проверкацвета")) {
-      document.body.classList.toggle("проверкацветафон", !oEvent.shiftKey);
+    if (document.body.classList.toggle("colourcheck")) {
+      document.body.classList.toggle("colourcheckbackground", !oEvent.shiftKey);
       m_News.OpenHelp();
     } else {
-      document.body.classList.remove("проверкацветафон");
+      document.body.classList.remove("colourcheckbackground");
     }
   }
   function CopyTextToClipboard(sText) {
@@ -3432,7 +3435,7 @@ const m_Controls = (() => {
   );
   function SaveAndApplyVolume(лПриглушить, nVolume) {
     Check(лПриглушить !== void 0 || nVolume !== void 0);
-    if (document.body.classList.contains("нетзвука")) {
+    if (document.body.classList.contains("noaudio")) {
       return;
     }
     if (лПриглушить !== void 0) {
@@ -3447,7 +3450,7 @@ const m_Controls = (() => {
   }
   function UpdateVolume() {
     const nVolume = m_Settings.Get("чГромкость2");
-    const nodeVolume = GetNode("громкость");
+    const nodeVolume = GetNode("volume");
     nodeVolume.value = nVolume;
     nodeVolume.style.setProperty(
       "--ширина",
@@ -3456,19 +3459,19 @@ const m_Controls = (() => {
       }%`
     );
     ChangeButton(
-      "переключитьприглушить",
+      "togglemute",
       m_Settings.Get("лПриглушить")
     );
   }
   function UpdateTrackCount(bHasVideo, bHasAudio) {
-    document.body.classList.toggle("нетвидео", !bHasVideo);
-    document.body.classList.toggle("нетзвука", !bHasAudio);
+    document.body.classList.toggle("novideo", !bHasVideo);
+    document.body.classList.toggle("noaudio", !bHasAudio);
   }
   function ChangeViewerChannelSubscription(nSubscription) {
     if (
       !document
-        .getElementById("зритель-подписка")
-        .classList.contains("обновляется")
+        .getElementById("viewer-subscription")
+        .classList.contains("updating")
     ) {
       m_Twitch.ChangeViewerChannelSubscription(nSubscription);
     }
@@ -3488,37 +3491,37 @@ const m_Controls = (() => {
     oEvent.sCallsign = sCallsign;
     m_Events.SendEvent("управление-левыйщелчок", oEvent);
     switch (sCallsign) {
-      case "переключитьтрансляцию":
+      case "togglebroadcast":
         ToggleWatchingBroadcast();
         break;
 
-      case "переключитьпаузу":
+      case "togglepause":
         if (_nState === STATE_REPEAT) {
           m_Player.TogglePause();
         }
         break;
 
-      case "переключитьприглушить":
+      case "togglemute":
         SaveAndApplyVolume(!m_Settings.Get("лПриглушить"));
         break;
 
-      case "переключитьчат":
+      case "togglechat":
         m_Chat.TogglePanelState();
         break;
 
-      case "создатьклип":
+      case "createclip":
         m_Twitch.CreateClip();
         break;
 
-      case "переключитькартинкавкартинке":
+      case "togglepictureinpicture":
         m_PictureInPicture.toggle();
         break;
 
-      case "переключитьполноэкранный":
+      case "togglefullscreen":
         m_FullscreenMode.Toggle();
         break;
 
-      case "одновременныхзагрузок":
+      case "concurrentdownloads":
         Check(nodeClick.checked);
         m_Settings.Change(
           "кОдновременныхЗагрузок",
@@ -3527,17 +3530,17 @@ const m_Controls = (() => {
         m_Statistics.ClearHistory();
         break;
 
-      case "анимацияинтерфейса":
+      case "interfaceanimation":
         m_Settings.Change("лАнимацияИнтерфейса", nodeClick.checked);
         ApplyInterfaceAnimation();
         break;
 
-      case "масштабироватьизображение":
+      case "scaleimage":
         m_Settings.Change("лМасштабироватьИзображение", nodeClick.checked);
         ApplyImageScaling();
         break;
 
-      case "автоположениечата":
+      case "autochatposition":
         m_Settings.Change("лАвтоПоложениеЧата", nodeClick.checked);
         UpdateSettingsWindow();
         m_Chat.ApplyPanelPosition();
@@ -3561,7 +3564,7 @@ const m_Controls = (() => {
         m_Chat.ApplyPanelPosition();
         break;
 
-      case "положениечата":
+      case "chatposition":
         Check(nodeClick.checked);
         m_Settings.Change(
           "чПоложениеПанелиЧата",
@@ -3570,73 +3573,73 @@ const m_Controls = (() => {
         m_Chat.ApplyPanelPosition();
         break;
 
-      case "состояниезакрытогочата":
+      case "closedchatstate":
         Check(nodeClick.checked);
         m_Chat.SaveAndApplyClosedPanelState(
           Number.parseInt(nodeClick.value, 10)
         );
         break;
 
-      case "переключитьстатистику":
-      case "позиция":
+      case "togglestatistics":
+      case "position":
         ToggleStatisticsWindow();
         break;
 
-      case "открытьновости":
-      case "открытьновости2":
+      case "opennews":
+      case "opennews2":
         m_News.OpenNews();
         break;
 
-      case "открытьсправку":
+      case "openhelp":
         m_News.OpenHelp();
         break;
 
-      case "отправитьотзыв":
+      case "sendfeedback":
         m_Debug.TerminateAndSendFeedback();
         break;
 
-      case "экспортнастроек":
+      case "exportsettings":
         m_Settings.Export();
         break;
 
-      case "импортнастроек":
-        const node = document.getElementById("выборфайладляимпортанастроек");
+      case "importsettings":
+        const node = document.getElementById("settingsimportfile");
         node.value = "";
         node.click();
         break;
 
-      case "сброситьнастройки":
+      case "resetsettings":
         m_Settings.Reset();
         break;
 
-      case "проверкацвета":
+      case "colourcheck":
         ToggleColourCheck(oEvent);
         break;
 
-      case "зритель-подписаться":
+      case "viewer-follow":
         ChangeViewerChannelSubscription(SUBSCRIPTION_NOTIFY);
         break;
 
-      case "зритель-отписаться":
+      case "viewer-unfollow":
         ChangeViewerChannelSubscription(SUBSCRIPTION_NOT_SUBSCRIBED);
         break;
 
-      case "зритель-уведомлять":
+      case "viewer-notify":
         ChangeViewerChannelSubscription(
           nodeClick.checked ? SUBSCRIPTION_NOTIFY : SUBSCRIPTION_DO_NOT_NOTIFY
         );
         break;
 
-      case "закрытьстатистику":
+      case "closestatistics":
         m_Statistics.CloseWindow();
         break;
 
-      case "копироватьадресканала":
+      case "copychannelurl":
         m_Log.Вот("[Управление] Копирую адрес канала в буфер обмена");
         CopyTextToClipboard(m_Twitch.GetChannelUrl(false));
         break;
 
-      case "копироватьадрестрансляции":
+      case "copybroadcasturl":
         CopyBroadcastUrlToClipboard();
     }
   });
@@ -3680,13 +3683,13 @@ const m_Controls = (() => {
 
         case 93:
           if (!bPress) {
-            GetNode("глаз").focus();
+            GetNode("eye").focus();
           }
           return;
 
         case 88:
           if (bPress1) {
-            m_Window.toggle("главноеменю");
+            m_Window.toggle("mainmenu");
           }
           break;
 
@@ -3698,13 +3701,13 @@ const m_Controls = (() => {
 
         case 86:
           if (bPress1) {
-            m_Window.toggle("настройки");
+            m_Window.toggle("settings");
           }
           break;
 
         case 73:
           if (bPress1) {
-            m_Window.toggle("канал");
+            m_Window.toggle("channel");
           }
           break;
 
@@ -3906,34 +3909,34 @@ const m_Controls = (() => {
   );
   function UpdateSettingsWindow() {
     document.querySelector(
-      `input[name="одновременныхзагрузок"][value="${m_Settings.Get(
+      `input[name="concurrentdownloads"][value="${m_Settings.Get(
         "кОдновременныхЗагрузок"
       )}"]`
     ).checked = true;
     document.querySelector(
-      `input[name="состояниезакрытогочата"][value="${m_Settings.Get(
+      `input[name="closedchatstate"][value="${m_Settings.Get(
         "чСостояниеЗакрытогоЧата"
       )}"]`
     ).checked = true;
-    GetNode("адресчата").selectedIndex = m_Settings.Get("лПолноценныйЧат")
+    GetNode("chaturl").selectedIndex = m_Settings.Get("лПолноценныйЧат")
       ? 0
       : m_Settings.Get("лЗатемнитьЧат")
         ? 2
         : 1;
-    GetNode("масштабироватьизображение").checked = m_Settings.Get(
+    GetNode("scaleimage").checked = m_Settings.Get(
       "лМасштабироватьИзображение"
     );
-    GetNode("анимацияинтерфейса").checked = m_Settings.Get(
+    GetNode("interfaceanimation").checked = m_Settings.Get(
       "лАнимацияИнтерфейса"
     );
-    GetNode("менятьгромкостьколесом").value = m_Settings.Get(
+    GetNode("wheelvolume").value = m_Settings.Get(
       "лМенятьГромкостьКолесом"
     )
       ? m_Settings.Get("чШагИзмененияГромкостиКолесом")
       : "";
     const bAutoPosition = m_Settings.Get("лАвтоПоложениеЧата");
-    GetNode("автоположениечата").checked = bAutoPosition;
-    const snodeSides = document.querySelectorAll(".положениечата input");
+    GetNode("autochatposition").checked = bAutoPosition;
+    const snodeSides = document.querySelectorAll(".chatposition input");
     if (bAutoPosition) {
       const nHorizontalPosition = m_Settings.Get(
         "чГоризонтальноеПоложениеЧата"
@@ -3964,7 +3967,7 @@ const m_Controls = (() => {
         if (nPosition === Number.parseInt(nodeSide.value, 10)) {
           nodePosition = nodeSide;
         }
-        nodeSide.name = "положениечата";
+        nodeSide.name = "chatposition";
       }
       nodePosition.checked = true;
     }
@@ -3979,20 +3982,20 @@ const m_Controls = (() => {
         "чНачалоВоспроизведения",
         0.5,
         1,
-        "началовоспроизведения"
+        "playbackstart"
       );
-      _oBufferSize = new NumberInput("чРазмерБуфера", 0.5, 1, "размербуфера");
+      _oBufferSize = new NumberInput("чРазмерБуфера", 0.5, 1, "buffersize");
       _oBufferStretch = new NumberInput(
         "чРастягиваниеБуфера",
         0.5,
         1,
-        "растягиваниебуфера"
+        "bufferstretch"
       );
       _oReplayDuration = new NumberInput(
         "чДлительностьПовтора2",
         30,
         0,
-        "длительностьповтора"
+        "replayduration"
       );
       _oPlaybackStart.AfterChange =
         _oBufferSize.AfterChange =
@@ -4002,12 +4005,12 @@ const m_Controls = (() => {
         "чИнтервалАвтоскрытия",
         0.5,
         1,
-        "интервалавтоскрытия"
+        "autohideinterval"
       );
     }
   }
   function HandleMainMenuOpen() {
-    const elItem = GetNode("адресзаписи");
+    const elItem = GetNode("recordingurl");
     const sAddress = m_Twitch.GetRecordingUrlForCurrentPosition();
     if (sAddress) {
       elItem.href = sAddress;
@@ -4018,14 +4021,14 @@ const m_Controls = (() => {
     }
   }
   function HandlePause(bPause) {
-    ChangeButton("переключитьпаузу", bPause);
+    ChangeButton("togglepause", bPause);
   }
   function HandleBufferingPresetChange() {
     UpdateSettingsWindow();
     m_Statistics.ClearHistory();
   }
   function getReplaySpeed() {
-    const nodeSpeed = GetNode("скорость");
+    const nodeSpeed = GetNode("speed");
     if (nodeSpeed.options[0].text === "") {
       for (const node of nodeSpeed.options) {
         node.text = node.defaultSelected
@@ -4038,7 +4041,7 @@ const m_Controls = (() => {
     return nSpeed;
   }
   function setReplaySpeed(nCode) {
-    const nodeSpeed = GetNode("скорость");
+    const nodeSpeed = GetNode("speed");
     if (!Number.isSafeInteger(nCode)) {
       Check(
         nodeSpeed.selectedIndex >= 0 &&
@@ -4113,7 +4116,7 @@ const m_Controls = (() => {
     }
   );
   function UpdateBroadcastVariantList([moVariants, oSelectedVariant]) {
-    const nodeList = GetNode("варианттрансляции");
+    const nodeList = GetNode("broadcastvariant");
     nodeList.length = 0;
     if (moVariants) {
       for (const oVariant of moVariants) {
@@ -4136,18 +4139,18 @@ const m_Controls = (() => {
     nodeList.disabled = nodeList.length < 2;
   }
   function handleAdStart() {
-    document.body.classList.add("реклама");
+    document.body.classList.add("advert");
   }
   function handleAdEnd() {
-    document.body.classList.remove("реклама");
+    document.body.classList.remove("advert");
   }
   function handleBufferOverflow() {
     m_Notification.Show("svg-cut", true);
   }
   function Start() {
     Check(_nState === void 0);
-    GetNode("названиетрансляции").href = m_Twitch.GetChannelUrl(true);
-    const nodeVolume = GetNode("громкость");
+    GetNode("broadcasttitle").href = m_Twitch.GetChannelUrl(true);
+    const nodeVolume = GetNode("volume");
     nodeVolume.min = MIN_VOLUME;
     nodeVolume.addEventListener("input", HandleVolumeChange);
     UpdateVolume();
@@ -4194,20 +4197,20 @@ const m_Controls = (() => {
     document.documentElement.addEventListener("click", HandleLeftClick);
     document.addEventListener("keydown", HandleKeyDownAndUp);
     document.addEventListener("keyup", HandleKeyDownAndUp);
-    GetNode("скорость").addEventListener(
+    GetNode("speed").addEventListener(
       "change",
       HandlePlaybackSpeedChange
     );
-    GetNode("варианттрансляции").addEventListener(
+    GetNode("broadcastvariant").addEventListener(
       "change",
       HandleBroadcastVariantChange
     );
-    GetNode("менятьгромкостьколесом").addEventListener(
+    GetNode("wheelvolume").addEventListener(
       "change",
       HandleWheelVolumeChange
     );
-    GetNode("адресчата").addEventListener("change", HandleChatUrlChange);
-    GetNode("выборфайладляимпортанастроек").addEventListener(
+    GetNode("chaturl").addEventListener("change", HandleChatUrlChange);
+    GetNode("settingsimportfile").addEventListener(
       "change",
       HandleSettingsImportFileChoice
     );
@@ -4228,7 +4231,7 @@ const m_Controls = (() => {
     _nState = nNewState;
     document.body.setAttribute("data-состояние", nNewState);
     ChangeButton(
-      "переключитьтрансляцию",
+      "togglebroadcast",
       nNewState === STATE_STOP ||
       nNewState === STATE_REPEAT
     );
@@ -4265,7 +4268,7 @@ const m_Controls = (() => {
           nBroadcastDuration: null,
         });
         m_Twitch.FinishCollectingBroadcastMetadata(true);
-        GetNode("статистика-задержкатрансляции").textContent = "";
+        GetNode("statistics-broadcastlatency").textContent = "";
         break;
 
       case STATE_LOADING:
@@ -4279,7 +4282,7 @@ const m_Controls = (() => {
           kViewers: null,
         });
         m_Twitch.FinishCollectingBroadcastMetadata(false);
-        GetNode("статистика-задержкатрансляции").textContent = "";
+        GetNode("statistics-broadcastlatency").textContent = "";
         break;
 
       default:
@@ -4295,17 +4298,17 @@ const m_Controls = (() => {
       ChangeDocumentTitle(
         `${oMetadata.sName} - Alternate Player for Twitch.tv`
       );
-      GetNode("канал-имя").textContent = oMetadata.sName;
+      GetNode("channel-name").textContent = oMetadata.sName;
     }
     if (oMetadata.sAvatar !== void 0) {
       Check(oMetadata.sAvatar);
-      GetNode("канал-аватар").src = oMetadata.sAvatar;
+      GetNode("channel-avatar").src = oMetadata.sAvatar;
     }
     if (oMetadata.sDescription !== void 0) {
-      GetNode("канал-описание").textContent = oMetadata.sDescription || "";
+      GetNode("channel-description").textContent = oMetadata.sDescription || "";
     }
     if (oMetadata.sLanguageCode !== void 0) {
-      const node = GetNode("канал-язык");
+      const node = GetNode("channel-language");
       if (oMetadata.sLanguageCode) {
         node.textContent = m_i18n.GetLanguageName(oMetadata.sLanguageCode);
         ShowElement(node.parentNode, true);
@@ -4314,7 +4317,7 @@ const m_Controls = (() => {
       }
     }
     if (oMetadata.kSubscribers !== void 0) {
-      const node = GetNode("канал-подписчиков");
+      const node = GetNode("channel-subscribers");
       if (Number.isFinite(oMetadata.kSubscribers)) {
         node.textContent = m_i18n.FormatNumber(oMetadata.kSubscribers);
         ShowElement(node.parentNode, true);
@@ -4323,7 +4326,7 @@ const m_Controls = (() => {
       }
     }
     if (oMetadata.nChannelCreated !== void 0) {
-      const node = GetNode("канал-создан");
+      const node = GetNode("channel-created");
       if (Number.isFinite(oMetadata.nChannelCreated)) {
         node.textContent = m_i18n.FormatDate(oMetadata.nChannelCreated);
         ShowElement(node.parentNode, true);
@@ -4332,7 +4335,7 @@ const m_Controls = (() => {
       }
     }
     if (oMetadata.moTeams !== void 0) {
-      ShowLinkArray(oMetadata.moTeams, "канал-команды");
+      ShowLinkArray(oMetadata.moTeams, "channel-teams");
     }
   }
   function ShowLinkArray(moLinks, pInsert) {
@@ -4353,7 +4356,7 @@ const m_Controls = (() => {
         nodeLink.rel = "noopener noreferrer";
         nodeLink.target = "_blank";
         if (oLink.sDescription) {
-          nodeLink.className = "канал-ссылка";
+          nodeLink.className = "channel-link";
           nodeLink.title = oLink.sDescription;
         }
         nodeLink.textContent = oLink.sName;
@@ -4367,19 +4370,19 @@ const m_Controls = (() => {
   function ShowViewerMetadata(oMetadata) {
     if (oMetadata.sName !== void 0) {
       if (oMetadata.sName !== "") {
-        GetNode("зритель-имя").textContent = oMetadata.sName;
+        GetNode("viewer-name").textContent = oMetadata.sName;
       } else {
-        m_i18n.InsertAdjacentHtmlMessage("зритель-имя", "content", "F0590");
+        m_i18n.InsertAdjacentHtmlMessage("viewer-name", "content", "F0590");
       }
     }
     if (oMetadata.nSubscription !== void 0) {
-      const node = GetNode("зритель-подписка");
+      const node = GetNode("viewer-subscription");
       if (oMetadata.nSubscription === SUBSCRIPTION_UPDATING) {
-        node.classList.add("обновляется");
+        node.classList.add("updating");
       } else {
-        node.classList.remove("обновляется");
+        node.classList.remove("updating");
         node.setAttribute("data-подписка", oMetadata.nSubscription);
-        GetNode("зритель-уведомлять").checked =
+        GetNode("viewer-notify").checked =
           oMetadata.nSubscription === SUBSCRIPTION_NOTIFY;
       }
     }
@@ -4391,7 +4394,7 @@ const m_Controls = (() => {
   };
   function ShowBroadcastMetadata(oMetadata) {
     if (oMetadata.sBroadcastType !== void 0) {
-      const node = GetNode("типтрансляции");
+      const node = GetNode("broadcasttype");
       if (typeof oMetadata.sBroadcastType == "string") {
         Check(_oBroadcastTypes.hasOwnProperty(oMetadata.sBroadcastType));
         node.textContent = GetText(_oBroadcastTypes[oMetadata.sBroadcastType][0]);
@@ -4399,7 +4402,7 @@ const m_Controls = (() => {
           _oBroadcastTypes[oMetadata.sBroadcastType][1]
         );
         node.classList.toggle(
-          "прямаятрансляция",
+          "livebroadcast",
           _oBroadcastTypes[oMetadata.sBroadcastType][2]
         );
         ShowElement(node.parentElement, true);
@@ -4410,13 +4413,13 @@ const m_Controls = (() => {
     }
     if (oMetadata.sBroadcastTitle !== void 0) {
       Check(oMetadata.sBroadcastTitle !== null);
-      const node = GetNode("названиетрансляции");
+      const node = GetNode("broadcasttitle");
       node.title = oMetadata.sBroadcastTitle + GetText("J0101");
       node.textContent = oMetadata.sBroadcastTitle;
       m_MediaQuery.updateQuickly();
     }
     if (oMetadata.sGameName !== void 0) {
-      const node = GetNode("категориятрансляции");
+      const node = GetNode("broadcastcategory");
       if (oMetadata.sGameName) {
         node.textContent = oMetadata.sGameName;
         node.title = node.previousElementSibling.title =
@@ -4435,7 +4438,7 @@ const m_Controls = (() => {
       m_MediaQuery.updateQuickly();
     }
     if (oMetadata.kViewers !== void 0) {
-      const node = GetNode("количествозрителей");
+      const node = GetNode("viewercount");
       if (
         Number.isFinite(oMetadata.kViewers) &&
         oMetadata.kViewers >= 0
@@ -4450,7 +4453,7 @@ const m_Controls = (() => {
       m_MediaQuery.updateQuickly();
     }
     if (oMetadata.nBroadcastDuration !== void 0) {
-      GetNode("позиция").textContent =
+      GetNode("position").textContent =
         Number.isFinite(oMetadata.nBroadcastDuration) &&
           oMetadata.nBroadcastDuration >= 0
           ? m_i18n.SecondsToString(
@@ -4475,7 +4478,7 @@ const m_Chat = (() => {
   //! <iframe>
   function GetPanelPosition() {
     switch (
-    getComputedStyle(document.getElementById("проигрывательичат"))
+    getComputedStyle(document.getElementById("playerandchat"))
       .flexDirection
     ) {
       case "column-reverse":
@@ -4502,10 +4505,10 @@ const m_Chat = (() => {
     m_Log.Вот(`[Чат] Вставляю iframe ${sAddress}`);
     _nodeChat = document.createElement("iframe");
     _nodeChat.src = sAddress;
-    _nodeChat.id = "чат";
+    _nodeChat.id = "chat";
     _nodeChat.width = m_Settings.Get("чШиринаПанелиЧата");
     _nodeChat.height = m_Settings.Get("чВысотаПанелиЧата");
-    GetNode("размерчата").insertAdjacentElement("afterend", _nodeChat);
+    GetNode("chatsize").insertAdjacentElement("afterend", _nodeChat);
   }
   function RemovePanel() {
     if (_nodeChat) {
@@ -4528,18 +4531,18 @@ const m_Chat = (() => {
     CancelPanelDrag();
     switch (nState) {
       case CHAT_UNLOADED:
-        document.body.classList.add("скрытьчат");
+        document.body.classList.add("hidechat");
         RemovePanel();
         break;
 
       case CHAT_HIDDEN:
         InsertPanel();
-        document.body.classList.add("скрытьчат");
+        document.body.classList.add("hidechat");
         break;
 
       case CHAT_PANEL:
         InsertPanel();
-        document.body.classList.remove("скрытьчат");
+        document.body.classList.remove("hidechat");
         break;
 
       default:
@@ -4551,22 +4554,22 @@ const m_Chat = (() => {
     CancelPanelDrag();
     const oClasses = document.body.classList;
     if (m_Settings.Get("лАвтоПоложениеЧата")) {
-      oClasses.add("автоположениечата");
+      oClasses.add("autochatposition");
       oClasses.toggle(
-        "чатвверху",
+        "chattop",
         m_Settings.Get("чВертикальноеПоложениеЧата") === TOP_SIDE
       );
       oClasses.toggle(
-        "чатслева",
+        "chatleft",
         m_Settings.Get("чГоризонтальноеПоложениеЧата") === LEFT_SIDE
       );
     } else {
       const nPosition = m_Settings.Get("чПоложениеПанелиЧата");
-      oClasses.remove("автоположениечата");
-      oClasses.toggle("чатвверху", nPosition === TOP_SIDE);
-      oClasses.toggle("чатсправа", nPosition === RIGHT_SIDE);
-      oClasses.toggle("чатвнизу", nPosition === BOTTOM_SIDE);
-      oClasses.toggle("чатслева", nPosition === LEFT_SIDE);
+      oClasses.remove("autochatposition");
+      oClasses.toggle("chattop", nPosition === TOP_SIDE);
+      oClasses.toggle("chatright", nPosition === RIGHT_SIDE);
+      oClasses.toggle("chatbottom", nPosition === BOTTOM_SIDE);
+      oClasses.toggle("chatleft", nPosition === LEFT_SIDE);
     }
     m_MediaQuery.updateSlowly();
   }
@@ -4673,11 +4676,11 @@ const m_Chat = (() => {
           if (oParameters.bChangedX) {
             const nMaxSize =
               Number.parseInt(
-                getComputedStyle(GetNode("проигрывательичат")).width,
+                getComputedStyle(GetNode("playerandchat")).width,
                 10
               ) -
               Number.parseInt(
-                getComputedStyle(GetNode("проигрыватель")).minWidth,
+                getComputedStyle(GetNode("player")).minWidth,
                 10
               );
             _nodeChat.width = Math.max(
@@ -4694,11 +4697,11 @@ const m_Chat = (() => {
         } else if (oParameters.bChangedY) {
           const nMaxSize =
             Number.parseInt(
-              getComputedStyle(GetNode("проигрывательичат")).height,
+              getComputedStyle(GetNode("playerandchat")).height,
               10
             ) -
             Number.parseInt(
-              getComputedStyle(GetNode("проигрыватель")).minHeight,
+              getComputedStyle(GetNode("player")).minHeight,
               10
             );
           _nodeChat.height = Math.max(
@@ -4733,7 +4736,7 @@ const m_Chat = (() => {
     }
   }
   function CancelPanelDrag() {
-    m_Dragger.CancelDrag("размерчата");
+    m_Dragger.CancelDrag("chatsize");
   }
   HandleFullscreenChange.nStateInNormalMode = -1;
   function HandleFullscreenChange(bEnabled) {
@@ -4797,7 +4800,7 @@ const m_AudioDevice = (() => {
   const COMMUNICATION_DEVICE = "communications";
   let _oMediaElement = null;
   function refreshDeviceListAndSelectDevice() {
-    const nodeDeviceList = GetNode("аудиоустройства-список");
+    const nodeDeviceList = GetNode("audiodevices-list");
     m_Log.Окак("[Аудиоустройства] Получаю список медиаустройств");
     navigator.mediaDevices
       .enumerateDevices()
@@ -4805,7 +4808,7 @@ const m_AudioDevice = (() => {
         (moMediaDevices) => {
           if (!Array.isArray(moMediaDevices)) {
             m_Log.Ой("[Аудиоустройства] Список аудиоустройств недоступен");
-            ShowElement("аудиоустройства", false);
+            ShowElement("audiodevices", false);
             return;
           }
           nodeDeviceList.length = 0;
@@ -4858,11 +4861,11 @@ const m_AudioDevice = (() => {
               getBrowserEngineVersion() <= 68 &&
               chrome.extension.inIncognitoContext
             ) {
-              ShowElement("аудиоустройства", false);
+              ShowElement("audiodevices", false);
             } else {
-              ShowElement("аудиоустройства-доступ", true);
+              ShowElement("audiodevices-access", true);
               ShowElement(nodeDeviceList, false);
-              ShowElement("аудиоустройства", true);
+              ShowElement("audiodevices", true);
               m_Events.AddHandler(
                 "управление-левыйщелчок",
                 handleClickAndRequestAudioDeviceAccess
@@ -4874,10 +4877,10 @@ const m_AudioDevice = (() => {
             }
             nodeDeviceList.value = sCurrentDevice;
             nodeDeviceList.disabled = nodeDeviceList.length === 0;
-            ShowElement("аудиоустройства-доступ", false);
+            ShowElement("audiodevices-access", false);
             ShowElement(nodeDeviceList, true);
             if (kRealDevices > 1) {
-              ShowElement("аудиоустройства", true);
+              ShowElement("audiodevices", true);
               nodeDeviceList.addEventListener(
                 "change",
                 handleDeviceChoice
@@ -4922,7 +4925,7 @@ const m_AudioDevice = (() => {
       .catch(m_Debug.CaughtException);
   }
   function handleClickAndRequestAudioDeviceAccess({ sCallsign }) {
-    if (sCallsign !== "аудиоустройства-доступ") {
+    if (sCallsign !== "audiodevices-access") {
       return;
     }
     m_Log.Окак("[Аудиоустройства] Запрашиваю разрешение contentSettings");
@@ -5297,7 +5300,7 @@ const m_Player = (() => {
       m_Log[nFetch > 0 && nPlayback > -0.1 ? "Вот" : "Ой"](
         `[Проигрыватель] Задержка трансляции: ${sLatency}с`
       );
-      GetNode("статистика-задержкатрансляции").textContent = sLatency;
+      GetNode("statistics-broadcastlatency").textContent = sLatency;
     }
   }
   function ApplyVolume() {
@@ -5884,7 +5887,7 @@ const m_Player = (() => {
   function SetReplaySpeed(nSpeed) {
     Check(nSpeed > 0);
     Check(m_Controls.GetState() === STATE_REPEAT);
-    m_Log.Окак(`[Проигрыватель] Задана скорость ${nSpeed}`);
+    m_Log.Окак(`[Проигрыватель] Задана speed ${nSpeed}`);
     _oMediaElement.playbackRate = nSpeed;
   }
   function StartReplay() {
@@ -5984,7 +5987,7 @@ const m_Player = (() => {
       "removesourcebuffer",
       WatchMediaSourceEvents
     );
-    _oMediaElement = document.getElementById("глаз");
+    _oMediaElement = document.getElementById("eye");
     ApplyVolume();
     m_PictureInPicture.start(_oMediaElement);
     for (let sEvent of [
@@ -6983,7 +6986,7 @@ const m_Playlist = (() => {
       );
       if (sAdType) {
         m_Log.Окак(
-          `[Список] Найдена реклама ТипРекламы=${sAdType} ТокенРекламы=${sAdToken.slice(
+          `[Список] Найдена advert ТипРекламы=${sAdType} ТокенРекламы=${sAdToken.slice(
             -10
           )} Роликов=${kAdClips} НомерРолика=${nAdClipNumber} ПродолжительностьРолика=${nAdClipDuration} НомерКвартеля=${nQuartileNumber} ЗаканчиваетсяРекламой=${thisListEndsWithAd(
             oSegmentList
@@ -8430,7 +8433,7 @@ const m_Twitch = (() => {
       true,
       true,
       true,
-      "не отслеживать канал"
+      "не отслеживать channel"
     )
       .then((oResult) => {
         if (
@@ -8446,7 +8449,7 @@ const m_Twitch = (() => {
       })
       .catch((pReason) => {
         if (typeof pReason == "string") {
-          m_Log.Ой(`[Twitch] Не удалось не отслеживать канал. ${pReason}`);
+          m_Log.Ой(`[Twitch] Не удалось не отслеживать channel. ${pReason}`);
           m_Notification.ShowAss();
           m_Events.SendEvent("twitch-полученыметаданныезрителя", {
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
@@ -8480,7 +8483,7 @@ const m_Twitch = (() => {
       true,
       true,
       true,
-      "отслеживать канал"
+      "отслеживать channel"
     )
       .then((oResult) => {
         if (
@@ -8499,7 +8502,7 @@ const m_Twitch = (() => {
       })
       .catch((pReason) => {
         if (typeof pReason == "string") {
-          m_Log.Ой(`[Twitch] Не удалось отслеживать канал. ${pReason}`);
+          m_Log.Ой(`[Twitch] Не удалось отслеживать channel. ${pReason}`);
           m_Notification.ShowAss();
           m_Events.SendEvent("twitch-полученыметаданныезрителя", {
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
@@ -9349,7 +9352,7 @@ AddExceptionHandler(() => {
       AddExceptionHandler((oMessage, _, fRespond) => {
         if (oMessage.sQuery === "ЭтотКаналУжеОткрыт") {
           m_Log.Ой(
-            `[Запускалка] В другой вкладке открыт канал ${oMessage.sChannel}`
+            `[Запускалка] В другой вкладке открыт channel ${oMessage.sChannel}`
           );
           if (oMessage.sChannel === sChannel) {
             fRespond(true);

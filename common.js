@@ -630,7 +630,7 @@ const m_Settings = (() => {
 		// sSelected: 'sPresetSelected_buffering',
 		sFilled: 'лПредустановкаЗаполнена_буферизация',
 		// sFilled: 'bPresetFilled_buffering',
-		sList: 'предустановка-буферизация',
+		sList: 'preset-buffering',
 		// sList: 'preset-buffering',
 		sEvent: 'настройки-измениласьпредустановка-буферизация'
 		// sEvent: 'settings-presetChanged-buffering'
@@ -643,7 +643,7 @@ const m_Settings = (() => {
 		// sSelected: 'sPresetSelected_appearance',
 		sFilled: 'лПредустановкаЗаполнена_оформление',
 		// sFilled: 'bPresetFilled_appearance',
-		sList: 'предустановка-оформление',
+		sList: 'preset-appearance',
 		// sList: 'preset-appearance',
 		sEvent: 'настройки-измениласьпредустановка-оформление'
 		// sEvent: 'settings-presetChanged-appearance'
@@ -824,7 +824,7 @@ const m_Settings = (() => {
 	// let _bDelayedDelete = false;
 	function Restore() {
 	// function Restore() {
-		m_Log.Вот('[Настройки] Восстанавливаю настройки');
+		m_Log.Вот('[Настройки] Восстанавливаю settings');
 		// m_Log.Here('[Settings] Restoring settings');
 		return new Promise((fResolve, fReject) => {
 		// return new Promise((fResolve, fReject) => {
@@ -985,7 +985,7 @@ const m_Settings = (() => {
 		// if (bDeleteRest) {
 			chrome.storage.local.clear(CheckSaveResult);
 			// chrome.storage.local.clear(CheckSaveResult);
-			m_Log.Вот('[Настройки] Все настройки удалены из хранилища');
+			m_Log.Вот('[Настройки] Все settings удалены из хранилища');
 			// m_Log.Here('[Settings] All settings deleted from storage');
 		}
 		chrome.storage.local.set(oSave, CheckSaveResult);
@@ -1003,7 +1003,7 @@ const m_Settings = (() => {
 	}
 	function Reset() {
 	// function Reset() {
-		m_Log.Окак('[Настройки] Сбрасываю настройки');
+		m_Log.Окак('[Настройки] Сбрасываю settings');
 		// m_Log.Wow('[Settings] Resetting settings');
 		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
@@ -1020,7 +1020,7 @@ const m_Settings = (() => {
 	}
 	function Export() {
 	// function Export() {
-		m_Log.Окак('[Настройки] Экспортирую настройки');
+		m_Log.Окак('[Настройки] Экспортирую settings');
 		// m_Log.Wow('[Settings] Exporting settings');
 		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
@@ -1037,14 +1037,14 @@ const m_Settings = (() => {
 				// oExport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
-		m_Log.Вот(`[Настройки] Отобраны настройки для экспорта: ${m_Log.O(oExport)}`);
+		m_Log.Вот(`[Настройки] Отобраны settings для экспорта: ${m_Log.O(oExport)}`);
 		// m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
 		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', GetText('J0133'));
 		// WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Text('J0133'));
 	}
 	function Import(oFromFile) {
 	// function Import(oFromFile) {
-		m_Log.Окак(`[Настройки] Импортирую настройки из файла ${oFromFile.name}`);
+		m_Log.Окак(`[Настройки] Импортирую settings из файла ${oFromFile.name}`);
 		// m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
 		Check(_oSettings.чВерсияНастроек.pCurrent);
 		// Check(_oSettings.nSettingsVersion.pCurrent);
