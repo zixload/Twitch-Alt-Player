@@ -1005,5 +1005,11 @@
   "чВД": "nDTS",
   "чВППоследнегоВидеоСемпла": "nLastVideoSampleCTO",
   "чВП": "nCTO",
-  "лСегментПреобразован": "bSegmentConverted"
+  "лСегментПреобразован": "bSegmentConverted",
+  "dvСегмент": "dvSegment",
+  "dvМедиасегмент": "dvMediaSegment",
+  "мбМедиасегмент": "mbMediaSegment",
+  "скрипт": "script",
+  "_лНеПерехватывать": "_bDoNotIntercept",
+  "сБыло": "sWas"
 }

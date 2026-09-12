@@ -1376,8 +1376,8 @@ var m_Log = (() => {
 	function CreateInitSegment() {
 		var kbSize = 1100 + (_abSequenceParameterSet === null ? 0 : _abSequenceParameterSet.length) + (_abPictureParameterSet === null ? 0 : _abPictureParameterSet.length) + (_abSequenceParameterSetExt === null ? 0 : _abSequenceParameterSetExt.length) + (_trAudio.Empty() ? 0 : _anDecoderSpecificInfo.length);
 		var mbSegment = new Uint8Array(kbSize);
-		var dvСегмент = CreateDataView(mbSegment);
-		var oSegment = new IsoBaseMedia(mbSegment, dvСегмент, 0);
+		var dvSegment = CreateDataView(mbSegment);
+		var oSegment = new IsoBaseMedia(mbSegment, dvSegment, 0);
 		oSegment.AddBox('ftyp', [ 105, 115, 111, 54, 0, 0, 0, 0, 97, 118, 99, 49 ]);
 		oSegment.AddBox('moov', () => {
 			oSegment.AddFullBox('mvhd', 1, 0, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 255, 255, 255, 255, 255, 255, 255, 255, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255 ]);
@@ -1536,20 +1536,20 @@ var m_Log = (() => {
 		});
 	}
 	function CreateMediaSegment(мбМедиасегмент) {
-		var dvМедиасегмент = CreateDataView(мбМедиасегмент);
-		var oSegment = new IsoBaseMedia(мбМедиасегмент, dvМедиасегмент, 0);
+		var dvMediaSegment = CreateDataView(мбМедиасегмент);
+		var oSegment = new IsoBaseMedia(мбМедиасегмент, dvMediaSegment, 0);
 		var uVideoDataOffset, uAudioDataOffset;
 		oSegment.AddBox('moof', () => {
 			oSegment.AddFullBox('mfhd', 0, 0, 4);
-			dvМедиасегмент.setUint32(oSegment.uEnd - 4, 0);
+			dvMediaSegment.setUint32(oSegment.uEnd - 4, 0);
 			if (!_trVideo.Empty()) {
 				oSegment.AddBox('traf', () => {
 					oSegment.AddFullBox('tfhd', 0, 131072, 4);
-					dvМедиасегмент.setUint32(oSegment.uEnd - 4, VIDEO_TRACK_NUMBER);
+					dvMediaSegment.setUint32(oSegment.uEnd - 4, VIDEO_TRACK_NUMBER);
 					oSegment.AddFullBox('tfdt', 1, 0, 8);
 					мбМедиасегмент.setUint64(oSegment.uEnd - 8, _trVideo.nStartDTS);
 					oSegment.AddFullBox('trun', 1, 3841, () => {
-						dvМедиасегмент.setUint32(oSegment.uEnd, _trVideo.GetSampleCount());
+						dvMediaSegment.setUint32(oSegment.uEnd, _trVideo.GetSampleCount());
 						uVideoDataOffset = oSegment.uEnd + 4;
 						oSegment.CopyFromBuffer(oSegment.uEnd + 8, _mbHeap, _trVideo.uSamplesStart, _trVideo.uSamplesEnd);
 					});
@@ -1558,11 +1558,11 @@ var m_Log = (() => {
 			if (!_trAudio.Empty()) {
 				oSegment.AddBox('traf', () => {
 					oSegment.AddFullBox('tfhd', 0, 131072, 4);
-					dvМедиасегмент.setUint32(oSegment.uEnd - 4, AUDIO_TRACK_NUMBER);
+					dvMediaSegment.setUint32(oSegment.uEnd - 4, AUDIO_TRACK_NUMBER);
 					oSegment.AddFullBox('tfdt', 1, 0, 8);
 					мбМедиасегмент.setUint64(oSegment.uEnd - 8, Math.round(_trAudio.nStartDTS / TS_TIMESCALE * _nSampleRate));
 					oSegment.AddFullBox('trun', 1, 513, () => {
-						dvМедиасегмент.setUint32(oSegment.uEnd, _trAudio.GetSampleCount());
+						dvMediaSegment.setUint32(oSegment.uEnd, _trAudio.GetSampleCount());
 						uAudioDataOffset = oSegment.uEnd + 4;
 						oSegment.CopyFromBuffer(oSegment.uEnd + 8, _mbHeap, _trAudio.uSamplesStart, _trAudio.uSamplesEnd);
 					});
@@ -1571,11 +1571,11 @@ var m_Log = (() => {
 		});
 		oSegment.AddBox('mdat', () => {
 			if (!_trVideo.Empty()) {
-				dvМедиасегмент.setInt32(uVideoDataOffset, oSegment.uEnd - oSegment.uStart);
+				dvMediaSegment.setInt32(uVideoDataOffset, oSegment.uEnd - oSegment.uStart);
 				oSegment.CopyFromBuffer(oSegment.uEnd, _mbHeap, _trVideo.uStreamStart, _trVideo.uStreamEnd);
 			}
 			if (!_trAudio.Empty()) {
-				dvМедиасегмент.setInt32(uAudioDataOffset, oSegment.uEnd - oSegment.uStart);
+				dvMediaSegment.setInt32(uAudioDataOffset, oSegment.uEnd - oSegment.uStart);
 				oSegment.CopyFromBuffer(oSegment.uEnd, _mbHeap, _trAudio.uStreamStart, _trAudio.uStreamEnd);
 			}
 		});

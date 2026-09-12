@@ -7,11 +7,11 @@
 
     // Function from content.js: перехватитьФункции()
     // Function from content.js: interceptFunctions()
-    let _лНеПерехватывать = false;
+    let _bDoNotIntercept = false;
     // let _bDoNotIntercept = false;
     window.addEventListener('tw5-неперехватывать', () => {
     // window.addEventListener('tw5-donotintercept', () => {
-        _лНеПерехватывать = true;
+        _bDoNotIntercept = true;
         // _bDoNotIntercept = true;
     });
     const oTitleDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
@@ -22,7 +22,7 @@
             return oTitleDescriptor.get.call(this);
         },
         set(title) {
-            if (_лНеПерехватывать) {
+            if (_bDoNotIntercept) {
             // if (_bDoNotIntercept) {
                 oTitleDescriptor.set.call(this, title);
             } else if (this.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
@@ -35,15 +35,15 @@
     });
     const fPushState = history.pushState;
     history.pushState = function (state, title) {
-        if (_лНеПерехватывать) {
+        if (_bDoNotIntercept) {
         // if (_bDoNotIntercept) {
             fPushState.apply(this, arguments);
         } else if (document.documentElement.hasAttribute('data-tw5-перенаправление')) {} else {
         // } else if (document.documentElement.hasAttribute('data-tw5-redirect')) {} else {
-            const сБыло = location.pathname;
+            const sWas = location.pathname;
             // const sWas = location.pathname;
             fPushState.apply(this, arguments);
-            if (сБыло !== location.pathname) {
+            if (sWas !== location.pathname) {
             // if (sWas !== location.pathname) {
                 oTitleDescriptor.set.call(document, 'Twitch');
                 window.dispatchEvent(new CustomEvent('tw5-pushstate'));
