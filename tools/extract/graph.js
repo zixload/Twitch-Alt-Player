@@ -45,15 +45,19 @@ const traverse = traverseModule.default || traverseModule;
 // Les deux seuls modules qu'un autre module peut appeler pendant sa construction.
 const CONSTRUCTION_ALLOWED = new Set(['m_Log', 'm_Events']);
 /*
-	Exceptions mesurees, chacune nommee, jamais une regle elargie en silence.
+	Exceptions mesurees, chacune nommee, jamais une regle elargie en silence. Vide aujourd'hui.
 
-	m_FullscreenMode appelle Update() a la fin de sa construction ; Update appelle ChangeButton, qui
-	appelle GetText des que le bouton porte une infobulle, et GetText appelle m_i18n.GetMessage. Le
-	releve de REPARTITION.md (« onze appels, tous vers m_Log ou m_Events ») ne suivait que les appels
-	directs et ne l'a pas vu. m_i18n est dans common.js, charge avant tout le reste : rien ne casse
-	aujourd'hui. A retirer quand m_FullscreenMode sera reecrit (agent B).
+	Elle en a porte une : m_FullscreenMode appelait Update() a la fin de sa construction, Update
+	appelait ChangeButton, qui appelait GetText des qu'un bouton portait une infobulle, et GetText
+	appelait m_i18n. Le releve de REPARTITION.md (« onze appels, tous vers m_Log ou m_Events ») ne
+	suivait que les appels directs et ne l'avait pas vu. La reecriture de m_FullscreenMode a differe
+	cette mise a jour d'une image : l'appel n'a plus lieu pendant la construction, et l'exception est
+	partie avec lui.
+
+	Le mecanisme reste : une exception nommee, datee et justifiee vaut mieux qu'une regle qu'on
+	elargit parce qu'un cas ne rentre pas.
 */
-const CONSTRUCTION_EXCEPTIONS = new Map([['m_FullscreenMode', new Set(['m_i18n'])]]);
+const CONSTRUCTION_EXCEPTIONS = new Map();
 const isModuleName = (n) => /^m_[A-Za-z0-9]+$/.test(n);
 
 // Rend la fonction qu'on lui passe, enveloppee : son resultat vaut la fonction.
