@@ -115,6 +115,7 @@ function charger({ nHasard = 0.5 } = {}) {
 		aoNotifications: [],
 		asOnglets: [],
 		asRemplacements: [],
+		asJournal: [],
 		aoCookies: [],
 		aoCookiesEffaces: [],
 		fEcouteurCookies: null,
@@ -218,7 +219,7 @@ function charger({ nHasard = 0.5 } = {}) {
 		getCurrentTab: { nTabId: 7 },
 		OpenAddressInNewTab: s => t.asOnglets.push(s),
 		GetText: s => `<${s}>`,
-		m_Log: { Here() {}, Wow() {}, Oops() {}, O: p => JSON.stringify(p), F0: n => String(Math.round(n)) },
+		m_Log: { Here() {}, Wow() {}, Oops: s => t.asJournal.push(s), O: p => JSON.stringify(p), F0: n => String(Math.round(n)) },
 		m_Settings: { Get: s => t.oReglages[s] },
 		m_Player: { GetBroadcastPlaybackPosition: () => t.nPosition },
 		m_Events: { SendEvent: (s, p) => t.aoEvenements.push([ s, p ]) },
@@ -436,7 +437,13 @@ await cas(async () => {
 	await t.avancer(0);
 	ok(t.requetes('follow channel').length === 2, 'un seul renvoi');
 	ok(t.kAss === 1 && t.evenements('twitch-viewermetadatareceived').pop().nSubscription === t.S.UNAVAILABLE,
-		'un second refus d integrite est definitif : ACCESS_DENIED');
+		'un second refus d integrite est definitif');
+	/*
+		Pas seulement un echec : CET echec. m_Playlist arrete la lecture sur la raison ACCESS_DENIED et
+		pas sur une autre ; une reponse en erreur rendue telle quelle ferait echouer l abonnement de la
+		meme facon a l ecran, sous une autre raison.
+	*/
+	ok(t.asJournal.some(s => s === '[Twitch] Could not follow channel. ACCESS_DENIED'), 'et la raison est bien ACCESS_DENIED');
 });
 await cas(async () => {
 	const t = charger();
@@ -493,6 +500,7 @@ await cas(async () => {
 	await t.avancer(10000);
 	ok(t.requetes('follow channel').length === 2, 'occupe, puis refus d integrite au renvoi');
 	ok(t.kAss === 1 && t.aoCookiesEffaces.length === 1, 'le refus au renvoi est definitif, et le jeton efface');
+	ok(t.asJournal.some(s => s === '[Twitch] Could not follow channel. ACCESS_DENIED'), 'sous la raison ACCESS_DENIED');
 });
 
 titre('5. Adresse du flux');
@@ -644,6 +652,7 @@ await cas(async () => {
 	ok(t.requetes('broadcast metadata')[1].oVariables.all === false, 'sans redemander l archive');
 	const o2 = t.evenements('twitch-broadcastmetadatareceived')[1];
 	ok(o2.sBroadcastType === void 0 && o2.sBroadcastTitle === 'Titre', 'le type n est donne qu une fois, le titre a chaque fois');
+	ok(t.apExceptions.length === 0 && t.asMessages.length === 0, 'deux minutes de collecte sans exception ni arret');
 });
 await cas(async () => {
 	const t = charger();
@@ -655,6 +664,8 @@ await cas(async () => {
 	ok(o.sBroadcastType === 'replay' && o.sBroadcastTitle === '<J0103>' && o.sGameName === null && o.sGameUrl === void 0,
 		'rediffusion ; titre vide remplace ; pas de jeu');
 	ok(t.requetes('view tracking').length === 0, 'sans spectateur connecte, aucun suivi de visionnage');
+	// Dans le vrai lecteur, une exception ici passe par m_Debug.CaughtException : le lecteur s arrete.
+	ok(t.apExceptions.length === 0, 'et sans exception : ne pas suivre n est pas une erreur');
 });
 await cas(async () => {
 	const t = charger();

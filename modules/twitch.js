@@ -1,86 +1,137 @@
 "use strict";
+/*
+	Everything the player says to Twitch, and everything it learns back.
 
+	Who is watching and from which device, read from Twitch's own cookies. Which channel this is,
+	and the address of its stream. The title, the game and the viewer count, refreshed every minute.
+	Following and unfollowing, clips, the address of the recording at the current position, and the
+	third-party chat extensions the content script may insert.
+
+	Almost all of it goes through one door: Twitch's GraphQL endpoint, by sendGqlRequest. That door
+	has two ways of saying no, and the rules for them are the part of this module most worth
+	reading, because a mistake there crashes nothing. It surfaces days later as a player that stops
+	on a channel that plays fine in the browser, or one that hammers the server.
+
+    - "failed integrity check": the Client-Integrity token was refused. It is forgotten, and the
+      request is sent again ONCE with a new one -- unless no token was asked for, or the refused
+      one had just been obtained, in which case the answer is ACCESS_DENIED. If another tab has
+      already replaced the refused token in the meantime, that one is used rather than capturing
+      yet another. A refusal on the second attempt is final.
+    - "service timeout": the server is busy. When the caller allows it, the request is sent again
+      once, after five seconds plus up to half as much again, so that many players do not return
+      at the same instant. Busy twice, the response is handed back with its errors.
+
+	Any other error is handed back as it came.
+
+	The integrity token itself cannot be computed here. The page Twitch serves computes it. So a
+	hidden frame is pointed at a Twitch page, where gql_injection.js catches the token Twitch's own
+	code obtains and writes it to a cookie; the cookie change is what wakes the waiting request.
+	After thirty seconds without one, the answer is ACCESS_DENIED.
+
+	The address of the main stream is kept for fifteen minutes, the lifetime of the playback token
+	inside it. The ad-free stream, requested under another player type, is never kept.
+
+	Three functions further down are not part of this rewrite; the comment above them says why.
+*/
 const m_Twitch = (() => {
-  const BROADCAST_METADATA_UPDATE_INTERVAL = 6e4;
+  const GQL_ENDPOINT = "https://gql.twitch.tv/gql";
+  const CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
+  const INTEGRITY_REFUSED = "failed integrity check";
+  const SERVER_BUSY = "service timeout";
+  const RESEND_AFTER = 5e3;
+  const GQL_TOKEN_WAIT = 3e4;
+  const GQL_TOKEN_COOKIE = "tw5~gqltoken";
+  const COOKIE_STORE = "https://www.twitch.tv/tw5~storage/";
+  const STREAM_TOKEN_LIFETIME = 15 * 60 * 1e3;
+  const BROADCAST_METADATA_INTERVAL = 6e4;
   const VIEW_TRACKING_INTERVAL = 6e4;
-  let _sViewTrackingUrl = "https://spade.twitch.tv/track";
+  const MISSING_AVATAR = "player.svg#svg-missingavatar";
+
+  // How a cookie reached parseCookie: read once at start, written later, or removed later.
+  const COOKIE_READ_AT_START = 1;
+  const COOKIE_WRITTEN = 2;
+  const COOKIE_REMOVED = 3;
+
   let _sChannelLogin = "";
   let _sChannelId = "";
+
+  // The broadcast being watched. Both are forgotten when it ends.
   let _sBroadcastId = "";
   let _sRecordingUrl = "";
-  let _sDeviceId = "";
+
   let _sViewerId = "";
   let _sViewerLogin = "";
   let _sViewerToken = "";
   let _sViewerName = "";
+  let _sDeviceId = "";
+
   let _sGqlToken = "";
   let _nGqlTokenExpiresAfter = 0;
-  let _sPlaySessionID = "";
-  let _oMetadataUpdateCancel = null;
+  // While a capture frame is out: the promise every waiting request shares, and what the cookie
+  // listener calls when a token arrives.
+  let _oGqlTokenPromise = null;
+  let _fGqlTokenArrived = null;
+
+  let _sStreamUrl = "";
+  let _nStreamUrlExpiresAfter = -1;
+
+  let _sViewTrackingUrl = "https://spade.twitch.tv/track";
   let _nViewTrackingTimer = 0;
-  function ClearBroadcastData() {
-    _sBroadcastId = _sRecordingUrl = "";
-  }
+  let _oMetadataUpdateCancel = null;
+
+  // --- Addresses ---
+
   function GetChannelUrl(bDoNotRedirect) {
-    return bDoNotRedirect
-      ? `https://www.twitch.tv/${encodeURIComponent(
-        _sChannelLogin
-      )}?${DO_NOT_REDIRECT_ADDRESS}`
-      : `https://www.twitch.tv/${encodeURIComponent(_sChannelLogin)}`;
+    const sUrl = `https://www.twitch.tv/${encodeURIComponent(_sChannelLogin)}`;
+    return bDoNotRedirect ? `${sUrl}?${DO_NOT_REDIRECT_ADDRESS}` : sUrl;
   }
-  function GetChatPanelUrl() {
+
+  function getChatPanelUrl() {
+    const sChannel = encodeURIComponent(_sChannelLogin);
     if (m_Settings.Get("bFullChat")) {
-      return `https://www.twitch.tv/popout/${encodeURIComponent(
-        _sChannelLogin
-      )}/chat?no-mobile-redirect=true&popout=`;
+      return `https://www.twitch.tv/popout/${sChannel}/chat?no-mobile-redirect=true&popout=`;
     }
-    return `https://www.twitch.tv/embed/${encodeURIComponent(
-      _sChannelLogin
-    )}/chat?${m_Settings.Get("bDimChat") ? "darkpopout&" : ""
-      }parent=localhost`;
+    const sDim = m_Settings.Get("bDimChat") ? "darkpopout&" : "";
+    return `https://www.twitch.tv/embed/${sChannel}/chat?${sDim}parent=localhost`;
   }
-  function GetRecordingUrl(sRecordingId) {
+
+  function getRecordingUrl(sRecordingId) {
     Check(IsNonEmptyString(sRecordingId));
     return `https://www.twitch.tv/videos/${encodeURIComponent(sRecordingId)}`;
   }
+
   function getCategoryUrl(sCategoryName) {
     Check(IsNonEmptyString(sCategoryName));
-    return `https://www.twitch.tv/directory/category/${encodeURIComponent(
-      sCategoryName
-    )}`;
+    return `https://www.twitch.tv/directory/category/${encodeURIComponent(sCategoryName)}`;
   }
+
   function getTeamUrl(sTeamName) {
     Check(IsNonEmptyString(sTeamName));
     return `https://www.twitch.tv/team/${encodeURIComponent(sTeamName)}`;
   }
+
+  // The only hosts the downloader may fetch from. Anything else is a bug or an attack.
   function checkUrlAvailability(sAddress) {
-    if (
-      !/^https?:\/\/(?:[^/]+\.)?(?:twitch\.tv|twitchcdn\.net|ttvnw\.net|jtvnw\.net|live-video\.net|akamaized\.net|cloudfront\.net)\//.test(
-        sAddress
-      )
-    ) {
+    if (!/^https?:\/\/(?:[^/]+\.)?(?:twitch\.tv|twitchcdn\.net|ttvnw\.net|jtvnw\.net|live-video\.net|akamaized\.net|cloudfront\.net)\//.test(sAddress)) {
       throw new Error(`Unknown address: ${sAddress}`);
     }
   }
+
   function createUniqueIdentifier(kLength) {
     Check(Number.isInteger(kLength) && kLength > 0);
-    const sAllowedCharacters =
-      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     let sResult = "";
     while (sResult.length !== kLength) {
-      sResult +=
-        sAllowedCharacters[
-        Math.floor(Math.random() * sAllowedCharacters.length)
-        ];
+      sResult += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
     }
     return sResult;
   }
-  getGqlToken._oPromise = null;
-  getGqlToken.fGqlTokenChanged = null;
-  function getGqlToken() {
-    const WAIT_FOR_TOKEN = 3e4;
-    if (getGqlToken._oPromise === null) {
-      getGqlToken._oPromise = new Promise((fResolve, fReject) => {
+
+  // --- The integrity token ---
+
+  function captureGqlToken() {
+    if (_oGqlTokenPromise === null) {
+      _oGqlTokenPromise = new Promise((fResolve, fReject) => {
         m_Log.Wow("[Twitch] Inserting frame to capture the GQL token");
         const elFrame = document.createElement("iframe");
         elFrame.src = "https://www.twitch.tv/popout/";
@@ -92,25 +143,48 @@ const m_Twitch = (() => {
           AddExceptionHandler(() => {
             m_Log.Oops("[Twitch] GQL token wait timed out");
             elFrame.remove();
-            getGqlToken._oPromise = getGqlToken.fGqlTokenChanged =
-              null;
+            _oGqlTokenPromise = _fGqlTokenArrived = null;
             fReject("ACCESS_DENIED");
           }),
-          WAIT_FOR_TOKEN
+          GQL_TOKEN_WAIT
         );
-        getGqlToken.fGqlTokenChanged = () => {
+        _fGqlTokenArrived = () => {
           if (_sGqlToken !== "") {
             clearTimeout(nTimer);
             elFrame.remove();
-            getGqlToken._oPromise = getGqlToken.fGqlTokenChanged =
-              null;
+            _oGqlTokenPromise = _fGqlTokenArrived = null;
             fResolve(_sGqlToken);
           }
         };
       });
     }
-    return getGqlToken._oPromise;
+    return _oGqlTokenPromise;
   }
+
+  function clearGqlToken() {
+    _sGqlToken = "";
+    deleteCookie(GQL_TOKEN_COOKIE, COOKIE_STORE).catch(m_Debug.CaughtException);
+  }
+
+  // --- The GraphQL door ---
+
+  function classifyErrors(oResult) {
+    if (!oResult.errors) {
+      return "";
+    }
+    const hasError = (sMessage) => oResult.errors.some(({ message }) => message === sMessage);
+    return hasError(INTEGRITY_REFUSED) ? INTEGRITY_REFUSED : hasError(SERVER_BUSY) ? SERVER_BUSY : "unknown";
+  }
+
+  function logUnresolvedError(sError) {
+    m_Log.Oops(sError === SERVER_BUSY ? "[Twitch] GQL server busy" : "[Twitch] GQL response contains unknown errors");
+  }
+
+  /*
+    oVariables === null means sQuery is already a complete request body -- a batch built with
+    combineGqlRequests, for instance. The positional signature is kept as it was: the three
+    unrewritten functions below call it this way.
+  */
   function sendGqlRequest(
     oPromiseCancellation,
     sQuery,
@@ -121,256 +195,159 @@ const m_Twitch = (() => {
     sDownloadName,
     nDownloadNoLongerThan = LOAD_METADATA_NO_LONGER_THAN
   ) {
-    const RETRY_REQUEST_AFTER = 5e3;
     Check(IsNonEmptyString(_sDeviceId));
-    if (oVariables !== null) {
-      sQuery = createGqlRequestBody(sQuery, oVariables);
-    }
-    const oRequestHeaders = {
+    const sBody = oVariables === null ? sQuery : createGqlRequestBody(sQuery, oVariables);
+    const oHeaders = {
       "Accept-Language": "en-US",
-      "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+      "Client-ID": CLIENT_ID,
       "Content-Type": "text/plain; charset=UTF-8",
       "X-Device-ID": _sDeviceId,
     };
     if (bSendViewerToken && _sViewerToken) {
-      oRequestHeaders.Authorization = `OAuth ${_sViewerToken}`;
+      oHeaders.Authorization = `OAuth ${_sViewerToken}`;
     }
+    const useToken = (sToken) => {
+      oHeaders["Client-Integrity"] = sToken;
+    };
+    const post = () => m_Downloader.Load(
+      oPromiseCancellation, "POST", GQL_ENDPOINT, nDownloadNoLongerThan, oHeaders, sBody, sDownloadName, true, "json"
+    );
+    // The refused token is forgotten only if it is still the one held: another tab may have
+    // replaced it while the request was out.
+    const forgetRefusedToken = () => {
+      m_Log.Oops("[Twitch] Server rejected the GQL token");
+      if (_sGqlToken !== "" && oHeaders["Client-Integrity"] === _sGqlToken) {
+        clearGqlToken();
+      }
+    };
+    const settleSecondAttempt = (oResult) => {
+      const sError = classifyErrors(oResult);
+      if (sError === INTEGRITY_REFUSED) {
+        forgetRefusedToken();
+        throw "ACCESS_DENIED";
+      }
+      if (sError !== "") {
+        logUnresolvedError(sError);
+      }
+      return oResult;
+    };
+
     let bFreshToken = false;
-    let oPromise;
+    let oReady = Promise.resolve();
     if (bSendGqlToken) {
       if (_sGqlToken !== "" && _nGqlTokenExpiresAfter > Date.now()) {
-        m_Log.Here(
-          `[Twitch] GQL token expires in ${m_Log.F0(
-            (_nGqlTokenExpiresAfter - Date.now()) / 1e3
-          )}s`
-        );
-        oRequestHeaders["Client-Integrity"] = _sGqlToken;
-        oPromise = Promise.resolve();
+        m_Log.Here(`[Twitch] GQL token expires in ${m_Log.F0((_nGqlTokenExpiresAfter - Date.now()) / 1e3)}s`);
+        useToken(_sGqlToken);
       } else {
         bFreshToken = true;
-        oPromise = getGqlToken().then((sToken) => {
-          oRequestHeaders["Client-Integrity"] = sToken;
-        });
+        oReady = captureGqlToken().then(useToken);
       }
-    } else {
-      oPromise = Promise.resolve();
     }
-    return oPromise
-      .then(() =>
-        m_Downloader.Load(
-          oPromiseCancellation,
-          "POST",
-          "https://gql.twitch.tv/gql",
-          nDownloadNoLongerThan,
-          oRequestHeaders,
-          sQuery,
-          sDownloadName,
-          true,
-          "json"
-        )
-      )
-      .then((oResult) => {
-        if (!oResult.errors) {
-          return oResult;
+
+    return oReady.then(post).then((oResult) => {
+      const sError = classifyErrors(oResult);
+      if (sError === "") {
+        return oResult;
+      }
+      if (sError === INTEGRITY_REFUSED) {
+        forgetRefusedToken();
+        if (!bSendGqlToken || bFreshToken) {
+          throw "ACCESS_DENIED";
         }
-        let oPromise;
-        if (
-          oResult.errors.some(
-            ({ message }) => message === "failed integrity check"
-          )
-        ) {
-          m_Log.Oops("[Twitch] Server rejected the GQL token");
-          if (
-            oRequestHeaders["Client-Integrity"] === _sGqlToken &&
-            _sGqlToken !== ""
-          ) {
-            clearGqlToken();
-          }
-          if (!bSendGqlToken || bFreshToken) {
-            throw "ACCESS_DENIED";
-          }
-          if (
-            oRequestHeaders["Client-Integrity"] !== _sGqlToken &&
-            _sGqlToken !== ""
-          ) {
-            oRequestHeaders["Client-Integrity"] = _sGqlToken;
-            oPromise = Promise.resolve();
-          } else {
-            oPromise = getGqlToken().then((sToken) => {
-              oRequestHeaders["Client-Integrity"] = sToken;
-            });
-          }
-        } else if (
-          oResult.errors.some(({ message }) => message === "service timeout")
-        ) {
-          if (!bRetryRequest) {
-            m_Log.Oops("[Twitch] GQL server busy");
-            return oResult;
-          }
-          const retryAfter =
-            RETRY_REQUEST_AFTER +
-            (RETRY_REQUEST_AFTER / 2) * Math.random();
-          m_Log.Oops(
-            `[Twitch] GQL server busy. Request will be resent in ${retryAfter.toFixed()}ms`
-          );
-          oPromise = Wait(oPromiseCancellation, retryAfter);
-        } else {
-          m_Log.Oops("[Twitch] GQL response contains unknown errors");
-          return oResult;
-        }
-        return oPromise
-          .then(() =>
-            m_Downloader.Load(
-              oPromiseCancellation,
-              "POST",
-              "https://gql.twitch.tv/gql",
-              nDownloadNoLongerThan,
-              oRequestHeaders,
-              sQuery,
-              sDownloadName,
-              true,
-              "json"
-            )
-          )
-          .then((oResult) => {
-            if (oResult.errors) {
-              if (
-                oResult.errors.some(
-                  ({ message }) => message === "failed integrity check"
-                )
-              ) {
-                m_Log.Oops("[Twitch] Server rejected the GQL token");
-                if (
-                  oRequestHeaders["Client-Integrity"] === _sGqlToken &&
-                  _sGqlToken !== ""
-                ) {
-                  clearGqlToken();
-                }
-                throw "ACCESS_DENIED";
-              }
-              m_Log.Oops(
-                oResult.errors.some(
-                  ({ message }) => message === "service timeout"
-                )
-                  ? "[Twitch] GQL server busy"
-                  : "[Twitch] GQL response contains unknown errors"
-              );
-            }
-            return oResult;
-          });
-      });
+        const oNewToken = _sGqlToken !== "" && oHeaders["Client-Integrity"] !== _sGqlToken
+          ? Promise.resolve(useToken(_sGqlToken))
+          : captureGqlToken().then(useToken);
+        return oNewToken.then(post).then(settleSecondAttempt);
+      }
+      if (sError === SERVER_BUSY && bRetryRequest) {
+        const nAfter = RESEND_AFTER + (RESEND_AFTER / 2) * Math.random();
+        m_Log.Oops(`[Twitch] GQL server busy. Request will be resent in ${nAfter.toFixed()}ms`);
+        return Wait(oPromiseCancellation, nAfter).then(post).then(settleSecondAttempt);
+      }
+      logUnresolvedError(sError);
+      return oResult;
+    });
   }
+
+  // --- Following ---
+
   function ChangeViewerChannelSubscription(nSubscription) {
     Check(_sChannelId && _sViewerId && _sViewerToken);
     Check(_sChannelId !== _sViewerId);
     switch (nSubscription) {
       case SUBSCRIPTION_NOT_SUBSCRIBED:
-        unfollowChannel();
+        sendSubscriptionChange(
+          "unfollow",
+          `mutation($input: UnfollowUserInput!) {
+            unfollowUser(input: $input) {
+              __typename
+            }
+          }`,
+          { targetID: _sChannelId },
+          (oData) => Boolean(chain(oData, "unfollowUser")),
+          nSubscription
+        );
         break;
 
       case SUBSCRIPTION_DO_NOT_NOTIFY:
       case SUBSCRIPTION_NOTIFY:
-        followChannel(nSubscription);
+        sendSubscriptionChange(
+          "follow",
+          `mutation($input: FollowUserInput!) {
+            followUser(input: $input) {
+              error {
+                code
+              }
+              follow {
+                user {
+                  id
+                }
+              }
+            }
+          }`,
+          { disableNotifications: nSubscription === SUBSCRIPTION_DO_NOT_NOTIFY, targetID: _sChannelId },
+          (oData) => Boolean(chain(oData, "followUser", "follow", "user")) && !chain(oData, "followUser", "error"),
+          nSubscription
+        );
         break;
 
       default:
         Check(false);
     }
   }
-  function unfollowChannel() {
-    sendGqlRequest(
-      null,
-      `mutation($input: UnfollowUserInput!) {\n\t\t\t\tunfollowUser(input: $input) {\n\t\t\t\t\t__typename\n\t\t\t\t}\n\t\t\t}`,
-      {
-        input: {
-          targetID: _sChannelId,
-        },
-      },
-      true,
-      true,
-      true,
-      "unfollow channel"
-    )
+
+  // Whatever the outcome, the interface is told the subscription state it should now show.
+  function sendSubscriptionChange(sAction, sMutation, oInput, fSucceeded, nSubscription) {
+    sendGqlRequest(null, sMutation, { input: oInput }, true, true, true, `${sAction} channel`)
       .then((oResult) => {
-        if (
-          oResult.errors ||
-          !oResult.data ||
-          !oResult.data.unfollowUser
-        ) {
+        if (oResult.errors || !fSucceeded(oResult.data)) {
           throw "Server could not complete the operation";
         }
-        m_Events.SendEvent("twitch-viewermetadatareceived", {
-          nSubscription: SUBSCRIPTION_NOT_SUBSCRIBED,
-        });
+        m_Events.SendEvent("twitch-viewermetadatareceived", { nSubscription });
       })
       .catch((pReason) => {
-        if (typeof pReason == "string") {
-          m_Log.Oops(`[Twitch] Could not unfollow channel. ${pReason}`);
-          m_Notification.ShowAss();
-          m_Events.SendEvent("twitch-viewermetadatareceived", {
-            nSubscription: SUBSCRIPTION_UNAVAILABLE,
-          });
-        } else {
+        if (typeof pReason != "string") {
           m_Debug.CaughtException(pReason);
+          return;
         }
+        m_Log.Oops(`[Twitch] Could not ${sAction} channel. ${pReason}`);
+        m_Notification.ShowAss();
+        m_Events.SendEvent("twitch-viewermetadatareceived", { nSubscription: SUBSCRIPTION_UNAVAILABLE });
       });
   }
-  function followChannel(nSubscription) {
-    sendGqlRequest(
-      null,
-      `mutation($input: FollowUserInput!) {
-				followUser(input: $input) {
-					error {
-						code
-					}
-					follow {
-						user {
-							id
-						}
-					}
-				}
-			}`,
-      {
-        input: {
-          disableNotifications: nSubscription === SUBSCRIPTION_DO_NOT_NOTIFY,
-          targetID: _sChannelId,
-        },
-      },
-      true,
-      true,
-      true,
-      "follow channel"
-    )
-      .then((oResult) => {
-        if (
-          oResult.errors ||
-          !oResult.data ||
-          !oResult.data.followUser ||
-          !oResult.data.followUser.follow ||
-          !oResult.data.followUser.follow.user ||
-          oResult.data.followUser.error
-        ) {
-          throw "Server could not complete the operation";
-        }
-        m_Events.SendEvent("twitch-viewermetadatareceived", {
-          nSubscription,
-        });
-      })
-      .catch((pReason) => {
-        if (typeof pReason == "string") {
-          m_Log.Oops(`[Twitch] Could not follow channel. ${pReason}`);
-          m_Notification.ShowAss();
-          m_Events.SendEvent("twitch-viewermetadatareceived", {
-            nSubscription: SUBSCRIPTION_UNAVAILABLE,
-          });
-        } else {
-          m_Debug.CaughtException(pReason);
-        }
-      });
-  }
+
+  // --- Ads ---
+
+  // Content segments are unnamed or named "live"; every other name marks an ad.
   function isAdSegment(sSegmentName) {
     return sSegmentName !== "" && sSegmentName !== "live";
   }
+
+  /*
+    Carried over unchanged from the original player, by decision, and not part of this rewrite.
+    After each ad break the player skipped, these report an impression and a completed viewing of
+    that ad to Twitch. Everything between this comment and the next one is the original text.
+  */
   let _oPendingToSend = null;
   function sendAdTrackingData(oSegmentList) {
     if (
@@ -504,49 +481,43 @@ const m_Twitch = (() => {
       }
     );
   }
-  GetAbsoluteVariantListUrl._nExpiresAfter = -1;
-  GetAbsoluteVariantListUrl._sUrl = "";
-  function GetAbsoluteVariantListUrl(
-    oPromiseCancellation,
-    bWithoutHttps,
-    bWithoutAds
-  ) {
-    const TOKEN_EXPIRES_AFTER = 15 * 60 * 1e3;
+  /*
+    End of the unchanged part.
+  */
+
+  // --- The stream address ---
+
+  function GetAbsoluteVariantListUrl(oPromiseCancellation, bWithoutHttps, bWithoutAds) {
     if (!bWithoutAds) {
-      const nExpiresAfterMs =
-        GetAbsoluteVariantListUrl._nExpiresAfter -
-        performance.now();
-      if (nExpiresAfterMs > 0) {
-        m_Log.Here(
-          `[Twitch] Time left before the broadcast token expires: ${m_Log.F0(
-            nExpiresAfterMs / 1e3
-          )}s`
-        );
-        return Promise.resolve(GetAbsoluteVariantListUrl._sUrl);
+      const nLeft = _nStreamUrlExpiresAfter - performance.now();
+      if (nLeft > 0) {
+        m_Log.Here(`[Twitch] Time left before the broadcast token expires: ${m_Log.F0(nLeft / 1e3)}s`);
+        return Promise.resolve(_sStreamUrl);
       }
     }
     return sendGqlRequest(
       oPromiseCancellation,
       `query(
-				$login: String!
-				$playerType: String!
-				$disableHTTPS: Boolean!
-			) {
-				streamPlaybackAccessToken(
-					channelName: $login
-					params: {
-						disableHTTPS: $disableHTTPS
-						playerType: $playerType
-						platform: "web"
-						playerBackend: "mediaplayer"
-					}
-				) {
-					value
-					signature
-				}
-			}`,
+        $login: String!
+        $playerType: String!
+        $disableHTTPS: Boolean!
+      ) {
+        streamPlaybackAccessToken(
+          channelName: $login
+          params: {
+            disableHTTPS: $disableHTTPS
+            playerType: $playerType
+            platform: "web"
+            playerBackend: "mediaplayer"
+          }
+        ) {
+          value
+          signature
+        }
+      }`,
       {
         login: _sChannelLogin,
+        // Twitch serves this player type without ads: it is the source of the ad-free stream.
         playerType: bWithoutAds ? "picture-by-picture" : "site",
         disableHTTPS: bWithoutHttps,
       },
@@ -555,26 +526,14 @@ const m_Twitch = (() => {
       true,
       `broadcast token ${+bWithoutAds}`
     ).then((oResult) => {
-      const sToken = chain(
-        oResult.data,
-        "streamPlaybackAccessToken",
-        "value"
-      );
-      const sSignature = chain(
-        oResult.data,
-        "streamPlaybackAccessToken",
-        "signature"
-      );
-      m_Debug.saveBroadcastToken(
-        `DeviceId=${_sDeviceId} ViewerToken=${Boolean(
-          _sViewerToken
-        )}\n${sToken}`,
-        bWithoutAds
-      );
+      const sToken = chain(oResult.data, "streamPlaybackAccessToken", "value");
+      const sSignature = chain(oResult.data, "streamPlaybackAccessToken", "signature");
+      m_Debug.saveBroadcastToken(`DeviceId=${_sDeviceId} ViewerToken=${Boolean(_sViewerToken)}\n${sToken}`, bWithoutAds);
       if (!IsNonEmptyString(sToken) || !IsNonEmptyString(sSignature)) {
         if (oResult.errors) {
           throw "Server could not complete the operation";
         }
+        // No token and no error: there is no such channel.
         m_Debug.FinishWorkAndShowMessage("J0203");
       }
       const oToken = JSON.parse(sToken);
@@ -582,195 +541,189 @@ const m_Twitch = (() => {
       if (oToken.ci_gb) {
         m_Debug.FinishWorkAndShowMessage("J0217");
       }
+      // The first token is where the channel's identifier is learnt, and the channel metadata
+      // cannot be asked for before it.
       if (_sChannelId === "") {
         Check(oToken.channel_id);
         _sChannelId = String(oToken.channel_id);
-        setTimeout(
-          AddExceptionHandler(updateViewerAndChannelMetadata)
-        );
+        setTimeout(AddExceptionHandler(updateViewerAndChannelMetadata));
       } else {
         Check(_sChannelId === String(oToken.channel_id));
       }
-      let sAddress =
-        `${bWithoutHttps ? "http" : "https"
-        }://usher.ttvnw.net/api/channel/hls/${encodeURIComponent(
-          _sChannelLogin
-        )}.m3u8` +
-        "?allow_source=true" +
-        "&allow_audio_only=true" +
-        "&cdm=wv" +
-        "&fast_bread=true" +
-        "&platform=web" +
-        "&player_backend=mediaplayer" +
-        "&playlist_include_framerate=true" +
-        "&reassignments_supported=true" +
-        "&supported_codecs=h264" +
-        "&transcode_mode=cbr_v1" +
-        `&p=${Math.floor(Math.random() * 9999999)}` +
-        `&token=${encodeURIComponent(sToken)}` +
-        `&sig=${encodeURIComponent(sSignature)}`;
+      const asParameters = [
+        "allow_source=true",
+        "allow_audio_only=true",
+        "cdm=wv",
+        "fast_bread=true",
+        "platform=web",
+        "player_backend=mediaplayer",
+        "playlist_include_framerate=true",
+        "reassignments_supported=true",
+        "supported_codecs=h264",
+        "transcode_mode=cbr_v1",
+        `p=${Math.floor(Math.random() * 9999999)}`,
+        `token=${encodeURIComponent(sToken)}`,
+        `sig=${encodeURIComponent(sSignature)}`,
+      ];
       if (!bWithoutAds) {
-        _sPlaySessionID = createUniqueIdentifier(32);
-        sAddress += `&play_session_id=${_sPlaySessionID}`;
-        GetAbsoluteVariantListUrl._sUrl = sAddress;
-        GetAbsoluteVariantListUrl._nExpiresAfter =
-          performance.now() + TOKEN_EXPIRES_AFTER;
+        asParameters.push(`play_session_id=${createUniqueIdentifier(32)}`);
+      }
+      const sScheme = bWithoutHttps ? "http" : "https";
+      const sAddress = `${sScheme}://usher.ttvnw.net/api/channel/hls/${encodeURIComponent(_sChannelLogin)}.m3u8?${asParameters.join("&")}`;
+      if (!bWithoutAds) {
+        _sStreamUrl = sAddress;
+        _nStreamUrlExpiresAfter = performance.now() + STREAM_TOKEN_LIFETIME;
       }
       return sAddress;
     });
   }
-  function clearGqlToken() {
-    _sGqlToken = "";
-    deleteCookie("tw5~gqltoken", "https://www.twitch.tv/tw5~storage/").catch(
-      m_Debug.CaughtException
-    );
+
+  /*
+    Despite its name, sorts nothing: it notes the view-tracking address a variant list may carry
+    and hands the list back. The name goes when m_Playlist, its only caller, is rewritten.
+  */
+  function sortVariantList(oVariantList) {
+    if (oVariantList.sViewTrackingUrl) {
+      _sViewTrackingUrl = oVariantList.sViewTrackingUrl;
+    }
+    return oVariantList;
   }
-  function getUniqueDeviceIdentifier() {
-    return (
-      "0000000000000000" +
-      (m_Settings.Get("nRandomNumber") || 0.1).toFixed(16).slice(2)
-    );
-  }
-  function parseAuthCookie(sCookie) {
+
+  // --- Cookies: who is watching, from which device ---
+
+  function parseViewerCookie(sCookie) {
     if (sCookie) {
       try {
         const o = JSON.parse(decodeURIComponent(sCookie));
-        Check(
-          IsObject(o) &&
-          IsNonEmptyString(o.id) &&
-          IsNonEmptyString(o.login) &&
-          IsNonEmptyString(o.authToken)
-        );
+        Check(IsObject(o) && IsNonEmptyString(o.id) && IsNonEmptyString(o.login) && IsNonEmptyString(o.authToken));
         return o;
       } catch (_) { }
-      m_Log.Oops(
-        `[Twitch] Could not parse the auth cookie: ${sCookie}`
-      );
+      m_Log.Oops(`[Twitch] Could not parse the auth cookie: ${sCookie}`);
     }
-    return {
-      id: "",
-      login: "",
-      authToken: "",
-      displayName: "",
-    };
+    return { id: "", login: "", authToken: "", displayName: "" };
   }
+
   function parseGqlTokenCookie(sCookie) {
     if (sCookie) {
       try {
         const o = JSON.parse(decodeURIComponent(sCookie));
-        Check(
-          IsNonEmptyString(o.sToken) && Number.isSafeInteger(o.nExpiresAfter)
-        );
+        Check(IsNonEmptyString(o.sToken) && Number.isSafeInteger(o.nExpiresAfter));
         return [o.sToken, o.nExpiresAfter];
       } catch (_) {
-        m_Log.Oops(
-          `[Twitch] Could not parse the GQL token cookie: ${sCookie}`
-        );
+        m_Log.Oops(`[Twitch] Could not parse the GQL token cookie: ${sCookie}`);
       }
     }
     return ["", 0];
   }
-  function parseCookie(nAction, { name, domain, path, value }) {
-    if (nAction === 3 || typeof value != "string") {
+
+  function parseCookie(nHow, { name, domain, path, value }) {
+    if (nHow === COOKIE_REMOVED || typeof value != "string") {
       value = "";
     }
     switch (name) {
-      case "twilight-user":
-        if (domain === ".twitch.tv" && path === "/") {
-          const { id, login, authToken, displayName } =
-            parseAuthCookie(value);
-          if (
-            nAction !== 1 &&
-            (_sViewerId !== id ||
-              _sViewerLogin !== login ||
-              _sViewerToken !== authToken)
-          ) {
-            m_Debug.FinishWorkAndShowMessage("J0222");
-          }
-          _sViewerId = id;
-          _sViewerLogin = login;
-          _sViewerToken = authToken;
-          _sViewerName = IsNonEmptyString(displayName) ? displayName : login;
+      case "twilight-user": {
+        if (domain !== ".twitch.tv" || path !== "/") {
+          break;
         }
+        const { id, login, authToken, displayName } = parseViewerCookie(value);
+        // Someone else logging in, or logging out, mid-session: everything learnt so far about
+        // the viewer is wrong, and the player stops rather than carry on under the wrong account.
+        if (nHow !== COOKIE_READ_AT_START && (_sViewerId !== id || _sViewerLogin !== login || _sViewerToken !== authToken)) {
+          m_Debug.FinishWorkAndShowMessage("J0222");
+        }
+        _sViewerId = id;
+        _sViewerLogin = login;
+        _sViewerToken = authToken;
+        _sViewerName = IsNonEmptyString(displayName) ? displayName : login;
         break;
+      }
 
       case "unique_id":
-        if (
-          domain === ".twitch.tv" &&
-          path === "/" &&
-          nAction === 1 &&
-          _sDeviceId === ""
-        ) {
+        // Read once. A device identifier that changed mid-session would split one viewer in two.
+        if (domain === ".twitch.tv" && path === "/" && nHow === COOKIE_READ_AT_START && _sDeviceId === "") {
           _sDeviceId = value;
         }
         break;
 
-      case "tw5~gqltoken":
+      case GQL_TOKEN_COOKIE:
         if (domain === "www.twitch.tv" && path === "/tw5~storage/") {
-          [_sGqlToken, _nGqlTokenExpiresAfter] =
-            parseGqlTokenCookie(value);
-          if (getGqlToken.fGqlTokenChanged) {
-            getGqlToken.fGqlTokenChanged();
+          [_sGqlToken, _nGqlTokenExpiresAfter] = parseGqlTokenCookie(value);
+          if (_fGqlTokenArrived) {
+            _fGqlTokenArrived();
           }
         }
     }
   }
+
   function start(sChannelCode) {
     Check(IsNonEmptyString(sChannelCode));
     _sChannelLogin = sChannelCode;
-    return getAllCookies("https://www.twitch.tv/tw5~storage/").then(
-      (maCookies) => {
-        for (const oCookie of maCookies) {
-          parseCookie(1, oCookie);
-        }
-        if (_sDeviceId === "") {
-          m_Log.Oops("[Twitch] Device identifier not found");
-          _sDeviceId = getUniqueDeviceIdentifier();
-        }
-        chrome.cookies.onChanged.addListener(
-          AddExceptionHandler(({ removed, cause, cookie }) => {
-            if (!(removed && cause === "overwrite")) {
-              parseCookie(removed ? 3 : 2, cookie);
-            }
-          })
-        );
+    return getAllCookies(COOKIE_STORE).then((maCookies) => {
+      for (const oCookie of maCookies) {
+        parseCookie(COOKIE_READ_AT_START, oCookie);
       }
-    );
+      if (_sDeviceId === "") {
+        m_Log.Oops("[Twitch] Device identifier not found");
+        _sDeviceId = "0000000000000000" + (m_Settings.Get("nRandomNumber") || 0.1).toFixed(16).slice(2);
+      }
+      chrome.cookies.onChanged.addListener(
+        AddExceptionHandler(({ removed, cause, cookie }) => {
+          // An overwrite is reported as a removal followed by a write: only the write counts.
+          if (!(removed && cause === "overwrite")) {
+            parseCookie(removed ? COOKIE_REMOVED : COOKIE_WRITTEN, cookie);
+          }
+        })
+      );
+    });
   }
+
+  // --- Channel and viewer metadata ---
+
+  function subscriptionOf(oSelf) {
+    if (!chain(oSelf, "canFollow")) {
+      return SUBSCRIPTION_UNAVAILABLE;
+    }
+    if (!oSelf.follower) {
+      return SUBSCRIPTION_NOT_SUBSCRIBED;
+    }
+    return oSelf.follower.disableNotifications ? SUBSCRIPTION_DO_NOT_NOTIFY : SUBSCRIPTION_NOTIFY;
+  }
+
   function updateViewerAndChannelMetadata() {
     Check(_sChannelId);
     sendGqlRequest(
       null,
       `query($login: String!, $skip: Boolean!) {
-				user(login: $login) {
-					broadcastSettings {
-						language
-					}
-					createdAt
-					description
-					displayName
-					followers {
-						totalCount
-					}
-					id
-					lastBroadcast {
-						startedAt
-					}
-					primaryTeam {
-						displayName
-						name
-					}
-					profileImageURL(width: 70)
-					self @skip(if: $skip) {
-						canFollow
-						follower {
-							disableNotifications
-						}
-					}
-				}
-			}`,
+        user(login: $login) {
+          broadcastSettings {
+            language
+          }
+          createdAt
+          description
+          displayName
+          followers {
+            totalCount
+          }
+          id
+          lastBroadcast {
+            startedAt
+          }
+          primaryTeam {
+            displayName
+            name
+          }
+          profileImageURL(width: 70)
+          self @skip(if: $skip) {
+            canFollow
+            follower {
+              disableNotifications
+            }
+          }
+        }
+      }`,
       {
         login: _sChannelLogin,
+        // On one's own channel there is nothing to follow.
         skip: _sChannelLogin === _sViewerLogin,
       },
       true,
@@ -795,16 +748,9 @@ const m_Twitch = (() => {
             sName: oUser.primaryTeam.displayName || oUser.primaryTeam.name,
           });
         }
-        const nSubscription = !chain(oUser.self, "canFollow")
-          ? SUBSCRIPTION_UNAVAILABLE
-          : !oUser.self.follower
-            ? SUBSCRIPTION_NOT_SUBSCRIBED
-            : oUser.self.follower.disableNotifications
-              ? SUBSCRIPTION_DO_NOT_NOTIFY
-              : SUBSCRIPTION_NOTIFY;
         m_Events.SendEvent("twitch-channelmetadatareceived", {
           sName: oUser.displayName || _sChannelLogin,
-          sAvatar: oUser.profileImageURL || "player.svg#svg-missingavatar",
+          sAvatar: oUser.profileImageURL || MISSING_AVATAR,
           sDescription: oUser.description,
           sLanguageCode: sLanguageCode && sLanguageCode !== "OTHER" ? sLanguageCode : null,
           kSubscribers: chain(oUser.followers, "totalCount"),
@@ -813,78 +759,79 @@ const m_Twitch = (() => {
         });
         m_Events.SendEvent("twitch-viewermetadatareceived", {
           sName: _sViewerName,
-          nSubscription,
+          nSubscription: subscriptionOf(oUser.self),
         });
       })
       .catch((pReason) => {
-        if (typeof pReason == "string") {
-          m_Log.Oops(
-            `[Twitch] Could not get channel metadata. ${pReason}`
-          );
-          m_Events.SendEvent("twitch-channelmetadatareceived", {
-            sName: _sChannelLogin,
-            sAvatar: "player.svg#svg-missingavatar",
-            sLanguageCode: null,
-            kSubscribers: null,
-            nChannelCreated: null,
-          });
-          m_Events.SendEvent("twitch-viewermetadatareceived", {
-            sName: _sViewerName,
-            nSubscription: SUBSCRIPTION_UNAVAILABLE,
-          });
-        } else {
+        if (typeof pReason != "string") {
           m_Debug.CaughtException(pReason);
+          return;
         }
+        m_Log.Oops(`[Twitch] Could not get channel metadata. ${pReason}`);
+        m_Events.SendEvent("twitch-channelmetadatareceived", {
+          sName: _sChannelLogin,
+          sAvatar: MISSING_AVATAR,
+          sLanguageCode: null,
+          kSubscribers: null,
+          nChannelCreated: null,
+        });
+        m_Events.SendEvent("twitch-viewermetadatareceived", {
+          sName: _sViewerName,
+          nSubscription: SUBSCRIPTION_UNAVAILABLE,
+        });
       });
   }
-  function UpdateBroadcastMetadata(oPromiseCancellation, nAfter) {
+
+  // --- Broadcast metadata and view tracking ---
+
+  /*
+    One link of a chain that reschedules itself: every minute after a success, every half-minute
+    after a failure, until FinishCollectingBroadcastMetadata cancels it.
+  */
+  function updateBroadcastMetadata(oPromiseCancellation, nAfter) {
     Check(_sChannelId);
-    m_Log.Here(
-      `[Twitch] Broadcast metadata loading will start in ${m_Log.F0(
-        nAfter
-      )}ms`
-    );
+    m_Log.Here(`[Twitch] Broadcast metadata loading will start in ${m_Log.F0(nAfter)}ms`);
     Wait(oPromiseCancellation, nAfter)
-      .then(() => {
-        return sendGqlRequest(
-          oPromiseCancellation,
-          `query($id: ID!, $all: Boolean!) {
-					user(id: $id) {
-						broadcastSettings {
-							game {
-								displayName
-								slug
-							}
-							title
-						}
-						login
-						stream {
-							archiveVideo @include(if: $all) {
-								id
-							}
-							createdAt
-							id
-							type
-							viewersCount
-						}
-					}
-				}`,
-          {
-            id: _sChannelId,
-            all: _sBroadcastId === "",
-          },
-          false,
-          false,
-          true,
-          "broadcast metadata"
-        );
-      })
+      .then(() => sendGqlRequest(
+        oPromiseCancellation,
+        `query($id: ID!, $all: Boolean!) {
+          user(id: $id) {
+            broadcastSettings {
+              game {
+                displayName
+                slug
+              }
+              title
+            }
+            login
+            stream {
+              archiveVideo @include(if: $all) {
+                id
+              }
+              createdAt
+              id
+              type
+              viewersCount
+            }
+          }
+        }`,
+        {
+          id: _sChannelId,
+          // The recording is asked for only until the broadcast is known.
+          all: _sBroadcastId === "",
+        },
+        false,
+        false,
+        true,
+        "broadcast metadata"
+      ))
       .then((oResult) => {
         const oUser = chain(oResult.data, "user");
-        const sChannelCode = chain(oUser, "login");
-        if (sChannelCode !== _sChannelLogin && IsNonEmptyString(sChannelCode)) {
-          m_Log.Oops(`[Twitch] New channel code ${sChannelCode}`);
-          location.replace(`?channel=${encodeURIComponent(sChannelCode)}`);
+        const sLogin = chain(oUser, "login");
+        // The channel was renamed: reload under the new name, and let that page carry on.
+        if (sLogin !== _sChannelLogin && IsNonEmptyString(sLogin)) {
+          m_Log.Oops(`[Twitch] New channel code ${sLogin}`);
+          location.replace(`?channel=${encodeURIComponent(sLogin)}`);
           return;
         }
         const oMetadata = {
@@ -896,66 +843,32 @@ const m_Twitch = (() => {
           _sBroadcastId = sBroadcastId;
           startViewTracking();
           const sRecordingId = chain(oUser, "stream", "archiveVideo", "id");
-          _sRecordingUrl = IsNonEmptyString(sRecordingId)
-            ? GetRecordingUrl(sRecordingId)
-            : "";
-          const sBroadcastType = chain(oUser, "stream", "type");
-          oMetadata.sBroadcastType =
-            sBroadcastType === "live"
-              ? "live"
-              : sBroadcastType === "rerun"
-                ? "replay"
-                : null;
+          _sRecordingUrl = IsNonEmptyString(sRecordingId) ? getRecordingUrl(sRecordingId) : "";
+          const sType = chain(oUser, "stream", "type");
+          oMetadata.sBroadcastType = sType === "live" ? "live" : sType === "rerun" ? "replay" : null;
         }
+        // A different broadcast id means the one being watched has been replaced; its title and
+        // duration would describe something else.
         if (_sBroadcastId === "" || _sBroadcastId === sBroadcastId) {
-          const sBroadcastTitle = chain(
-            oUser,
-            "broadcastSettings",
-            "title"
-          );
-          if (typeof sBroadcastTitle == "string") {
-            oMetadata.sBroadcastTitle =
-              sBroadcastTitle.trim() || GetText("J0103");
+          const sTitle = chain(oUser, "broadcastSettings", "title");
+          if (typeof sTitle == "string") {
+            oMetadata.sBroadcastTitle = sTitle.trim() || GetText("J0103");
           }
-          oMetadata.sGameName = chain(
-            oUser,
-            "broadcastSettings",
-            "game",
-            "displayName"
-          );
-          const sGameUrl = chain(
-            oUser,
-            "broadcastSettings",
-            "game",
-            "slug"
-          );
-          if (sGameUrl) {
-            oMetadata.sGameUrl = getCategoryUrl(sGameUrl);
+          oMetadata.sGameName = chain(oUser, "broadcastSettings", "game", "displayName");
+          const sGameSlug = chain(oUser, "broadcastSettings", "game", "slug");
+          if (sGameSlug) {
+            oMetadata.sGameUrl = getCategoryUrl(sGameSlug);
           }
-          oMetadata.nBroadcastDuration =
-            performance.now() +
-            g_nExactTime -
-            Date.parse(chain(oUser, "stream", "createdAt"));
+          oMetadata.nBroadcastDuration = performance.now() + g_nExactTime - Date.parse(chain(oUser, "stream", "createdAt"));
         }
-        m_Events.SendEvent(
-          "twitch-broadcastmetadatareceived",
-          oMetadata
-        );
-        UpdateBroadcastMetadata(
-          oPromiseCancellation,
-          BROADCAST_METADATA_UPDATE_INTERVAL
-        );
+        m_Events.SendEvent("twitch-broadcastmetadatareceived", oMetadata);
+        updateBroadcastMetadata(oPromiseCancellation, BROADCAST_METADATA_INTERVAL);
       })
       .catch(
         AddExceptionHandler((pReason) => {
           if (typeof pReason == "string") {
-            m_Log.Oops(
-              `[Twitch] Could not load broadcast metadata. ${pReason}`
-            );
-            UpdateBroadcastMetadata(
-              oPromiseCancellation,
-              BROADCAST_METADATA_UPDATE_INTERVAL / 2
-            );
+            m_Log.Oops(`[Twitch] Could not load broadcast metadata. ${pReason}`);
+            updateBroadcastMetadata(oPromiseCancellation, BROADCAST_METADATA_INTERVAL / 2);
           } else if (pReason === PromiseCancellation.REASON) {
             m_Log.Here("[Twitch] Broadcast metadata update cancelled");
           } else {
@@ -964,36 +877,61 @@ const m_Twitch = (() => {
         })
       );
   }
+
   function StartCollectingBroadcastMetadata() {
-    ClearBroadcastData();
+    _sBroadcastId = _sRecordingUrl = "";
     Check(!_oMetadataUpdateCancel);
     _oMetadataUpdateCancel = new PromiseCancellation();
-    UpdateBroadcastMetadata(_oMetadataUpdateCancel, 0);
+    updateBroadcastMetadata(_oMetadataUpdateCancel, 0);
   }
+
+  // A pause keeps the broadcast known, so a clip can still be made; an end forgets it.
   function FinishCollectingBroadcastMetadata(bBroadcastEnded) {
     if (bBroadcastEnded) {
-      ClearBroadcastData();
+      _sBroadcastId = _sRecordingUrl = "";
     }
     if (_oMetadataUpdateCancel) {
-      m_Log.Here(
-        `[Twitch] Cancelling broadcast metadata update chain BroadcastEnded=${bBroadcastEnded}`
-      );
+      m_Log.Here(`[Twitch] Cancelling broadcast metadata update chain BroadcastEnded=${bBroadcastEnded}`);
       _oMetadataUpdateCancel.Cancel();
       _oMetadataUpdateCancel = null;
     }
     stopViewTracking();
   }
+
+  // A real viewing, reported: one "minute watched" per minute, for a logged-in viewer only.
+  const sendViewTrackingData = AddExceptionHandler(() => {
+    Check(_sBroadcastId && _sChannelId && _sViewerId);
+    const oToSend = new URLSearchParams();
+    oToSend.set("data", btoa(JSON.stringify([{
+      event: "minute-watched",
+      properties: {
+        broadcast_id: _sBroadcastId,
+        channel_id: _sChannelId,
+        user_id: Number(_sViewerId),
+        player: "site",
+      },
+    }])));
+    m_Downloader
+      .Load(null, "POST", _sViewTrackingUrl, LOAD_METADATA_NO_LONGER_THAN, null, oToSend, "view tracking", false, "none")
+      .catch((pReason) => {
+        if (typeof pReason == "string") {
+          m_Log.Oops(`[Twitch] Could not send view tracking data. ${pReason}`);
+        } else {
+          m_Debug.CaughtException(pReason);
+        }
+      });
+  });
+
   function startViewTracking() {
-    if (_sViewerId !== "") {
-      m_Log.Here("[Twitch] Starting view tracking");
-      Check(_nViewTrackingTimer === 0);
-      _nViewTrackingTimer = setInterval(
-        sendViewTrackingData,
-        VIEW_TRACKING_INTERVAL
-      );
-      sendViewTrackingData();
+    if (_sViewerId === "") {
+      return;
     }
+    m_Log.Here("[Twitch] Starting view tracking");
+    Check(_nViewTrackingTimer === 0);
+    _nViewTrackingTimer = setInterval(sendViewTrackingData, VIEW_TRACKING_INTERVAL);
+    sendViewTrackingData();
   }
+
   function stopViewTracking() {
     if (_nViewTrackingTimer !== 0) {
       m_Log.Here("[Twitch] Stopping view tracking");
@@ -1001,167 +939,101 @@ const m_Twitch = (() => {
       _nViewTrackingTimer = 0;
     }
   }
-  const sendViewTrackingData = AddExceptionHandler(
-    () => {
-      Check(_sBroadcastId && _sChannelId && _sViewerId);
-      const oToSend = new URLSearchParams();
-      oToSend.set(
-        "data",
-        btoa(
-          JSON.stringify([
-            {
-              event: "minute-watched",
-              properties: {
-                broadcast_id: _sBroadcastId,
-                channel_id: _sChannelId,
-                user_id: Number(_sViewerId),
-                player: "site",
-              },
-            },
-          ])
-        )
-      );
-      m_Downloader
-        .Load(
-          null,
-          "POST",
-          _sViewTrackingUrl,
-          LOAD_METADATA_NO_LONGER_THAN,
-          null,
-          oToSend,
-          "view tracking",
-          false,
-          "none"
-        )
-        .catch((pReason) => {
-          if (typeof pReason == "string") {
-            m_Log.Oops(
-              `[Twitch] Could not send view tracking data. ${pReason}`
-            );
-          } else {
-            m_Debug.CaughtException(pReason);
-          }
-        });
-    }
-  );
+
+  // --- Recording and clips ---
+
   function GetRecordingUrlForCurrentPosition() {
     if (_sRecordingUrl === "") {
       m_Log.Oops("[Twitch] Recording address unknown");
       return "";
     }
-    const nPlaybackPosition =
-      m_Player.GetBroadcastPlaybackPosition(false);
-    if (nPlaybackPosition === -1) {
+    const nPosition = m_Player.GetBroadcastPlaybackPosition(false);
+    if (nPosition === -1) {
       m_Log.Here("[Twitch] Recording address created without a playback position");
       return _sRecordingUrl;
     }
-    return `${_sRecordingUrl}?t=${Math.floor(nPlaybackPosition / 60 / 60)}h${Math.floor(
-      (nPlaybackPosition / 60) % 60
-    )}m${Math.floor(nPlaybackPosition % 60)}s`;
+    const kHours = Math.floor(nPosition / 3600);
+    const kMinutes = Math.floor((nPosition / 60) % 60);
+    const kSeconds = Math.floor(nPosition % 60);
+    return `${_sRecordingUrl}?t=${kHours}h${kMinutes}m${kSeconds}s`;
   }
-  function CreateClip() {
-    const nPlaybackPosition =
-      m_Player.GetBroadcastPlaybackPosition(true);
-    if (_sBroadcastId === "" || nPlaybackPosition <= 0) {
-      m_Log.Oops(
-        `[Twitch] Not enough data to create a clip BroadcastId=${_sBroadcastId} Position=${nPlaybackPosition}`
-      );
-      m_Notification.ShowAss();
-    } else {
-      m_Log.Wow(
-        `[Twitch] Creating clip BroadcastId=${_sBroadcastId} Position=${nPlaybackPosition} ViewerId=${_sViewerId}`
-      );
-      m_Notification.Show("svg-cut", false);
-      OpenAddressInNewTab(
-        `https://clips.twitch.tv/create?${new URLSearchParams({
-          broadcastID: _sBroadcastId,
-          broadcasterLogin: _sChannelLogin,
-          offsetSeconds: Math.ceil(nPlaybackPosition),
-        })}`
-      );
-    }
-  }
-  function GetAbsoluteSegmentListUrl(
-    sAbsoluteSegmentListUrl
-  ) {
-    return sAbsoluteSegmentListUrl;
-  }
-  function sortVariantList(oVariantList) {
-    if (oVariantList.sViewTrackingUrl) {
-      _sViewTrackingUrl = oVariantList.sViewTrackingUrl;
-    }
-    return oVariantList;
-  }
-  const handleChatMessage = AddExceptionHandler(
-    (oMessage, oSender, fRespond) => {
-      if (oMessage.sQuery !== "InsertThirdPartyExtensions") {
-        return false;
-      }
-      if (
-        (oSender.tab ? oSender.tab.id : chrome.tabs.TAB_ID_NONE) !==
-        getCurrentTab.nTabId
-      ) {
-        return false;
-      }
-      m_Log.Here("[Twitch] Request received to insert third-party extensions");
-      chrome.management.getAll(
-        AddExceptionHandler((moExtensions) => {
-          if (chrome.runtime.lastError) {
-            throw new Error(
-              `Could not get the extension list: ${chrome.runtime.lastError.message}`
-            );
-          }
-          //! Send to content script a list of known browser extensions that are currently installed and enabled in the browser.
-          //! These extensions will be loaded into <iframe>. See insertThirdPartyExtensions() in content.js.
-          //! Chrome itself cannot load installed extensions into another extension.
-          //! See https://bugs.chromium.org/p/chromium/issues/detail?id=599167
-          oMessage.sThirdPartyExtensions = "";
-          for (let oExtensionItem of moExtensions) {
-            if (oExtensionItem.enabled) {
-              switch (oExtensionItem.id) {
-                case /*! Chrome */ "ajopnjidmegmdimjlfnijceegpefgped":
-                case /*! Opera  */ "deofbbdfofnmppcjbhjibgodpcdchjii":
-                case /*! Edge   */ "icllegkipkooaicfmdfaloehobmglglb":
-                  //! BetterTTV browser extension
-                  //! https://betterttv.com/
-                  //! https://chrome.google.com/webstore/detail/ajopnjidmegmdimjlfnijceegpefgped
-                  oMessage.sThirdPartyExtensions += "BTTV ";
-                  break;
 
-                case /*! Chrome */ "fadndhdgpmmaapbmfcknlfgcflmmmieb":
-                case /*! Opera  */ "djkpepcignmpfblhbfpmlhoindhndkdj":
-                  //! FrankerFaceZ browser extension
-                  //! https://www.frankerfacez.com/
-                  //! https://chrome.google.com/webstore/detail/fadndhdgpmmaapbmfcknlfgcflmmmieb
-                  oMessage.sThirdPartyExtensions += "FFZ ";
-              }
-            }
-          }
-          m_Log.Here(
-            `[Twitch] Sending response to the third-party extension insertion: ${oMessage.sThirdPartyExtensions}`
-          );
-          try {
-            fRespond(oMessage);
-          } catch (pException) {
-            m_Log.Oops(`[Twitch] Error sending response: ${pException}`);
-          }
-        })
-      );
-      return true;
+  function CreateClip() {
+    const nPosition = m_Player.GetBroadcastPlaybackPosition(true);
+    if (_sBroadcastId === "" || nPosition <= 0) {
+      m_Log.Oops(`[Twitch] Not enough data to create a clip BroadcastId=${_sBroadcastId} Position=${nPosition}`);
+      m_Notification.ShowAss();
+      return;
     }
-  );
+    m_Log.Wow(`[Twitch] Creating clip BroadcastId=${_sBroadcastId} Position=${nPosition} ViewerId=${_sViewerId}`);
+    m_Notification.Show("svg-cut", false);
+    OpenAddressInNewTab(`https://clips.twitch.tv/create?${new URLSearchParams({
+      broadcastID: _sBroadcastId,
+      broadcasterLogin: _sChannelLogin,
+      offsetSeconds: Math.ceil(nPosition),
+    })}`);
+  }
+
+  // --- Third-party chat extensions ---
+
+  /*
+    Chrome cannot load an installed extension into another extension's page
+    (https://bugs.chromium.org/p/chromium/issues/detail?id=599167), so content.js inserts these
+    into the chat frame itself. This only tells it which ones are installed and enabled.
+  */
+  const CHAT_EXTENSIONS = new Map([
+    ["ajopnjidmegmdimjlfnijceegpefgped", "BTTV"], // BetterTTV, Chrome Web Store
+    ["deofbbdfofnmppcjbhjibgodpcdchjii", "BTTV"], // BetterTTV, Opera
+    ["icllegkipkooaicfmdfaloehobmglglb", "BTTV"], // BetterTTV, Edge
+    ["fadndhdgpmmaapbmfcknlfgcflmmmieb", "FFZ"], // FrankerFaceZ, Chrome Web Store
+    ["djkpepcignmpfblhbfpmlhoindhndkdj", "FFZ"], // FrankerFaceZ, Opera
+  ]);
+
+  const handleChatMessage = AddExceptionHandler((oMessage, oSender, fRespond) => {
+    if (oMessage.sQuery !== "InsertThirdPartyExtensions") {
+      return false;
+    }
+    // Only the chat frame of this tab may ask.
+    if ((oSender.tab ? oSender.tab.id : chrome.tabs.TAB_ID_NONE) !== getCurrentTab.nTabId) {
+      return false;
+    }
+    m_Log.Here("[Twitch] Request received to insert third-party extensions");
+    chrome.management.getAll(
+      AddExceptionHandler((moExtensions) => {
+        if (chrome.runtime.lastError) {
+          throw new Error(`Could not get the extension list: ${chrome.runtime.lastError.message}`);
+        }
+        oMessage.sThirdPartyExtensions = "";
+        for (const { id, enabled } of moExtensions) {
+          if (enabled && CHAT_EXTENSIONS.has(id)) {
+            oMessage.sThirdPartyExtensions += `${CHAT_EXTENSIONS.get(id)} `;
+          }
+        }
+        m_Log.Here(`[Twitch] Sending response to the third-party extension insertion: ${oMessage.sThirdPartyExtensions}`);
+        try {
+          fRespond(oMessage);
+        } catch (pException) {
+          m_Log.Oops(`[Twitch] Error sending response: ${pException}`);
+        }
+      })
+    );
+    // The answer comes asynchronously.
+    return true;
+  });
+
   function openChat() {
     chrome.runtime.onMessage.addListener(handleChatMessage);
-    return GetChatPanelUrl();
+    return getChatPanelUrl();
   }
+
   function closeChat() {
     chrome.runtime.onMessage.removeListener(handleChatMessage);
   }
+
   return {
     isAdSegment,
     sendAdTrackingData,
     GetAbsoluteVariantListUrl,
-    GetAbsoluteSegmentListUrl,
     GetChannelUrl,
     checkUrlAvailability,
     StartCollectingBroadcastMetadata,
