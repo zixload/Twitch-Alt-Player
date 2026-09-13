@@ -34,9 +34,32 @@ l'extension**, et parce qu'ils encodent des connaissances qui coûtent cher à r
 | `tipcheck.py`, `followcheck.py`, `reporttest.py` | Vérifications ciblées : infobulles, états du bouton suivre, contenu du rapport. |
 | `survey.py` | Recense les conteneurs servis par les grosses chaînes (fMP4 contre MPEG-TS). |
 | `settingscheck.py` | Ouvre les réglages et actionne chaque contrôle à la souris : dit lequel est muet, lequel lève, lequel est couvert. |
+| `modulecheck.py` | Exerce un module réécrit dans le vrai lecteur, à partir de sa sonde `probes/<module>.js` : la phase 2 y prouve qu'une réécriture se comporte comme l'originale. |
 
 Ils dépendent de `websockets` et, pour les captures, de `Pillow`. Sur cette machine, seul
 `py -3.14` a `websockets` : `python` pointe sur un 3.12 qui ne l'a pas.
+
+## modulecheck.py : la preuve d'une réécriture
+
+    py -3.14 tools/harness/modulecheck.py notification            # sur le deuxième écran
+    py -3.14 tools/harness/modulecheck.py notification --cache    # hors écran
+
+Les contrôles statiques prouvent qu'une réécriture n'a rien perdu de ce qui se lit dans le code.
+Aucun ne prouve que la pastille s'affiche encore, ni qu'elle disparaît au bout de deux secondes.
+`verify.py` complet, lui, prouve que le flux joue : il ne touche pas un module de périphérie.
+
+Une sonde vit dans `probes/<module>.js`, s'écrit **depuis la description du module et avant sa
+réécriture**, et ne regarde jamais l'intérieur du module : seulement son interface et le DOM. Elle
+rend une liste de verdicts `[nom, vrai/faux, détail]` ; une sonde muette est un échec.
+
+La façon de s'en servir tient en trois passages, et les trois comptent :
+
+1. sur le module **tel qu'extrait**, avant réécriture — c'est lui la référence de comportement ;
+2. sur une version **délibérément cassée**, pour prouver que la sonde sait échouer ;
+3. sur le module **réécrit** — les verdicts doivent être ceux du premier passage, un par un.
+
+Pour `m_Notification` : 15 vérifications, identiques avant et après ; la mutation qui garde le
+minuteur de la première notification au lieu de le relancer est bien attrapée.
 
 ## verify.py : toutes les vérifications d'un lot, dans l'ordre
 

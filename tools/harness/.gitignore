@@ -25,3 +25,4 @@ verify-out.txt
 admeasure-*.json
 migrationcheck-*/
 migrationcheck-out.txt
+module-profile/
