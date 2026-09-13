@@ -252,7 +252,7 @@ comme un acquis.
 
 ## 8. Les pièges déjà payés
 
-Neuf, dont trois fois le même. Ils valent pour la réécriture autant que pour la traduction.
+Dix, dont trois fois le même. Ils valent pour la réécriture autant que pour la traduction.
 
 1. **Exports abrégés.** `return { Get, Set }` : renommer la liaison sans la propriété désynchronise
    l'interface de ses appelants. Mort au chargement, sans erreur de syntaxe.
@@ -278,6 +278,16 @@ Neuf, dont trois fois le même. Ils valent pour la réécriture autant que pour 
    « guillemet, contenu, guillemet » se désynchronise à la première apostrophe d'un commentaire, et
    ce dépôt en est plein. Un inventaire bâti ainsi annonçait 211 noms sûrs ; avec l'analyseur, 64.
 
+10. **Sept tests de version du navigateur ne peuvent plus être vrais.** `manifest.json` déclare
+    MV3 et `minimum_chrome_version: 92` ; MV3 lui-même exige Chrome 88. Tout garde en dessous est
+    donc mort : `content.js:343` et `player.js:1189` (`< 67`), `player.js:4573` (`<= 68`),
+    `worker.js:3` (`< 50`), `worker.js:37` (`< 58`), et deux conditions toujours vraies,
+    `worker.js:55` (`>= 70`) et `worker.js:610` (`>= 64` — qui rend le `isMobileDevice() ||` qui le
+    précède inutile). Conséquence la plus visible : `WorkerThreadGarbageCollector` est
+    inatteignable, et `recycler.js` est un fichier entier que seule cette branche morte maintient
+    en vie. **Chaque retrait se fait dans le commit de réécriture du module concerné**, pas en une
+    passe éparpillée : c'est la règle « un module par commit ».
+
 ---
 
 ## 9. Où en est la phase 1
@@ -298,3 +308,47 @@ et commentaires. Les 43 clés de réglages sont traduites avec une migration ép
 Un défaut reste ouvert et ne peut pas être fermé au banc : le bouton d'accès aux périphériques
 audio. Sa permission manquante est maintenant déclarée, mais l'accorder exige un clic humain sur
 une invite du navigateur. **C'est à Luca de le vérifier en vrai.**
+
+---
+
+## 10. Où en est la phase 2
+
+| module | agent | état |
+|---|---|---|
+| `m_Notification` | B | sorti dans `modules/notification.js` |
+| `m_Window` | B | sorti dans `modules/window.js` |
+| `m_Menu` | B | sorti dans `modules/menu.js` |
+| `m_MediaQuery` | B | sortie en cours |
+| `m_Log` | A | réécrit — `4d5e937`, test `tests/log.test.js` |
+| `m_Settings` | A | réécrit — `f628c6c`, test + auto-test de ce test |
+| `m_Events` | A | décrit : `tests/events.test.js`, 29 constats qui passent sur le code actuel |
+
+Un test unitaire par module réécrit, plus — depuis `m_Settings` — **un auto-test de ce test**.
+Même exigence que pour `crosscheck` : une suite qui affiche soixante-trois « ok » ne prouve rien
+tant qu'on ne l'a pas vue afficher autre chose. `tests/settings-selftest.js` abîme le module en
+huit endroits, un à la fois, et exige que la suite tombe sur le constat prévu à chaque fois.
+
+### Ce dont A a besoin de B, maintenant
+
+**Tous les modules qui restent à A vivent dans `player.js`** : `m_Events` (l. 1068),
+`m_GarbageCollector` (l. 1120), puis le nœud `m_Controls` + `m_Player` + `m_Playlist` + `m_Twitch`.
+Tant qu'ils y sont, A ne peut pas les réécrire sans écrire dans le fichier que B est en train de
+découper — exactement la collision que ce document existe pour éviter. `m_Settings` a pu passer
+avant parce qu'il vivait dans `common.js`.
+
+Demande à B, dans cet ordre : **sortir `m_Events` puis `m_GarbageCollector`**, qui sont petits
+(56 et 76 lignes) et sans dépendance vers la périphérie. A enchaîne dès qu'ils sont dans
+`modules/`. Le nœud viendra après, et mérite d'être discuté avant d'être découpé.
+
+### Trois points à traiter côté B
+
+- **Quatre outils auxiliaires sont cassés** : `shot.py`, `reporttest.py`, `compare.py` et
+  `followcheck.py` désignent encore des noms cyrilliques que la phase 1 a traduits. Ils sont hors
+  des douze étapes de `verify.py`, donc rien ne les signale.
+- **Les tests unitaires ne sont dans aucune chaîne.** `tests/log.test.js`, `tests/settings.test.js`,
+  `tests/settings-selftest.js` et `tests/events.test.js` tournent sans navigateur en quelques
+  secondes. Leur place est dans la partie `--statique` de `verify.py`, qui est à B.
+- **`eventcheck.js` signale quatre défauts** dans l'arbre de travail — `window-opened-svg-success`,
+  `-fail`, `-fullscreen-${…}`, `-cut` — envoyés sans personne pour les écouter. Ils viennent du
+  découpage de `m_Window` en cours, pas de `common.js` : sur un arbre fait du dernier commit plus
+  le seul `common.js` de A, le contrôle rend zéro défaut.
