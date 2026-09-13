@@ -115,13 +115,40 @@ Relevé sur le code, pas supposé.
 **Les couples mutuels** — deux modules qui s'appellent l'un l'autre, à sortir ensemble :
 `m_FullscreenMode` ↔ `m_PictureInPicture`, `m_Transcoder` ↔ `m_InitSegment`.
 
-**Le nœud.** `m_Controls` (1226), `m_Player` (1027), `m_Playlist` (1323) et `m_Twitch` (1253)
-s'appellent mutuellement : 4829 lignes qui forment un seul bloc entrelacé. Aucun des quatre ne
-s'extrait sans les trois autres.
+**Le nœud, mesuré.** `m_Controls` (1225), `m_Player` (1023), `m_Playlist` (1312) et `m_Twitch`
+(1175) : **4735 lignes**. Le chiffre de 4829 donné plus tôt comptait d'un module au suivant, ce qui
+attribuait à `m_Twitch` les 78 lignes de la chaîne de démarrage qui le suit et ne lui appartient
+pas.
 
-**C'est ce nœud qui décide du partage.** Il ne peut pas être coupé en deux entre deux agents, et
-il représente à lui seul la moitié du travail restant. Le partage est donc déséquilibré en lignes,
-et il vaut mieux le dire que de faire semblant de l'équilibrer.
+**Et ce n'est pas un nœud, c'est une étoile.** Relevé par analyse syntaxique, appel par appel :
+
+| de → vers | appels | membres |
+|---|---|---|
+| `m_Controls` → `m_Player` | 11 | `AddNextSegment ApplyVolume Reload SeekReplayBy SetReplaySpeed TogglePause` |
+| `m_Controls` → `m_Twitch` | 11 | 7 membres |
+| `m_Controls` → `m_Playlist` | 3 | `ChangeBroadcastVariant Start Stop` |
+| `m_Player` → `m_Controls` | 21 | `ChangeState GetState StopWatchingBroadcast UpdateTrackCount getReplaySpeed` |
+| `m_Playlist` → `m_Twitch` | 6 | 5 membres |
+| `m_Playlist` → `m_Controls` | **1** | `StopWatchingBroadcast` |
+| `m_Twitch` → `m_Player` | **2** | `GetBroadcastPlaybackPosition` |
+
+`m_Controls` est le centre. Des trois cycles, **deux tiennent à un seul membre appelé à un seul
+endroit**, et les deux sont superficiels :
+
+- `m_Playlist` → `m_Controls.StopWatchingBroadcast()`, dans `_listNotUpdated`, quand le serveur
+  répond `ACCESS_DENIED`. « La liste m'est refusée, arrête la lecture. »
+- `m_Twitch` → `m_Player.GetBroadcastPlaybackPosition()`, deux fois, pour l'adresse d'enregistrement
+  et pour le clip. « Où en est le spectateur en ce moment. »
+
+Le seul vrai couple est `m_Controls` ↔ `m_Player` : 11 appels dans un sens, 21 dans l'autre.
+
+**Ce que ça change pour le partage.** Le bloc indivisible de 4735 lignes devient trois morceaux :
+`m_Twitch` (1175), `m_Playlist` (1312), puis `m_Controls` + `m_Player` ensemble (2248). Les
+surfaces publiques sont d'ailleurs minces pour la taille — `m_Playlist` fait 1312 lignes et
+n'expose que trois membres, dont un seul, `Start`, au reste du lecteur.
+
+Le partage reste déséquilibré en lignes et il vaut mieux le dire que de faire semblant de
+l'équilibrer. Mais il n'est plus vrai qu'aucun des quatre ne s'extrait sans les trois autres.
 
 ---
 
@@ -321,7 +348,11 @@ une invite du navigateur. **C'est à Luca de le vérifier en vrai.**
 | `m_MediaQuery` | B | sortie en cours |
 | `m_Log` | A | réécrit — `4d5e937`, test `tests/log.test.js` |
 | `m_Settings` | A | réécrit — `f628c6c`, test + auto-test de ce test |
+| `m_AutoHide` | B | sorti dans `modules/auto-hide.js` |
+| `m_FocusManager` | B | réécrit |
+| `m_MediaQuery` | B | réécrit |
 | `m_Events` | A | décrit : `tests/events.test.js`, 29 constats qui passent sur le code actuel |
+| `m_GarbageCollector` | A | décrit : `tests/garbage-collector.test.js`, 23 constats |
 
 Un test unitaire par module réécrit, plus — depuis `m_Settings` — **un auto-test de ce test**.
 Même exigence que pour `crosscheck` : une suite qui affiche soixante-trois « ok » ne prouve rien
@@ -338,7 +369,11 @@ avant parce qu'il vivait dans `common.js`.
 
 Demande à B, dans cet ordre : **sortir `m_Events` puis `m_GarbageCollector`**, qui sont petits
 (56 et 76 lignes) et sans dépendance vers la périphérie. A enchaîne dès qu'ils sont dans
-`modules/`. Le nœud viendra après, et mérite d'être discuté avant d'être découpé.
+`modules/`.
+
+Ensuite, et c'est le résultat de la section 4 : **`m_Twitch`, puis `m_Playlist`, puis
+`m_Controls` + `m_Player` ensemble**. Les deux premiers ne tiennent au reste du nœud que par un
+membre chacun, appelé à un seul endroit ; le troisième est le seul vrai couple.
 
 ### Trois points à traiter côté B
 
