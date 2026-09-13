@@ -113,6 +113,27 @@ class Echec(Exception):
     pass
 
 
+def empreinte():
+    """Date de derniere ecriture de tout ce que l'extension charge."""
+    fichiers = [f for f in os.listdir(ROOT) if f.endswith(('.js', '.html', '.json'))]
+    if os.path.isdir(os.path.join(ROOT, 'modules')):
+        fichiers += ['modules/' + f for f in os.listdir(os.path.join(ROOT, 'modules')) if f.endswith('.js')]
+    out = {}
+    for f in fichiers:
+        try:
+            out[f] = os.path.getmtime(os.path.join(ROOT, f))
+        except OSError:
+            pass
+    return out
+
+
+def a_bouge(avant):
+    """Ce qui a change depuis l'empreinte : ecrit, ajoute ou retire."""
+    apres = empreinte()
+    change = sorted(f for f in set(avant) | set(apres) if avant.get(f) != apres.get(f))
+    return change
+
+
 # ---------------------------------------------------------------------------------------------
 # Etapes
 
@@ -374,6 +395,10 @@ def etape_reglages(etat):
 
 def main():
     etat = {}
+    # Deux agents travaillent dans ce depot. Un fichier reecrit pendant qu'un navigateur le lit
+    # donne un echec qui ne dit rien du lecteur : c'est arrive une fois, a l'etape de lecture,
+    # pendant que l'autre agent reecrivait un module. Mieux vaut le dire que de le chercher.
+    avant = empreinte()
     etapes = [
         (u'syntaxe', lambda: etape_syntaxe()),
         (u'controle croise', lambda: etape_croise(etat)),
@@ -402,6 +427,12 @@ def main():
             msg = f()
         except Echec as e:
             say(u'   ECHEC (%.0f s) : %s' % (time.time() - t, e))
+            change = a_bouge(avant)
+            if change:
+                say(u'')
+                say(u'   ATTENTION : %d fichier(s) ont change pendant ce passage :' % len(change))
+                say(u'   ' + u' '.join(change[:12]))
+                say(u'   Un echec peut venir de la, et non du lecteur. Relancer sur un arbre au repos.')
             say(u'')
             say(u'ARRET a l\'etape %d sur %d. Les suivantes n\'ont pas ete lancees.' % (n, len(etapes)))
             return 1
@@ -417,6 +448,12 @@ def main():
             with io.open(REF_SETTINGS, 'w', encoding='utf-8') as fh:
                 json.dump({'defauts': etat['reglages']}, fh, ensure_ascii=False, indent=1)
             say(u'reference enregistree : %s' % os.path.relpath(REF_SETTINGS, ROOT))
+    change = a_bouge(avant)
+    if change:
+        say(u'')
+        say(u'   ATTENTION : %d fichier(s) ont change pendant ce passage :' % len(change))
+        say(u'   ' + u' '.join(change[:12]))
+        say(u'   Le vert ci-dessus ne porte donc pas sur un seul et meme arbre.')
     say(u'')
     say(u'OK : %d etapes en %.0f s.%s' % (len(etapes), time.time() - debut,
                                           u' Navigateur non lance (--statique).' if STATIQUE else u''))
