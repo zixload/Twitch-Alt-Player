@@ -24,6 +24,13 @@
 	     each way.
 	  6. Runs extractcheck.js on the result, in memory, against the tree as it was. Only then writes.
 
+	It also refuses to start from a dirty tree. Two agents share this repository and both write
+	player.js; an extraction that starts on top of someone else's unfinished work ends up carrying
+	it, and `git commit -- <paths>` carries it silently. That happened once: an extraction commit
+	took another agent's removal of a module without the file that module had moved to, and left a
+	tree that could not load. The rule was already written — an extraction commit is made alone —
+	and this is it, enforced.
+
 	common.js is loaded both by player.html and by the content scripts on twitch.tv. A module taken
 	from it goes into both, each at its own valid place.
 
@@ -41,6 +48,7 @@
 */
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const G = require('./graph.js');
 const { compareTrees } = require('./extractcheck.js');
 
@@ -66,6 +74,31 @@ const TARGET = INTO + '/' + (arg('--as') || kebab(MODULE) + '.js');
 
 const disk = G.tree(ROOT);
 const contexts = G.contextsOf(disk);
+
+// ---------------------------------------------------------------------------------------------
+// 0. L'arbre doit etre propre : ce qui traine ici finirait dans le commit d'extraction.
+
+const gitStatus = () => {
+	try {
+		return execFileSync('git', ['status', '--porcelain'], { cwd: ROOT, encoding: 'utf8' });
+	} catch (oError) {
+		return null;   // pas un depot git, ou git absent : on ne bloque pas pour autant
+	}
+};
+const sStatus = gitStatus();
+if (sStatus !== null) {
+	const salies = sStatus.split('\n')
+		.filter((l) => l.trim() && !l.startsWith('??'))
+		.map((l) => l.slice(3).trim());
+	if (salies.length) {
+		console.log('REFUS : l\'arbre porte des modifications non commitees :');
+		for (const f of salies) console.log('   ' + f);
+		console.log('   Une extraction se commite seule. Partir d\'un arbre propre, sans quoi le commit');
+		console.log('   emporte le travail en cours de quelqu\'un d\'autre -- et « git commit -- <chemins> »');
+		console.log('   le fait sans rien dire.');
+		process.exit(1);
+	}
+}
 
 // ---------------------------------------------------------------------------------------------
 // 1. La declaration
