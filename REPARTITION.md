@@ -358,8 +358,9 @@ une invite du navigateur. **C'est à Luca de le vérifier en vrai.**
 | `m_Log` | A | réécrit — `4d5e937`, `tests/log.test.js` |
 | `m_Settings` | A | réécrit — `f628c6c`, `tests/settings.test.js` + son auto-test |
 | chaîne de démarrage | A | sortie dans `modules/startup.js` — `28e58b1` |
-| `m_Events` | A | sorti par B ; décrit, `tests/events.test.js` (29 constats) ; réécriture en cours |
-| `m_GarbageCollector` | A | sorti par B ; décrit, `tests/garbage-collector.test.js` (23 constats) |
+| `m_Events` | A | réécrit — `23eeea8`, une seule convention d'appel |
+| `m_GarbageCollector` | A | réécrit — `ebfca7e`, `recycler.js` et `Burn` retirés |
+| `m_Twitch` | A | sorti — `4ac86ab` ; description en cours |
 
 ### Le verrou du démarrage est levé
 
@@ -386,6 +387,36 @@ Vérifié au navigateur, puisque c'est le code qui lance la lecture : zéro exce
 
 Ordre du nœud, résultat de la section 4 : **`m_Twitch`, puis `m_Playlist`, puis `m_Controls` +
 `m_Player` ensemble.**
+
+### Décision de Luca : trois fonctions de `m_Twitch` restent telles qu'elles sont
+
+`sendAdTrackingData`, `sendAdPodImpression` et `createAdEvent`. Le lecteur ne montre jamais les
+pubs — `queueSegment` écarte leurs segments — mais, trois secondes après chaque coupure, ces
+fonctions envoient à Twitch par `recordAdEvent` une impression, les quatre quartiles et la fin du
+bloc, avec `visible: true` et les identifiants réels de l'annonce, de la campagne et de la
+commande.
+
+Luca a décidé de les garder **écrites comme elles le sont**. Conséquences pour les deux agents :
+
+- **Personne ne les réécrit**, et personne ne les retire sans nouvelle décision de sa part.
+- La réécriture de `m_Twitch` les laisse à l'identique et **garde les interfaces qu'elles
+  appellent** — `sendGqlRequest`, `combineGqlRequests`, `createGqlRequestBody`, `Wait` — pour
+  qu'elles tournent sans qu'on y touche.
+- Elles n'ont pas de test sans navigateur.
+
+Le reste de `m_Twitch` est réécrit normalement. Le suivi « minute regardée » vers
+`spade.twitch.tv` n'est pas concerné : il déclare un visionnage réel.
+
+### Deux défauts du banc, vus pendant l'extraction de `m_Twitch` — pour B
+
+- **`probe2.py` échoue sur toute coupure pub.** À l'arrivée d'une pub, le lecteur bascule sur le
+  flux sans pub : le temps média repart de zéro et le compteur d'images aussi. Le verdict
+  soustrait deux compteurs de sources différentes et obtient un nombre négatif — « la lecture n'a
+  pas eu lieu » alors qu'elle continue (état 6, tampon de 12 s). Mesuré sur HEAD, sur gaules.
+- **Sur caedrel pendant sa coupure, la sonde perd la cible de la page** dans les dix premières
+  secondes (`ConnectionClosedError`), HEAD comme arbre modifié. Le lecteur recharge-t-il sa page
+  pendant la pub ? Deux endroits le peuvent : `m_Debug` (`location.reload`) et `m_Twitch.start`
+  (`location.replace`). Non tranché.
 
 ### Décision : `tests/` est commun, et un critère dit qui y entre
 
