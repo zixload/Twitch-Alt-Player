@@ -14,6 +14,9 @@ import urllib.request
 
 import websockets
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
 # laquelle il vit : pointer sur un dossier fixe reviendrait a tester l'extension chargee dans
@@ -31,7 +34,7 @@ CHANNEL = sys.argv[1] if len(sys.argv) > 1 else 'fps_shaka'
 # le meme identifiant. Un seul bouton doit exister.
 PROBE = r'''
 (() => {
-  const ids = ['tw5-autoredirect', 'tw5-автоперенаправление'];
+  const ids = ['tw5-autoredirect'];
   const btn = ids.map((i) => document.getElementById(i)).find(Boolean) || null;
   const buttonCount = ids.reduce((n, i) => n + document.querySelectorAll('[id="' + i + '"]').length, 0);
   const root = getComputedStyle(document.documentElement);

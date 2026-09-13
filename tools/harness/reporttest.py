@@ -14,6 +14,10 @@ import time
 import urllib.request
 
 import websockets
+import sys
+
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
@@ -51,7 +55,7 @@ ARM = r'''
 (() => {
   window.__saved = null;
   window.__xhrOpens = [];
-  window.ЗаписатьТекстВЛокальныйФайл = function (text, type, name) {
+  window.WriteTextToLocalFile = function (text, type, name) {
     window.__saved = { text: text, type: type, name: name };
   };
   const open0 = XMLHttpRequest.prototype.open;
@@ -68,23 +72,23 @@ ARM = r'''
 })()
 '''
 
-TRIGGER = 'м_Отладка.ЗавершитьРаботуИОтправитьОтзыв(), "triggered"'
+TRIGGER = 'm_Debug.TerminateAndSendFeedback(), "triggered"'
 
 SUBMIT = r'''
 (() => {
   const fr = document.querySelector('iframe');
   if (!fr || !fr.contentDocument) { return 'no iframe'; }
   const d = fr.contentDocument;
-  const form = d.getElementById('отладка-отзыв');
+  const form = d.getElementById('debug-feedback');
   if (!form) { return 'no form'; }
-  const msg = form.elements['отладка-сообщение'];
+  const msg = form.elements['debug-message'];
   if (msg) { msg.value = 'test run'; }
   const btn = form.querySelector('button[type=submit]');
   return JSON.stringify({
     formVisible: !form.hidden,
     submitLabel: btn ? btn.textContent : null,
-    heading: (d.querySelector('#отладка-отзыв h3') || {}).textContent,
-    notice: (d.querySelector('#отладка-отзыв p:last-of-type') || {}).textContent
+    heading: (d.querySelector('#debug-feedback h3') || {}).textContent,
+    notice: (d.querySelector('#debug-feedback p:last-of-type') || {}).textContent
   });
 })()
 '''
@@ -92,7 +96,7 @@ SUBMIT = r'''
 DO_SUBMIT = r'''
 (() => {
   const d = document.querySelector('iframe').contentDocument;
-  const form = d.getElementById('отладка-отзыв');
+  const form = d.getElementById('debug-feedback');
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   return 'submitted';
 })()
@@ -109,20 +113,34 @@ CHECK = r'''
     name: s.name,
     type: s.type,
     bytes: s.text.length,
-    token: o ? String(o['ТокенТрансляции']).slice(0, 60) : null,
-    tokenNoAds: o ? String(o['ТокенТрансляцииБезРекламы']).slice(0, 60) : null,
-    hasMessage: o ? !!o['Сообщение'] : null,
+    token: o ? String(o['BroadcastToken']).slice(0, 60) : null,
+    tokenNoAds: o ? String(o['BroadcastTokenWithoutAds']).slice(0, 60) : null,
+    hasMessage: o ? !!o['Message'] : null,
     keys: o ? Object.keys(o).length : null,
-    leaksIp: /\b(?:\d{1,3}\.){3}\d{1,3}\b/.test(s.text),
-    ipSample: (s.text.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/) || [null])[0],
-    ipWhere: (() => {
-      const i = s.text.search(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
-      if (i < 0) return null;
-      return s.text.slice(Math.max(0, i - 260), i + 60);
-    })(),
-    ipField: (() => {
-      if (!o) return null;
-      return Object.keys(o).filter(k => /\b(?:\d{1,3}\.){3}\d{1,3}\b/.test(JSON.stringify(o[k])));
+    /*
+      Quatre nombres separes par des points, ce n'est pas toujours une adresse : le champ
+      Browser porte « Chrome/152.0.0.0 », et l'alarme se declenchait a chaque passage. Une
+      alarme qui se declenche toujours ne se lit plus. Les numeros de version d'un agent
+      utilisateur -- precedes d'une barre oblique -- sont donc ecartes, et comptes a part.
+    */
+    ...(() => {
+      const RE_QUATRE_NOMBRES = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+      const suspects = [];
+      const versions = [];
+      let m;
+      while ((m = RE_QUATRE_NOMBRES.exec(s.text)) !== null) {
+        const avant = s.text.slice(Math.max(0, m.index - 40), m.index);
+        (/\/$|\/\s*$/.test(avant) ? versions : suspects).push({ valeur: m[0], index: m.index });
+      }
+      const premier = suspects[0] || null;
+      return {
+        leaksIp: suspects.length > 0,
+        ipSample: premier ? premier.valeur : null,
+        ipWhere: premier ? s.text.slice(Math.max(0, premier.index - 260), premier.index + 60) : null,
+        ipField: !o || !premier ? null
+          : Object.keys(o).filter(k => String(JSON.stringify(o[k])).includes(premier.valeur)),
+        versionsIgnorees: versions.map(v => v.valeur),
+      };
     })(),
     leaksUserId: /"user_id"/.test(s.text),
     xhr: window.__xhrOpens

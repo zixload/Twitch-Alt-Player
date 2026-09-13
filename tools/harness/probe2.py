@@ -15,6 +15,9 @@ import urllib.request
 
 import websockets
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
 # laquelle il vit : pointer sur un dossier fixe reviendrait a tester l'extension chargee dans
@@ -72,8 +75,8 @@ PROBE = r'''
   try { q = v && v.getVideoPlaybackQuality(); } catch (e) {}
   return JSON.stringify({
     title: document.title,
-    state: document.body.getAttribute('data-\u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435') ?? document.body.getAttribute('data-state'),
-    ad: ['\u0440\u0435\u043a\u043b\u0430\u043c\u0430', 'advert'].some((c) => document.body.classList.contains(c)),
+    state: document.body.getAttribute('data-state'),
+    ad: ['advert'].some((c) => document.body.classList.contains(c)),
     hasVideo: !!v,
     ct: v ? +v.currentTime.toFixed(2) : null,
     rs: v ? v.readyState : null,

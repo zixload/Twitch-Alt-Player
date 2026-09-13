@@ -50,6 +50,9 @@ import urllib.request
 
 import websockets
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOCALAPPDATA = os.environ.get('LOCALAPPDATA', '')
 

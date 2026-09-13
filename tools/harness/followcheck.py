@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Checks the follow button against every subscription state, and the sidebar titles.
 
-The follow control only appears for a signed-in viewer, so the four ПОДПИСКА_* states
+The follow control only appears for a signed-in viewer, so the four SUBSCRIPTION_* states
 are driven directly on the node the player writes to, and the button's reaction is
 observed — including which of the player's own buttons the click is forwarded to.
 """
@@ -14,6 +14,10 @@ import time
 import urllib.request
 
 import websockets
+import sys
+
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
@@ -42,9 +46,9 @@ SIDEBAR = r'''
 
 FOLLOW = r'''
 (() => {
-  const state = document.getElementById('\u0437\u0440\u0438\u0442\u0435\u043b\u044c-\u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0430');
-  const sub = document.getElementById('\u0437\u0440\u0438\u0442\u0435\u043b\u044c-\u043f\u043e\u0434\u043f\u0438\u0441\u0430\u0442\u044c\u0441\u044f');
-  const unsub = document.getElementById('\u0437\u0440\u0438\u0442\u0435\u043b\u044c-\u043e\u0442\u043f\u0438\u0441\u0430\u0442\u044c\u0441\u044f');
+  const state = document.getElementById('viewer-subscription');
+  const sub = document.getElementById('viewer-follow');
+  const unsub = document.getElementById('viewer-unfollow');
   const btn = document.getElementById('alt-cb-follow');
   if (!state || !sub || !unsub || !btn) { return JSON.stringify({ error: 'missing nodes' }); }
 
@@ -52,12 +56,12 @@ FOLLOW = r'''
   sub.textContent = 'Follow';
   unsub.textContent = 'Unfollow';
   let clicked = null;
-  sub.addEventListener('click', () => { clicked = 'subscribe'; }, true);
-  unsub.addEventListener('click', () => { clicked = 'unsubscribe'; }, true);
+  sub.addEventListener('click', () => { clicked = 'viewer-follow'; }, true);
+  unsub.addEventListener('click', () => { clicked = 'viewer-unfollow'; }, true);
 
   const out = [];
   for (const s of ['0', '1', '2', '3']) {
-    state.setAttribute('data-\u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0430', s);
+    state.setAttribute('data-subscription', s);
     m_ChannelBar.paint();
     clicked = null;
     if (!btn.hidden) { btn.click(); }

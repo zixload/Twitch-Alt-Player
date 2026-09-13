@@ -22,6 +22,9 @@ import urllib.request
 
 import websockets
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Voir probe2.py.
 EXT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -50,10 +53,9 @@ ECRAN2 = ['--window-position=1960,40', '--window-size=1600,950']
 # par lot, et des noms figes ici ont fait echouer l'essai sur un arbre sain ("bouton absent",
 # "lecteur : None") des qu'un lot a traduit ces trois noms. Le premier nom present gagne ;
 # aucun present fait echouer l'essai, jamais passer.
-PLAYER_IDS = [u'\u043f\u0440\u043e\u0438\u0433\u0440\u044b\u0432\u0430\u0442\u0435\u043b\u044c\u0438\u0447\u0430\u0442',
-              u'playerandchat']
-CHAT_TOGGLE_IDS = [u'\u043f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0447\u0430\u0442', u'togglechat']
-CHAT_HIDDEN_CLASSES = [u'\u0441\u043a\u0440\u044b\u0442\u044c\u0447\u0430\u0442', u'hidechat']
+PLAYER_IDS = [u'playerandchat']
+CHAT_TOGGLE_IDS = [u'togglechat']
+CHAT_HIDDEN_CLASSES = [u'hidechat']
 
 NAMES_JS = u"""
   const byId = (ids) => ids.map((i) => document.getElementById(i)).find(Boolean) || null;

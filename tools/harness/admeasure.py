@@ -74,8 +74,8 @@ RECORDER = r'''
 (() => {
   if (window.__adRec) { return; }
   window.__adRec = [];
-  const AD_CLASSES = ['\u0440\u0435\u043a\u043b\u0430\u043c\u0430', 'advert'];
-  const STATE_ATTRS = ['data-\u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435', 'data-state'];
+  const AD_CLASSES = ['advert'];
+  const STATE_ATTRS = ['data-state'];
   setInterval(() => {
     const v = document.querySelector('video');
     if (!v || !document.body) { return; }

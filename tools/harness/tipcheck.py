@@ -9,6 +9,10 @@ import time
 import urllib.request
 
 import websockets
+import sys
+
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
@@ -22,7 +26,7 @@ CHANNEL = os.environ.get('CHANNEL', 'fps_shaka')
 
 PROBE = r'''
 (() => {
-  const stats = document.getElementById('\u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430');
+  const stats = document.getElementById('statistics');
   const tips = [...document.querySelectorAll('[title]')]
     .map(e => e.getAttribute('title'))
     .filter(t => t && t.length > 40);

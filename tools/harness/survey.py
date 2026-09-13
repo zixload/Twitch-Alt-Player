@@ -6,6 +6,10 @@ different things, so this checks which one actually shows up in the wild.
 import json
 import urllib.parse
 import urllib.request
+import sys
+
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko'
 

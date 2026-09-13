@@ -3,6 +3,9 @@
 import json
 import sys
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 STATE_NAMES = {
     '1': 'start', '2': 'stream-begin', '3': 'OFFLINE', '4': 'loading',
     '5': 'playback-begin', '6': 'playing', '7': 'stopped', '8': 'replay',

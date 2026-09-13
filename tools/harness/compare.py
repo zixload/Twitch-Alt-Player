@@ -18,6 +18,9 @@ import urllib.request
 
 import websockets
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
 # laquelle il vit : pointer sur un dossier fixe reviendrait a tester l'extension chargee dans
@@ -32,13 +35,15 @@ BROWSERS = [
 
 CHANNEL = sys.argv[1] if len(sys.argv) > 1 else 'samueletienne'
 MINUTES = float(sys.argv[2]) if len(sys.argv) > 2 else 3.0
+# Le temps laisse au lecteur pour se poser avant qu'on se branche dessus.
+START_WAIT = 8
 
 RECORDER = r'''
 (() => {
   if (window.__adRec) { return 'already'; }
   window.__adRec = [];
-  const AD_CLASS = '\u0440\u0435\u043a\u043b\u0430\u043c\u0430';
-  const STATE_ATTR = 'data-\u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435';
+  const AD_CLASS = 'advert';
+  const STATE_ATTR = 'data-state';
   setInterval(() => {
     const v = document.querySelector('video');
     if (!v) { return; }
@@ -66,7 +71,7 @@ JSON.stringify({
   samples: window.__adRec || [],
   log: (() => {
     try {
-      const d = м_Журнал.ПолучитьДанныеДляОтчета();
+      const d = m_Log.GetDataForReport();
       const text = typeof d === "string" ? d : JSON.stringify(d);
       return text.split(String.fromCharCode(10)).slice(-1200);
     } catch (e) { return ["log unavailable: " + e]; }
@@ -88,14 +93,19 @@ class Cdp:
             msg['sessionId'] = session
         await self.ws.send(json.dumps(msg))
         deadline = time.time() + timeout
-        while time.time() < deadline:
-            got = json.loads(await asyncio.wait_for(self.ws.recv(),
-                                                    timeout=deadline - time.time()))
-            if got.get('id') == mid:
-                if 'error' in got:
-                    raise RuntimeError('%s -> %s' % (method, got['error']))
-                return got.get('result', {})
-        raise TimeoutError(method)
+        # Le delai vient de recv, dont l'exception est vide : sans ce nom, « TimeoutError: »
+        # ne dit pas quel appel n'a pas repondu, et le diagnostic recommence a zero.
+        try:
+            while time.time() < deadline:
+                got = json.loads(await asyncio.wait_for(self.ws.recv(),
+                                                        timeout=deadline - time.time()))
+                if got.get('id') == mid:
+                    if 'error' in got:
+                        raise RuntimeError('%s -> %s' % (method, got['error']))
+                    return got.get('result', {})
+        except asyncio.TimeoutError:
+            raise TimeoutError('%s : aucune reponse en %d s' % (method, timeout))
+        raise TimeoutError('%s : aucune reponse en %d s' % (method, timeout))
 
 
 def stop(proc):
@@ -151,22 +161,59 @@ async def measure(name, binary, port):
                 return result
 
             url = 'chrome-extension://%s/player.html?channel=%s' % (ext_id, CHANNEL)
-            tgt = await cdp.call('Target.createTarget', {'url': url})
-            sid = (await cdp.call('Target.attachToTarget',
-                                  {'targetId': tgt['targetId'],
-                                   'flatten': True}))['sessionId']
-            await cdp.call('Runtime.enable', {}, session=sid)
-            time.sleep(8)
-            await cdp.call('Runtime.evaluate',
-                           {'expression': RECORDER, 'returnByValue': True}, session=sid)
-            await asyncio.sleep(MINUTES * 60)
-            out = await cdp.call('Runtime.evaluate',
-                                 {'expression': READ_BACK, 'returnByValue': True},
-                                 session=sid, timeout=90)
-            payload = out.get('result', {}).get('value')
-            if isinstance(payload, str):
-                payload = json.loads(payload)
-            result.update(payload)
+            await cdp.call('Target.createTarget', {'url': url})
+
+        """L'onglet se pilote par une connexion directe, comme partout ailleurs dans le harnais.
+
+        Deux choses se paient ici, et les deux se sont vues sur Vivaldi pendant que Chrome
+        marchait. La session « aplatie » de Target.attachToTarget n'y repond pas : Runtime.enable
+        reste muet. Et une connexion ouverte pendant que la page charge encore peut rester ouverte
+        sur une cible que le navigateur a remplacee : elle ne repond plus jamais, sans se fermer.
+
+        Donc : laisser la page se poser, puis la chercher, puis se connecter, puis eprouver la
+        connexion par une evaluation triviale avant de lui confier la mesure.
+        """
+        await asyncio.sleep(START_WAIT)
+
+        for essai in range(3):
+            page = None
+            for _ in range(20):
+                try:
+                    with urllib.request.urlopen('http://127.0.0.1:%d/json/list' % port, timeout=6) as r:
+                        for t in json.load(r):
+                            if t.get('type') == 'page' and 'player.html' in (t.get('url') or ''):
+                                page = t
+                                break
+                except Exception:
+                    pass
+                if page and page.get('webSocketDebuggerUrl'):
+                    break
+                page = None
+                await asyncio.sleep(1)
+            if not page:
+                result['error'] = 'aucun onglet du lecteur a piloter'
+                return result
+
+            async with websockets.connect(page['webSocketDebuggerUrl'],
+                                          max_size=None, ping_interval=None) as pws:
+                pcdp = Cdp(pws)
+                try:
+                    await pcdp.call('Runtime.evaluate', {'expression': '1', 'returnByValue': True},
+                                    timeout=10)
+                except TimeoutError:
+                    continue   # cible remplacee sous la connexion : on en cherche une autre
+                await pcdp.call('Runtime.evaluate', {'expression': RECORDER, 'returnByValue': True})
+                await asyncio.sleep(MINUTES * 60)
+                out = await pcdp.call('Runtime.evaluate',
+                                      {'expression': READ_BACK, 'returnByValue': True},
+                                      timeout=90)
+                payload = out.get('result', {}).get('value')
+                if isinstance(payload, str):
+                    payload = json.loads(payload)
+                result.update(payload)
+            return result
+
+        result['error'] = 'l\'onglet du lecteur ne repond pas'
         return result
     finally:
         stop(proc)

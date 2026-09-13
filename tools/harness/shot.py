@@ -15,6 +15,9 @@ import urllib.request
 
 import websockets
 
+# La console de Windows n'est pas en UTF-8 : sans cela, un titre de chaine en chinois tue le script.
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 # **Derive du chemin du script, jamais code en dur.** Le harnais doit eprouver la copie dans
 # laquelle il vit : pointer sur un dossier fixe reviendrait a tester l'extension chargee dans
@@ -54,11 +57,11 @@ PROBE = r'''
   const bar = document.getElementById('alt-channelbar');
   const v = document.querySelector('video');
   const cs = bar ? getComputedStyle(bar) : null;
-  const top = document.getElementById('верхняяпанель');
+  const top = document.getElementById('toppanel');
   return JSON.stringify({
     barPresent: !!bar,
-    topTitle: (document.getElementById('названиетрансляции')||{}).textContent,
-    topViewers: (document.getElementById('количествозрителей')||{}).textContent,
+    topTitle: (document.getElementById('broadcasttitle')||{}).textContent,
+    topViewers: (document.getElementById('viewercount')||{}).textContent,
     barHidden: bar ? bar.hidden : null,
     barHeight: bar ? Math.round(bar.getBoundingClientRect().height) : null,
     name: (document.getElementById('alt-cb-name') || {}).textContent,
@@ -67,7 +70,7 @@ PROBE = r'''
     followHidden: (document.getElementById('alt-cb-follow') || {}).hidden,
     followText: (document.getElementById('alt-cb-follow') || {}).textContent,
     leaveText: (document.getElementById('alt-cb-leave') || {}).innerText,
-    leaveHref: (document.getElementById('названиетрансляции') || {}).href,
+    leaveHref: (document.getElementById('broadcasttitle') || {}).href,
     islive: bar ? bar.classList.contains('alt-cb-islive') : null,
     topPanelBg: top ? getComputedStyle(top).backgroundColor : null,
     videoBottom: v ? Math.round(v.getBoundingClientRect().bottom) : null,
