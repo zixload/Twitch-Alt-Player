@@ -1,44 +1,46 @@
 "use strict";
+/*
+	The changelog and the manual, in the same window, from the same table.
 
-/**
- * Module: News & Updates Manager (m_News)
- * -----------------------------------------------------------------------------
- * This module is a Singleton (IIFE) responsible for:
- * 1. CHANGELOG & NEWS DISPLAY:
- *    - Stores the entire history of changes (`_mNews`) as [Date/Version, TitleKey, ContentKeys...].
- *    - Renders these items into the UI (via `AddNewsItems`).
- *    - Supports "Special" pages like "Full Help" (`FULL_HELP`) or "Tablet Info".
- *    - Auto-generates "Google Translate" links for non-Russian users.
- *
- * 2. UPDATE CHECKING:
- *    - Notifies the user if a new version is found (logic involves `m_Settings.nLastExtensionUpdateCheck`).
- *
- * 3. VERSION TRACKING:
- *    - On startup (`Start`), compares the current extension version (`EXTENSION_VERSION`)
- *      with the last seen version (`sPreviousVersion` in Settings).
- *    - If upgraded, highlights the "News" button to alert the user of new features.
- *
- * USAGE IN CODEBASE:
- * - `m_News.Start()`: Called on player startup to verify version and check for updates.
- * - `m_News.OpenNews()`: Triggered by UI menu ("opennews"). Shows relevant changes based on what the user has seen.
- * - `m_News.OpenHelp()`: Triggered by UI menu ("openhelp"). Displays the full manual.
- *
- * DEPENDENCIES:
- * - `m_Settings`: To read/write version history and check times.
- * - `m_i18n`: To translate news keys (Jxxxx, Fxxxx) into text.
- * - `m_Downloader`: To fetch the version.json file.
- * - `m_Window`: To open the modal window.
- */
+	Each row is a version, a title key, then body keys. Four rows are not versions at all: they are
+	markers, and they all start with "2000" so a single prefix test tells them apart from a date —
+	show once, always show, the manual, tablets only. The manual is not a separate document; it is
+	rows of this table that no date will ever match.
+
+	**Asking for entries newer than Infinity means asking for none.** That is how the manual and the
+	first-run notice are shown alone: the filter that keeps dated entries out is the same one that
+	selects them, given an impossible bound. It reads like a mistake and is the opposite.
+
+	Three ways to open, and they do not show the same thing:
+	  - the viewer has never seen anything: the one-time notice, no more, and the version is recorded
+	    straight away — there is nothing they could have missed;
+	  - the viewer saw an older version: everything newer than it, and a "later" button. **The
+	    version is recorded only when they confirm having read it.** Opening by accident must not
+	    swallow news nobody read;
+	  - the viewer is up to date: the whole changelog, since they asked for it themselves, and no
+	    confirmation to give.
+
+	The translate link is filled in when it is clicked, not when the entry is drawn: building it
+	means URL-encoding the whole entry, and drawing thirty entries would do that thirty times for a
+	link that is almost never used. It is left out entirely when the interface is already Russian —
+	the language these entries were written in.
+
+	The extension used to poll the original author's website every five days for a version manifest
+	and offer an update from it. This fork does not ship from there, so the check is gone rather
+	than left pointing at someone else's site.
+*/
 const m_News = (() => {
-  // Special "Version" Constants (Markers for non-date items)
-  const SHOW_ONCE = "2000.1.1"; // Show once (e.g. urgent notice)
-  const SHOW_ALWAYS = "2000.2.2"; // Always visible (e.g. pinned)
-  const FULL_HELP = "2000.3.3";    // Full Help/Manual identifier
-  const FOR_TABLET = "2000.4.4";      // Tablet-specific info
+  // Les quatre marqueurs qui ne sont pas des dates. Tous en « 2000 », c'est ce qui les distingue.
+  const SHOW_ONCE = "2000.1.1";
+  const SHOW_ALWAYS = "2000.2.2";
+  const FULL_HELP = "2000.3.3";
+  const FOR_TABLET = "2000.4.4";
 
-  // Changelog Data: [Version/Date, Title_I18n_Key, Content_I18n_Keys...]
-  // Used to generate the "What's New" list.
-  const _mNews = [
+  const NO_DATED_ENTRIES = Infinity;
+  const EVERY_DATED_ENTRY = 0;
+  const NO_MARKER = "";
+
+  const NEWS = [
     ["2025.5.28", "J1010", "F1078"],
     ["2024.6.14", "J1010", "F1077"],
     ["2024.6.5", "J1010", "F1076"],
@@ -102,71 +104,63 @@ const m_News = (() => {
     [FOR_TABLET, "J1055", "F1056"],
     [SHOW_ALWAYS, "J1003", "F1000"],
   ];
-  function ConvertVersionToMilliseconds(sVersion) {
+
+  // « 2025.5.28 » ou « 2025.5.28.2 » : une date, et un rang dans la journee.
+  function VersionToTime(sVersion) {
     const mnParts = /^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$/.exec(sVersion);
-    mnParts[1] |= 0;
-    mnParts[2] |= 0;
-    mnParts[3] |= 0;
-    mnParts[4] |= 0;
+    Check(mnParts !== null);
     return Date.UTC(
-      mnParts[1],
-      mnParts[2] - 1,
-      mnParts[3],
+      mnParts[1] | 0,
+      (mnParts[2] | 0) - 1,
+      mnParts[3] | 0,
       0,
       0,
       0,
-      mnParts[4]
+      mnParts[4] | 0
     );
   }
-  function HasNewsWithVersionOlderThan(sVersion) {
-    const nVersion = ConvertVersionToMilliseconds(sVersion);
-    return _mNews.some(
-      (mNewsItem) => ConvertVersionToMilliseconds(mNewsItem[0]) > nVersion
-    );
+
+  function HasEntriesNewerThan(sVersion) {
+    const nVersion = VersionToTime(sVersion);
+    return NEWS.some((mEntry) => VersionToTime(mEntry[0]) > nVersion);
   }
-  function AddNewsItems(nAddVersionsOlderThan, sAddHelpVersion) {
-    Check(
-      typeof nAddVersionsOlderThan == "number" && nAddVersionsOlderThan >= 0
-    );
-    Check(
-      sAddHelpVersion === "" || sAddHelpVersion.startsWith("2000")
-    );
-    Check(
-      Number.isFinite(nAddVersionsOlderThan) || sAddHelpVersion !== ""
-    );
+
+  function Render(nNewerThan, sMarker) {
+    Check(typeof nNewerThan == "number" && nNewerThan >= 0);
+    Check(sMarker === NO_MARKER || sMarker.startsWith("2000"));
+    Check(Number.isFinite(nNewerThan) || sMarker !== NO_MARKER);
     const elAddTo = GetNode("newstext");
     elAddTo.textContent = "";
-    for (let mNewsItem of _mNews) {
-      const sVersion = mNewsItem[0];
+    for (const mEntry of NEWS) {
+      const sVersion = mEntry[0];
       if (sVersion.startsWith("2000")) {
+        // Le marqueur demande, ce qui est toujours visible, et les tablettes sur une tablette.
         if (
-          sVersion === sAddHelpVersion ||
-          (sVersion === FOR_TABLET && isMobileDevice()) ||
-          sVersion === SHOW_ALWAYS
+          sVersion === sMarker ||
+          sVersion === SHOW_ALWAYS ||
+          (sVersion === FOR_TABLET && isMobileDevice())
         ) {
-          AddNewsItem(elAddTo, mNewsItem, 0);
+          RenderEntry(elAddTo, mEntry, 0);
         }
       } else {
-        const nVersion = ConvertVersionToMilliseconds(sVersion);
-        if (nVersion > nAddVersionsOlderThan) {
-          AddNewsItem(elAddTo, mNewsItem, nVersion);
+        const nTime = VersionToTime(sVersion);
+        if (nTime > nNewerThan) {
+          RenderEntry(elAddTo, mEntry, nTime);
         }
       }
     }
     m_Window.configureScrollIndicator(elAddTo);
   }
-  function AddNewsItem(elAddTo, mNewsItem, nNewsDate) {
+
+  function RenderEntry(elAddTo, mEntry, nTime) {
     if (elAddTo.firstElementChild) {
       elAddTo.appendChild(document.createElement("hr"));
     }
     const nodeHeading = document.createElement("h4");
-    if (nNewsDate === 0) {
-      nodeHeading.textContent = GetText(mNewsItem[1]);
-    } else {
-      nodeHeading.textContent = `${m_i18n.FormatDate(
-        nNewsDate
-      )} · ${GetText(mNewsItem[1])}`;
-    }
+    // Les entrees marquees n'ont pas de date a montrer : le manuel n'est pas date.
+    nodeHeading.textContent = nTime === 0
+      ? GetText(mEntry[1])
+      : `${m_i18n.FormatDate(nTime)}\u2002\u00b7\u2002${GetText(mEntry[1])}`;
     elAddTo.appendChild(nodeHeading);
     if (GetText("M0010") !== "ru") {
       const elLink = nodeHeading.appendChild(document.createElement("a"));
@@ -175,96 +169,91 @@ const m_News = (() => {
       elLink.target = "_blank";
       elLink.title = GetText("J0148");
     }
-    for (let idx = 2; idx < mNewsItem.length; ++idx) {
-      m_i18n.InsertAdjacentHtmlMessage(elAddTo, "beforeend", mNewsItem[idx]);
+    for (let idx = 2; idx < mEntry.length; ++idx) {
+      // Le texte des entrees porte du balisage : il s'insere, il ne s'affecte pas.
+      m_i18n.InsertAdjacentHtmlMessage(elAddTo, "beforeend", mEntry[idx]);
     }
   }
+
   function OpenWindow(bConfirmRead) {
     if (bConfirmRead) {
-      m_i18n.InsertAdjacentHtmlMessage(
-        "closenews",
-        "content",
-        "F0619"
-      ).title = GetText("A0620");
-      ShowElement("postponenews", true);
+      m_i18n.InsertAdjacentHtmlMessage("closenews", "content", "F0619").title =
+        GetText("A0620");
     } else {
-      m_i18n.InsertAdjacentHtmlMessage(
-        "closenews",
-        "content",
-        "F0663"
-      ).title = "";
-      ShowElement("postponenews", false);
+      m_i18n.InsertAdjacentHtmlMessage("closenews", "content", "F0663").title = "";
     }
-    m_Events.AddHandler(
-      "controls-leftclick",
-      HandleLeftClick
-    );
+    ShowElement("postponenews", bConfirmRead);
+    m_Events.AddHandler("controls-leftclick", HandleLeftClick);
     m_Window.open("news");
   }
+
   function HandleLeftClick(oEvent) {
-    if (
-      oEvent.sCallsign === "closenews" &&
-      ElementIsShown("postponenews")
-    ) {
+    // Fermer par « j'ai lu » : c'est le seul moment ou la version vue est enregistree.
+    if (oEvent.sCallsign === "closenews" && ElementIsShown("postponenews")) {
       ShowElement("opennews", false);
       m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
-    } else if (oEvent.target.href === "translate:") {
-      let sText = "";
-      for (
-        let elText = oEvent.target.parentElement;
-        elText && elText.nodeName !== "HR";
-        elText = elText.nextElementSibling
-      ) {
-        sText += `${elText.textContent}\n\n`;
-      }
-      oEvent.target.href = `https://translate.google.com/?op=translate&sl=${GetText(
-        "M0010"
-      )}&text=${encodeURIComponent(sText)}`;
+      return;
+    }
+    if (oEvent.target.href === "translate:") {
+      oEvent.target.href = TranslateAddress(oEvent.target);
     }
   }
+
+  // Le texte d'une entree : du titre jusqu'au trait qui ouvre la suivante.
+  function TranslateAddress(elLink) {
+    let sText = "";
+    for (
+      let elText = elLink.parentElement;
+      elText && elText.nodeName !== "HR";
+      elText = elText.nextElementSibling
+    ) {
+      sText += `${elText.textContent}\n\n`;
+    }
+    return `https://translate.google.com/?op=translate&sl=${GetText(
+      "M0010"
+    )}&text=${encodeURIComponent(sText)}`;
+  }
+
   function OpenHelp() {
-    AddNewsItems(Infinity, FULL_HELP);
+    Render(NO_DATED_ENTRIES, FULL_HELP);
     OpenWindow(false);
   }
+
   function OpenNews() {
-    const { pCurrent: sPreviousVersion, pInitial: sInitialVersion } =
+    const { pCurrent: sSeenVersion, pInitial: sNeverSeen } =
       m_Settings.GetSettingParameters("sPreviousVersion");
-    if (sPreviousVersion === sInitialVersion) {
-      AddNewsItems(Infinity, SHOW_ONCE);
+    if (sSeenVersion === sNeverSeen) {
+      Render(NO_DATED_ENTRIES, SHOW_ONCE);
       OpenWindow(false);
       ShowElement("opennews", false);
       m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
-    } else if (sPreviousVersion !== EXTENSION_VERSION) {
-      AddNewsItems(ConvertVersionToMilliseconds(sPreviousVersion), "");
+    } else if (sSeenVersion !== EXTENSION_VERSION) {
+      Render(VersionToTime(sSeenVersion), NO_MARKER);
       OpenWindow(true);
       GetNode("opennews").classList.remove("unread");
     } else {
-      AddNewsItems(0, "");
+      Render(EVERY_DATED_ENTRY, NO_MARKER);
       OpenWindow(false);
     }
   }
-  /*
-   * The extension used to poll the original author's website every five days for
-   * a version manifest, and offer an update from it. This fork does not ship from
-   * there, so the check is gone rather than left pointing at someone else's site.
-   */
+
   function Start() {
-    const { pCurrent: sPreviousVersion, pInitial: sInitialVersion } =
+    const { pCurrent: sSeenVersion, pInitial: sNeverSeen } =
       m_Settings.GetSettingParameters("sPreviousVersion");
-    if (sPreviousVersion !== EXTENSION_VERSION) {
-      m_Log.Wow(
-        `[News] Extension version changed from ${sPreviousVersion} to ${EXTENSION_VERSION}`
-      );
-      if (
-        sPreviousVersion === sInitialVersion ||
-        HasNewsWithVersionOlderThan(sPreviousVersion)
-      ) {
-        ShowElement("opennews", true).classList.add("unread");
-      } else {
-        m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
-      }
+    if (sSeenVersion === EXTENSION_VERSION) {
+      return;
+    }
+    m_Log.Wow(
+      `[News] Extension version changed from ${sSeenVersion} to ${EXTENSION_VERSION}`
+    );
+    if (sSeenVersion === sNeverSeen || HasEntriesNewerThan(sSeenVersion)) {
+      ShowElement("opennews", true).classList.add("unread");
+    } else {
+      // Rien de neuf a montrer : on note la version sans rien allumer.
+      m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
     }
   }
+
   return {
     Start,
     OpenNews,
