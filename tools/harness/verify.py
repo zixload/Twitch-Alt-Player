@@ -19,11 +19,15 @@ de message.
                       pendant sa construction (exceptions nommees dans graph.js).
   7. auto-test        extract-selftest.js : l'extraction extrait, refuse, et sa verification
                       attrape ce qui n'est pas un deplacement.
-  8. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
-  9. console          errors.py : zero exception, zero console.error.
- 10. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
- 11. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
- 12. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
+  8. tests unitaires  tests/*.test.js et tests/*-selftest.js : chaque module reecrit, monte seul
+                      au-dessus d'un faux navigateur, pousse dans les cas limites que trente
+                      secondes de flux ne franchissent jamais -- le tour d'un anneau, une file
+                      d'ecriture fusionnee dans un effacement. Un fichier muet est un echec.
+  9. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
+ 10. console          errors.py : zero exception, zero console.error.
+ 11. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
+ 12. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
+ 13. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
 
 **Des references, pas des seuils.** Le controle croise et les reglages portent aujourd'hui des
 defauts connus. Exiger zero ferait echouer chaque lot jusqu'a leur correction, et un outil qui
@@ -35,9 +39,9 @@ echoue toujours finit par ne plus etre lu. Ils sont donc compares a une referenc
 ce que le passage rapporte : c'est une decision, pas une formalite.
 
 Usage: py -3.14 tools/harness/verify.py [--statique] [--chaines a,b,c] [--accepter]
-  --statique  etapes 1 a 7 seulement, quelques secondes, sans navigateur
+  --statique  etapes 1 a 8 seulement, quelques secondes, sans navigateur
   --chaines   candidates, essayees dans l'ordre (defaut : zerator)
-  --accepter  enregistre les resultats des etapes 2 et 12 comme reference
+  --accepter  enregistre les resultats des etapes 2 et 13 comme reference
 """
 import io
 import json
@@ -226,6 +230,29 @@ def etape_autotest_extraction():
     return out.strip().splitlines()[-1]
 
 
+def etape_tests():
+    """Les tests unitaires de tests/ : un fichier par module reecrit, lances sans navigateur."""
+    dossier = os.path.join(ROOT, 'tests')
+    if not os.path.isdir(dossier):
+        raise Echec(u'tests/ n\'existe pas : les tests unitaires ne peuvent pas etre lances')
+    fichiers = sorted(f for f in os.listdir(dossier)
+                      if f.endswith('.test.js') or f.endswith('-selftest.js'))
+    if not fichiers:
+        raise Echec(u'aucun fichier tests/*.test.js ni tests/*-selftest.js')
+    rates, resumes = [], []
+    for f in fichiers:
+        code, out = run(['node', os.path.join('tests', f)], 300)
+        lignes = [l.strip() for l in out.strip().splitlines() if l.strip()]
+        # Le code de sortie ET une sortie : un fichier muet qui rend 0 n'a rien prouve.
+        if code != 0 or not lignes:
+            rates.append(u'%s\n%s' % (f, tail(out, 10)))
+        else:
+            resumes.append(u'%s : %s' % (f, lignes[-1][:48]))
+    if rates:
+        raise Echec(u'%d test(s) unitaire(s) en defaut :\n%s' % (len(rates), u'\n'.join(rates)))
+    return u'%d fichiers\n    %s' % (len(fichiers), u'\n    '.join(resumes))
+
+
 def en_direct(chaine):
     """L'apercu public d'une chaine hors ligne redirige vers une image « 404 » ; en direct, il est servi."""
     class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -355,6 +382,7 @@ def main():
         (u'auto-test des evenements', lambda: etape_autotest_evenements()),
         (u'ordre de construction', lambda: etape_construction()),
         (u'auto-test de l\'extraction', lambda: etape_autotest_extraction()),
+        (u'tests unitaires', lambda: etape_tests()),
     ]
     if not STATIQUE:
         etapes += [
