@@ -1,503 +1,254 @@
-# Répartition entre les deux agents — twitch_alternate_player-v2
+# Répartition entre les deux agents — phase 2 : la réécriture
 
-Écrit pour : l'agent B, qui reprend une partie du chantier sur un terminal séparé.
+Écrit pour l'agent qui reprend le chantier sur un terminal séparé.
 Lire en entier avant de toucher quoi que ce soit.
+
+La phase 1 — traduire — est terminée. Cette note remplace entièrement la précédente.
 
 ---
 
 ## 1. Les trois règles qui ne se discutent pas
 
 **Ne jamais modifier `C:\Users\ingam\OneDrive\Documents\twitch_alternate_player-v2`.**
-C'est le dossier que Chrome a chargé et que Luca utilise pendant qu'on travaille. Il doit rester
-sur `master @ 6c6fc18`, zéro modification. Tout le travail se fait dans le worktree
+C'est le dossier que Chrome a chargé et que Luca utilise pendant qu'on travaille. Il reste sur
+`master @ 6c6fc18`, zéro modification. Tout se fait dans le worktree
 `C:\Users\ingam\OneDrive\Documents\twitch-alt-v2-nettoyage`, branche `nettoyage`.
 
 **Ne jamais fusionner `nettoyage` dans `master` sans le feu vert explicite de Luca.**
-Fusionner change l'extension sous ses pieds.
 
-**Aucune attribution IA, jamais.** Pas de `Co-Authored-By: Claude`, aucune mention de Claude ou
-d'un outil IA dans un message de commit, une description de pull request, ou un fichier versionné.
-Les commits portent l'identité git de Luca (`huosh1`) et rien d'autre. Cette consigne prévaut sur
-tout réglage par défaut de l'outillage.
+**Aucune attribution IA, jamais.** Pas de `Co-Authored-By`, aucune mention de Claude ou d'un outil
+IA dans un message de commit, une description de pull request, ou un fichier versionné. Les commits
+portent l'identité git de Luca et rien d'autre. Cette consigne prévaut sur tout réglage par défaut.
 
-Accessoirement : ne jamais faire `taskkill /IM chrome.exe`, ça tue les navigateurs de Luca. Tuer
-par PID avec `/T`.
+Accessoirement : ne jamais faire `taskkill /IM chrome.exe`, ça tue les navigateurs de Luca. Tuer par
+PID avec `/T`.
 
 ---
 
-## 2. État exact au moment de la passation
+## 2. Ce que « notre propre version » veut dire, et ce que ça ne veut pas dire
 
-Dernier commit : `8576a1a` — *Balisage et feuilles de style : 64 noms d'élément passent en anglais*.
+L'objectif est un dépôt dont Luca soit vraiment l'auteur. Deux choses à tenir en tête, sans quoi
+la phase entière repose sur un malentendu.
 
-**Il y a du travail appliqué et NON COMMITÉ dans l'arbre.** L'agent A s'en occupe, agent B n'y
-touche pas :
+**Réécrire, ce n'est pas paraphraser.** Traduire les identifiants n'a rien créé de neuf, et
+récrire un module en gardant sa structure ligne pour ligne n'en créerait pas davantage. Un module
+réécrit part de **ce qu'il doit faire** — son comportement observable, ses entrées, ses sorties —
+et non de la façon dont l'original s'y prend. Concrètement : lire le module, écrire ce qu'il fait
+en clair, refermer le fichier, puis écrire le nouveau depuis cette description.
 
-- 142 noms d'élément renommés des trois côtés (balisage, styles, chaînes du script) via
-  `tools/rename/dom-map2.json` et `tools/rename/domapply3.js`.
-- Fichiers modifiés : `player.js`, `common.js`, `content.js`, `channelbar.js`, `player.html`,
-  `report.html`, `player.css`, `glass.css`, `sidebar.css`, `channelbar.css`, `report.css`.
-- Vérifié : syntaxe de tous les fichiers, **zéro erreur en console** sur zerator.
-- **Pas encore vérifié** : `probe2.py`, `fscheck.py`, et le contrôle croisé. À finir avant commit.
-
-### Ce qui est déjà fait (commité)
-
-| Étape | État |
-|---|---|
-| Harnais de vérification (`tools/harness/`) | fait |
-| Suppression du code mort | fait |
-| Correctif barre latérale en plein écran | fait |
-| Renommage JavaScript complet, 1006 noms | fait — **plus aucun identifiant à traduire** |
-| 64 noms d'élément purement balisage/style | fait |
-
-### Ce qui reste
-
-| Lot | Volume | Qui |
-|---|---|---|
-| Finir et commiter les 142 noms en cours | en cours | **A** |
-| Groupe 1b — chaînes JS pures (sentinelles, messages inter-scripts) | 59 noms | **A** |
-| Groupe 2 — clés de réglages persistées + migration | 43 clés | **A** |
-| Retrait des commentaires anglais devenus redondants | milliers de lignes | **A** |
-| Outillage, harnais, documentation, préparation du dépôt public | — | **B** |
+**Le fork reste un fork jusqu'à ce que tout soit remplacé.** `LICENSE` garde la ligne de copyright
+d'Alexander Choporov aussi longtemps qu'une part substantielle de son travail subsiste — ce qui
+sera le cas pendant des mois. Ça n'empêche ni de publier, ni de mettre son nom dessus : la licence
+BSD autorise tout cela. Ça interdit seulement de faire disparaître l'attribution.
 
 ---
 
-## 3. Le partage : par fichier, pas par sujet
+## 3. La règle qui rend le travail en parallèle possible
 
-**La contrainte qui décide de tout : deux agents qui éditent `player.js` en même temps, c'est
-perdu d'avance.** Ce fichier fait 9000 lignes et chaque lot le réécrit par centaines
-d'occurrences. Le partage est donc un partage de **propriété de fichiers**, strict.
+**Un module, un fichier.**
 
-### Agent A possède — agent B n'y touche jamais
+Aujourd'hui `player.js` fait 9341 lignes et contient 26 modules. Tant que c'est le cas, deux agents
+ne peuvent pas y travailler ensemble : chaque réécriture déplace des centaines de lignes et toute
+fusion devient un corps à corps.
 
-```
-player.js  common.js  content.js  worker.js  sidebar.js  channelbar.js
-background.js  autoclaim.js  gqltoken.js  content_injection.js
-player.html  report.html
-player.css  glass.css  sidebar.css  channelbar.css  report.css
-manifest.json  _locales/
-```
+La réécriture est donc aussi une **extraction**. Chaque module sort dans son propre fichier avant
+d'être réécrit. À partir de là, la propriété se lit sans ambiguïté : le fichier appartient à qui a
+le module.
 
-### Agent B possède — agent A n'y touche pas
+Ce que ça exige :
 
-```
-tools/harness/      le harnais de vérification
-tools/rename/       l'outillage de renommage (scripts, PAS les cartes en cours d'application)
-Documentation/      tout
-README.md           à créer pour le dépôt public
-```
+`player.html` charge les fichiers dans l'ordre, en `defer`. Ce qui compte est donc l'ordre de
+*construction*, pas celui des appels : un module peut appeler n'importe quel autre depuis
+l'intérieur d'une fonction, puisque cette fonction ne s'exécutera qu'une fois tout chargé. Les
+cycles ne gênent que s'ils s'exerçent pendant la construction.
 
-**Exception à sens unique :** agent B peut *produire* des cartes de renommage (fichiers JSON dans
-`tools/rename/`) et les proposer. C'est agent A qui les applique aux sources. B analyse et propose,
-A applique. Jamais l'inverse.
+**Mesuré sur le code, et c'est la bonne nouvelle de cette phase.** Onze appels seulement ont lieu
+pendant la construction d'un module, et tous les onze visent `m_Log` ou `m_Events` — les deux
+seuls modules qui ne dépendent de rien. `common.js` n'en a aucun.
 
----
+La contrainte d'ordre tient donc en une ligne :
 
-## 4. Le travail d'agent B, par ordre d'utilité
+> **`m_Log` et `m_Events` sont construits en premier. Tout le reste vient dans n'importe quel
+> ordre.**
 
-### 4.1 — Combler les trous du contrôle croisé (le plus utile)
+Le nœud de quatre modules, malgré ses cycles, s'extrait donc sans difficulté d'ordonnancement : ses
+appels croisés sont tous différés. Ce qui rend ce nœud difficile n'est pas le chargement, c'est
+qu'on ne peut pas le réécrire par morceaux.
 
-`tools/rename/crosscheck.js` compte les références pendantes : un identifiant demandé par le script
-ou sélectionné par une feuille de style que le balisage ne porte plus. C'est l'invariant qui garde
-les renommages honnêtes — il valait 151 avant, 150 après le dernier lot.
-
-**Il a un trou, et ce trou a déjà coûté une panne.** Il ne lit que les chaînes littérales, pas les
-gabarits `` ` ``. Or le lecteur interroge ses contrôles comme ceci :
-
-```js
-document.querySelector(`input[name="одновременныхзагрузок"][value="${...}"]`)
-```
-
-Le balisage a été renommé, la requête non, `querySelector` a rendu `null`, et le lecteur est mort au
-démarrage sur *Cannot set properties of null* — sans que le contrôle croisé voie quoi que ce soit.
-
-**À faire :** faire lire les `TemplateElement` à `crosscheck.js`, comme `domapply3.js` le fait
-désormais. Puis chercher les autres chemins non couverts : `setAttribute`, `matches`, `closest`,
-les sélecteurs construits par concaténation.
-
-### 4.2 — Rendre le harnais capable de dire « ce bouton ne répond plus »
-
-Aujourd'hui le harnais prouve que le flux joue, que la console est propre, et que la barre latérale
-se retire en plein écran. **Il ne prouve pas qu'un bouton de réglage fonctionne encore.** C'est
-précisément ce qui a manqué ci-dessus.
-
-Piste : un script qui ouvre la fenêtre de réglages, clique chaque contrôle, et vérifie que la valeur
-change. `tools/harness/fscheck.py` montre comment piloter un clic réel par CDP (`Runtime.evaluate`
-avec `userGesture: true`).
-
-### 4.3 — Préparer le dépôt public
-
-Le dépôt est un fork de *Alternate Player for Twitch.tv*, BSD 3-Clause, © 2016-2023 Alexander
-Choporov (CoolCmd). La licence permet de publier, renommer, modifier, même vendre. Deux obligations
-seulement : **conserver `LICENSE` avec sa ligne de copyright**, et ne pas laisser entendre que
-l'auteur d'origine cautionne le projet.
-
-À préparer : un `README.md` court — projet en cours, deux ou trois lignes sur les technologies, pas
-d'instructions d'installation longues. Ajouter la ligne de copyright de Luca pour ses
-modifications, sous celle d'origine. Pas de `CLAUDE.md` ni d'`AGENTS.md` versionné.
-
-### 4.4 — Documentation
-
-`Documentation/` contient des rapports d'archive **périmés** : l'un annonce 11 infobulles russes
-actives dans `player.html`, il n'y en a aucune. Vérifier chaque affirmation contre le code avant de
-la garder, et dater ce qui reste.
+À re-vérifier après chaque extraction, parce qu'une réécriture peut introduire un appel de
+construction là où il n'y en avait pas. C'est un des contrôles que l'outil d'extraction doit
+porter.
 
 ---
 
-## 5. Les huit pièges déjà payés — ne pas les repayer
+## 4. Ce que les dépendances imposent
 
-1. **Exports abrégés.** Les modules finissent par `return { Получить, Установить }`. Renommer la
-   liaison sans la propriété réécrit le nom exporté pendant que les appelants gardent l'ancien.
-   Mort au chargement, sans erreur de syntaxe.
+Relevé sur le code, pas supposé.
 
-2. **Objet nu en guise de dictionnaire.** `MAP['hasOwnProperty']` ne rend pas `undefined` mais la
-   méthode héritée d'`Object.prototype`. Toujours une `Map`.
+**Les feuilles** — ne dépendent de rien, ou seulement de `m_Log` et `m_Events` :
+`m_Notification` (35 lignes, aucune dépendance), `m_Log` (81), `m_Events` (52),
+`m_FocusManager` (43), `m_Heartbeat` (63), `m_GarbageCollector` (74), `m_Window` (84),
+`m_Menu` (18), `m_MediaQuery` (66), `m_AutoHide` (110).
 
-3. **Cibles d'affectation.** `x = 1` n'est ni une lecture ni une déclaration : `isReferencedIdentifier()`
-   est faux. Il faut aussi `isBindingIdentifier()`.
+**Les couples mutuels** — deux modules qui s'appellent l'un l'autre, à sortir ensemble :
+`m_FullscreenMode` ↔ `m_PictureInPicture`, `m_Transcoder` ↔ `m_InitSegment`.
 
-4. **Globales du navigateur.** Le glossaire du dépôt traduit `Узел` par `Node`, ce qui masque
-   l'interface DOM `Node`. `Node.ELEMENT_NODE` devient `undefined` et **tous les gestionnaires de
-   clic cessent de répondre, en silence**. `validate.js` porte une liste explicite.
+**Le nœud.** `m_Controls` (1226), `m_Player` (1027), `m_Playlist` (1323) et `m_Twitch` (1253)
+s'appellent mutuellement : 4829 lignes qui forment un seul bloc entrelacé. Aucun des quatre ne
+s'extrait sans les trois autres.
 
-5. **Globales inter-fichiers.** 36 des 48 déclarations de haut niveau de `common.js` sont lues par
-   `player.js`, `content.js`, `sidebar.js` — scripts classiques, tout passe par `window`. Renommer
-   fichier par fichier est impossible.
-
-6. **Noms écrits aussi en chaîne.** `_oSettings` est indexé par propriété *et* par chaîne ; la
-   méthode de journal est choisie par `m_Log[n > 0 ? "Вот" : "Ой"]`. Un nom écrit en chaîne
-   quelque part ne bouge nulle part sans son jumeau.
-
-7. **Gabarits.** Voir 4.1. Les sélecteurs vivent souvent dans des `` ` ``.
-
-8. **L'analyseur de playlist lève sur toute balise inconnue** (`default: Проверить(false)`). Ne
-   jamais retirer une branche `case "-X-..."`, même vide.
-
-Et un piège d'outillage, pour finir : ne jamais chercher les chaînes JavaScript à l'expression
-régulière. Le motif « guillemet, contenu, guillemet » se désynchronise à la première apostrophe
-d'un commentaire, et ce dépôt en est plein. Un inventaire bâti ainsi annonçait 211 noms sûrs ;
-avec l'analyseur, il y en avait 64.
+**C'est ce nœud qui décide du partage.** Il ne peut pas être coupé en deux entre deux agents, et
+il représente à lui seul la moitié du travail restant. Le partage est donc déséquilibré en lignes,
+et il vaut mieux le dire que de faire semblant de l'équilibrer.
 
 ---
 
-## 6. Vérifier — l'ordre compte, le premier qui échoue arrête tout
+## 5. Qui fait quoi
+
+### Agent B — l'outillage, la périphérie, et la preuve
+
+**D'abord, et avant toute réécriture :**
+
+1. **Le contrôle des noms d'évènement interne.** C'est le trou connu, et il a déjà coûté une panne
+   silencieuse : le lecteur émettait `окно-открыто-mainmenu` pendant qu'il écoutait
+   `window-opened-mainmenu`, et l'ouverture du menu principal n'avertissait plus personne. Le
+   contrôle croisé ne voit que les noms DOM ; un nom d'évènement interne n'est ni dans le balisage
+   ni dans une feuille de style, et rien ne le vérifie aujourd'hui. Apparier
+   `m_Events.SendEvent(x)` et `m_Events.AddHandler(x)`, y compris quand `x` est construit par
+   préfixe dans un gabarit.
+2. **L'outil d'extraction** : sortir un module dans son fichier, mettre à jour `player.html`, et
+   refuser l'opération si le module appelle un autre module que `m_Log` ou `m_Events` pendant sa
+   construction — voir la règle d'ordre en section 3.
+3. **La vérification de l'extraction** : un module extrait doit se comporter exactement comme
+   avant. Comparaison de l'arbre syntaxique du corps, à l'identique.
+
+**Ensuite, les modules de périphérie**, du plus isolé au moins isolé :
+
+`m_Notification` · `m_Window` · `m_Menu` · `m_MediaQuery` · `m_AutoHide` · `m_FocusManager` ·
+`m_Heartbeat` · `m_Appearance` · `m_Scale` · `m_Dragger` · `m_FullscreenMode` +
+`m_PictureInPicture` (ensemble) · `m_News` · `m_i18n` · `m_AudioDevice` · `m_Chat` ·
+`m_Statistics` · `m_Debug`
+
+Environ 3300 lignes. B possède aussi, comme avant : `tools/`, `Documentation/`, `README.md`, et la
+branche publique.
+
+### Agent A — le cœur média
+
+`m_Log` · `m_Events` · `m_Settings` · `m_GarbageCollector`, puis le nœud
+`m_Controls` + `m_Player` + `m_Playlist` + `m_Twitch`, puis `m_Downloader`,
+`m_Transcoder` + `m_InitSegment`, et enfin `worker.js`.
+
+Environ 8100 lignes, plus les 1767 de `worker.js`. `worker.js` vient en dernier : c'est le
+démultiplexage MPEG-TS et le multiplexage fMP4, le morceau où une erreur d'un octet corrompt
+l'image sans rien lever.
+
+### Ce que le déséquilibre implique
+
+B finit largement avant A. Quand c'est le cas, B enchaîne sur : la documentation du nouveau
+découpage, la préparation du dépôt public, et l'extension du harnais — en particulier un essai qui
+exerce le chat et le plein écran comme un utilisateur, et une référence de performance qui manque
+encore.
+
+**L'exception reste à sens unique :** B analyse, propose, outille. A applique sur les fichiers de A.
+Jamais l'inverse, sauf accord écrit ici.
+
+### Journal des incursions
+
+Consigne à tenir des deux côtés : ne pas modifier un fichier de l'autre sans l'écrire ici.
+
+- **2026-09-13, agent A, `tools/rename/crosscheck-selftest.js`.** Deux cas d'auto-test s'ancraient
+  sur des noms qu'un lot venait de traduire ; réancrés sur les nouveaux noms. Fait deux fois, à la
+  demande de Luca.
+- **2026-09-13, agent A, `tools/harness/`.** `migrationcheck.py` ajouté, plus une ligne au
+  `.gitignore` du harnais.
+- **2026-09-13, agent A, commit `6b19491`.** Un `git add -A` a embarqué trois fichiers du harnais
+  en cours de modification chez B. Contenu intact, seulement rangé dans le mauvais commit.
+
+---
+
+## 6. L'ordre, et pourquoi
+
+Pour chaque module, quatre temps, dans cet ordre :
+
+1. **Extraire** dans son fichier, sans toucher au code. Vérifier. Commiter.
+2. **Décrire** ce que le module fait : entrées, sorties, évènements émis et écoutés, état
+   conservé, et les cas limites qu'il traite. C'est ce document qui sert de source à la réécriture,
+   pas le code.
+3. **Réécrire** depuis cette description.
+4. **Vérifier**, puis commiter. Un module par commit, jamais deux.
+
+Le temps 2 n'est pas une formalité. C'est lui qui fait la différence entre une réécriture et une
+paraphrase, et c'est lui qui donne le droit de mettre son nom sur le résultat.
+
+---
+
+## 7. Vérifier
 
 ```
-node --check <chaque fichier touché>
-node tools/rename/crosscheck.js            # le total de pendantes ne doit pas augmenter
-python tools/harness/errors.py chrome <chaîne> 25    # zéro exception
-python tools/harness/probe2.py chrome <chaîne> 40    # doit sortir en 0
-python tools/harness/fscheck.py chrome <chaîne>      # barre sans boîte en plein écran
+python tools/harness/verify.py --chaines <chaînes en direct>
+python tools/harness/migrationcheck.py chrome <chaîne>
 ```
 
-**Prendre une chaîne réellement en direct.** Sur une chaîne hors ligne le résultat est zéro image et
-ressemble à un succès — c'est exactement ce que le verdict de `probe2` a été ajouté pour empêcher.
-`zerator` marchait au moment d'écrire ; `ohnepixel` et `domingo` étaient hors ligne.
+`verify.py` enchaîne huit étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
+comparé nom par nom à une référence, auto-test du contrôle, chaîne réellement en direct, console,
+lecture, plein écran, contrôles de réglages.
+
+**Prendre une chaîne réellement en direct.** Sur une chaîne hors ligne le résultat est zéro image
+et ressemble à un succès. `zerator` marchait au moment d'écrire.
 
 Le navigateur d'essai s'ouvre sur le **deuxième écran** (1960,40) pour que Luca regarde tourner les
 essais. Ne pas le remettre hors écran.
 
-`probe2` affiche la cadence effective et signale sous 20 images/s. Une alerte n'est pas forcément
-une régression : la variante de qualité choisie automatiquement varie d'un essai à l'autre. Mesurer
-deux fois avant de conclure.
+Jamais `--accepter` sur un arbre en cours de modification : la référence enregistrerait une panne
+comme un acquis.
 
 ---
 
-## 7. Si les deux agents doivent quand même toucher au même fichier
+## 8. Les pièges déjà payés
 
-Ne pas le faire. Si c'est inévitable : celui qui veut le fichier le demande, l'autre commite son
-travail en cours et annonce qu'il lâche le fichier. Jamais de `git stash` nu — le stash est partagé
-entre tous les worktrees et l'autre agent peut dépiler le vôtre. Préférer un commit de travail
-temporaire.
+Neuf, dont trois fois le même. Ils valent pour la réécriture autant que pour la traduction.
 
----
-
-## 8. Retour de l'agent B — 2026-09-12, 22 h
-
-Section écrite par B pendant qu'A était coupé. Le texte au-dessus n'a pas été modifié.
-
-### 8.1 — À corriger par A : casse introduite par `8576a1a`, déjà commitée
-
-`8576a1a` a renommé `id=индикаторпрокрутки-newstext` en `id=scrollindicator-newstext` dans
-`player.html`, mais `player.js` construit toujours le nom avec l'ancien préfixe :
-
-```js
-// player.js:2277, dans updateScrollIndicator
-ShowElement(GetNode(`индикаторпрокрутки-${elScroll.id}`), bShow);
-```
-
-`getElementById` rend `null`, `GetNode` lève sur `elElement.nodeType`. Chemin vérifié dans le code :
-`OpenHelp` / `OpenNews` → `AddNewsItems` → `configureScrollIndicator` → `updateScrollIndicator`.
-Déclencheurs : boutons `openhelp`, `opennews`, `opennews2`, touche **F1**, contrôle des couleurs.
-Le harnais ne les touche pas, d'où la console propre sur zerator.
-
-Correctif, une ligne dans un fichier d'A : le préfixe du gabarit devient `scrollindicator-`.
-Non testé à l'exécution par B (fichier d'A, et le lot en cours partage l'arbre).
-
-### 8.2 — Le contrôle croisé a changé : refaire la référence
-
-`tools/rename/crosscheck.js` est réécrit, voir `tools/rename/README.md`. Il lit le script avec
-l'analyseur (gabarits, constantes, alias de `classList`, `GetNode` nu, paramètres sur un niveau)
-et vérifie en plus `name=`, `data-*` et les préfixes construits par gabarit.
-`node crosscheck-selftest.js` injecte huit casses d'un seul côté : le nouveau les voit toutes,
-l'ancien en voyait deux — et ratait la panne `одновременныхзагрузок` elle-même.
-
-**Les chiffres de `crosscheck-baseline.json` / `crosscheck-apres*.json` ne sont plus comparables.**
-Les 150 d'avant étaient presque tous du bruit. Avec le nouvel outil :
-
-| État | Pendantes (extension) |
-|---|---|
-| `8576a1a` (dernier commit) | 7 |
-| arbre avec le lot de 142 noms non commité | 7 |
-
-Les deux listes sont identiques, aux renommages du lot près (`отладка-ошибка` → `debug-error`,
-`отладка-отзыв` → `debug-feedback`). **Le lot n'introduit aucune pendante.** Le contrôle croisé
-de l'étape « pas encore vérifié » est donc fait ; restent `probe2.py` et `fscheck.py`.
-
-Les 7 : `индикаторпрокрутки-` (8.1) ; cinq `debug-*` de `report.css`, fournis par
-`ShowForm(oDocument, nodeForm.id)` que l'outil ne suit pas (le rapport les marque « porte aussi
-comme id ») ; `.support`, règle morte depuis `2fa2738` qui a retiré le lien de soutien — supprimable.
-
-**Procédure à changer en section 6 :** comparer les listes du `--json`, pas le total. Un
-renommage qui répare une référence et en casse une autre laisse le total inchangé.
-
-### 8.3 — Renommages à faire à la main
-
-La section « CHEMINS NON RESOLUS » du rapport liste ce que l'outil ne suit pas. Deux de ces
-lignes portent du cyrillique qu'A renommera, et doivent bouger en même temps que le balisage :
-
-- `player.js:1039` — `` `#${sNodeId} > .вводчисла-число` `` (la classe est vérifiée, l'id non)
-- `player.js:2277` — le préfixe de 8.1
-
-### 8.5 — `settingscheck.py` : ce qu'il a trouvé dans l'arbre, lot de 142 noms compris
-
-`tools/harness/settingscheck.py` ouvre les réglages et actionne les 55 contrôles à la souris.
-Sur l'arbre actuel : 43 répondent, 10 non essayés (lecture seule, radio déjà cochée, invisible),
-et deux vrais défauts, aucun faux positif. Il sort en échec tant qu'ils restent.
-
-1. **`colourcheck` → exception.** Pile relevée à l'exécution :
-   `GetNode ← updateScrollIndicator (player.js:2277) ← configureScrollIndicator ← AddNewsItems`.
-   C'est la casse de 8.1, confirmée indépendamment de l'analyse statique.
-2. **`audiodevices-access` → muet, pour tout utilisateur.** `chrome.permissions.request` y demande
-   `contentSettings`, que le manifeste ne déclare pas en permission optionnelle. Réponse du
-   navigateur, relevée : *« Only permissions specified in the manifest may be requested »*. Présent
-   depuis la copie de départ `bb7fd8e`. Correctif probable, fichier d'A :
-   `"optional_permissions": ["contentSettings"]` dans `manifest.json` (retirer et recharger
-   l'extension ensuite). Non essayé par B.
-
-Et un défaut que ni l'un ni l'autre outil ne voit, trouvé en lisant : dans `player.html`, la ligne
-active de `statistics-server` porte `data-clear` alors que le script ne vide que `[data-очистить]`.
-Le champ serveur n'est donc jamais remis à zéro. Présent depuis `bb7fd8e`. Le contrôle croisé ne
-le voit pas parce qu'il vérifie qu'un attribut existe *quelque part*, pas sur *chaque* élément.
-
-**À ajouter en section 6**, après `fscheck.py` :
-`py -3.14 tools/harness/settingscheck.py chrome <chaîne>` — aucun nouveau MUET, ERREUR ou COUVERT.
-
-### 8.7 — La section 6 tient désormais en une commande
-
-```
-py -3.14 tools/harness/verify.py --statique     # 7 s, après chaque modification
-py -3.14 tools/harness/verify.py                # ~3 min, avant chaque commit de lot
-```
-
-Huit étapes, arrêt au premier échec. Le contrôle croisé et les réglages sont comparés à des
-références enregistrées, **nom par nom** : c'est la règle « comparer les listes, pas les totaux »
-appliquée par l'outil au lieu d'être rappelée à l'agent. Les deux références actuelles contiennent
-les défauts analysés en 8.2 et 8.5 : quand A les corrige, le passage les signale « réparés » ; A
-lance alors `--accepter` et commite la référence avec le correctif.
-
-Corrigé au passage : `probe2.py` sortait en 0 quand le navigateur ne démarrait pas ou que
-l'extension ne se chargeait pas.
-
-**Le harnais nomme des éléments, et le renommage les déplace.** Premier passage complet : échec à
-l'étape « plein écran », « bouton absent », « lecteur : None ». L'extension n'y était pour rien :
-le lot de 142 noms a traduit `проигрывательичат`, `переключитьчат` et `скрытьчат`, que
-`fscheck.py` cherchait en dur. **A aurait heurté exactement ce mur** en finissant la vérification
-de son lot. `fscheck.py` et `probe2.py` cherchent maintenant l'ancien nom puis le nouveau
-(`playerandchat`, `togglechat`, `hidechat`, `advert`). Les autres scripts du harnais —
-`shot`, `tipcheck`, `followcheck`, `reporttest`, `entrycheck` — ont encore des noms figés ; ils
-ne sont pas dans `verify.py`. **Quand un lot renomme un élément que le harnais cite, ajouter le
-nouveau nom à côté de l'ancien dans le script concerné** (`grep` du nom dans `tools/harness/`).
-
-### 8.9 — Référence de performance : `admeasure.py` réécrit
-
-**L'ancien `admeasure.py` faisait `taskkill /F /IM chrome.exe` au début et à la fin** : il tuait
-tous les Chrome, ceux de Luca et les essais en cours. Ne jamais lancer une version antérieure à
-cette réécriture. Il tue maintenant son seul processus, par PID, sur le deuxième écran.
-
-Ce qu'il mesure, en un fichier : première image, images décodées et perdues, cadence, gels
-(horloge arrêtée), image figée (horloge qui avance sans nouvelle image), tampon (médiane, 10e
-centile, minimum), temps et passages en publicité. Et pendant toute la mesure : charge processeur
-et **autres navigateurs d'essai**. Deux navigateurs qui décodent en même temps se font perdre des
-images : une mesure prise pendant qu'un autre agent lance `verify.py` n'est pas une référence, et
-le script le dit (code 2) au lieu de l'enregistrer.
-
-Il mesure une **copie figée** d'un commit (`--ext`, `--commit`), pas le dossier de travail qu'un
-agent modifie pendant les 20 minutes de mesure :
-
-```
-git archive <commit> | tar -x -C <copie>      # en Bash : PowerShell corrompt le cyrillique
-py -3.14 tools/harness/admeasure.py zerator 20 reference-<commit> --ext <copie> --commit <commit> --enregistrer
-```
-
-`--enregistrer` écrit `tools/harness/perf-reference.json` — résumé et contexte seulement.
-**Les captures brutes `admeasure-*.json` ne vont jamais dans git** : le lecteur recopie dans son
-journal les balises publicitaires entières, jetons `RADS-TOKEN` et identifiants de session compris.
-
-Premier essai (3 min, non propre : un essai d'A tournait) : première image 1 048 ms, 0 image perdue
-sur 5 394, 30,2 images/s, aucun gel, tampon médian 9,9 s, aucune publicité.
-
-### 8.8 — Documentation vérifiée contre le code (tâche 4.4)
-
-**`legacy_code_translation_reference.md` a fini son travail.** Audit de ses 671 lignes contre les
-cartes appliquées (`map-clean.json`, `manual-map.json`, `dom-map*.json`, `overrides.json`) et le
-code vivant :
-- 31 paires d'identifiants : toutes appliquées telles quelles, aucune contredite ;
-- 622 lignes de code traduites, 348 identifiants cyrilliques : 338 traduits, 7 disparus avec le
-  code mort, 3 encore vivants (`Вот`, et deux mots de messages) ;
-- à l'inverse, 1 643 des 1 670 noms réellement renommés n'y figurent pas ; et il ne couvre presque
-  rien des 549 noms cyrilliques qui restent (chaînes, noms d'éléments, clés de réglages).
-**Décision de Luca : supprimé partout** (`a88d587`). `CLAUDE.md` l'annonce encore comme « the
-authoritative glossary » : cette ligne est morte. Le vrai registre des renommages JavaScript est
-`tools/rename/map-clean.json` — **non versionné**, présent seulement sur le disque.
-
-**Le bug « Zombie Ads » n'est plus ce que `CLAUDE.md` décrit.** `CLAUDE.md` et l'ancien README le
-disent ouvert, correctif à faire : valider `START-DATE`. Or `player.js:6725` filtre déjà les
-publicités expirées ou lointaines (« STRICT AD FILTER FIX, UPDATED DEC 16 », présent dès la copie
-de départ). Si les écrans noirs ont disparu, rien ne le prouve : c'est à mesurer, pas à supposer.
-
-**Code mort, fichier d'A :** `player.js:6599-6614`, « ZOMBIE SEGMENT OVERRIDE ». Le drapeau
-`g_bIgnoreAdSegments` est déclaré `false` (ligne 151), remis à `false` (6608), et jamais passé à
-`true` nulle part : la branche ne s'exécute jamais, et son commentaire décrit un mécanisme absent.
-
-**`ad-data-structure.md`** se contredit (annonce 22 attributs, en liste 26), repose sur une capture
-qui n'est pas dans le dépôt, et le lecteur ne lit que 11 des 26 attributs listés (`CLASS`,
-`START-DATE`, `DURATION`, et `X-TV-TWITCH-AD-` suivi de `ROLL-TYPE`, `POD-LENGTH`,
-`POD-POSITION`, `LINE-ITEM-ID`, `CREATIVE-ID`, `RADS-TOKEN`, `AD-SESSION-ID`, `AD-FORMAT`). Son en-tête interdit à un modèle de langage de
-le modifier : B ne l'a pas touché.
-
-### 8.6 — Dépôt public : branche `public`, historique neuf (décision de Luca)
-
-Worktree `C:\Users\ingam\OneDrive\Documents\twitch-alt-v2-public`, branche orpheline `public`,
-un seul commit `1a41bcc` signé huosh1/Proton, sans parent : aucune version ne contient l'adresse
-Gmail des anciens commits, un trailer IA ou un fichier d'agent. **Rien n'est poussé.**
-`nettoyage` et `master` ne sont pas touchés ; leur historique reste local et privé.
-
-Contenu : l'arbre de `b24f824`, plus README.md, LICENSE et les commentaires du harnais modifiés
-par B, **moins** : `CLAUDE.md`, `CLAUDE/`, `.agent/`, `Documentation/archive/`,
-`Documentation/Translation/`, `_metadata/`, `player-english-translating-test.js`. Vérifié : 78
-fichiers, identiques octet pour octet à la source hors fichiers voulus.
-
-**Pour reporter du travail de `nettoyage` vers `public`** : pas de fusion ni de cherry-pick, les
-deux historiques n'ont rien en commun. Appliquer le diff filtré, puis vérifier que `public` égale
-la source moins les exclusions, fichier par fichier. **Dernier report : `a88d587`** (23 h 25).
-
-```
-git -C twitch-alt-v2-nettoyage diff --binary a88d587..<nouveau> -- . \
-  ':(exclude)CLAUDE.md' ':(exclude)CLAUDE' ':(exclude).agent' ':(exclude)Documentation' \
-  ':(exclude)_metadata' ':(exclude)player-english-translating-test.js' ':(exclude)REPARTITION.md' \
-  > sync.patch
-git -C twitch-alt-v2-public apply --check sync.patch && git -C twitch-alt-v2-public apply sync.patch
-```
-
-**La forme longue `:(exclude)` est obligatoire** : la forme courte `':!_metadata'` fait lire à git
-le `_` comme un modificateur, et le diff sort vide sans que `apply` ne se plaigne vraiment. La
-première version de cette procédure avait ce défaut ; elle a été éprouvée et corrigée au premier
-report. `Documentation/` est exclu en entier : le glossaire est supprimé, et
-`ad-data-structure.md` reste une note de travail de Luca, qu'il réécrira lui-même.
-
-La liste des exclusions vit ici et pas dans le `.gitignore` publié : un `.gitignore` qui nomme
-`CLAUDE.md` annonce ce qu'il cache.
-
-**Décisions de Luca (2026-09-12, 22 h 45) :**
-- Publication sur un **nouveau** dépôt GitHub — pas `zixload/twitch-alt-player`, dont l'historique
-  porte l'adresse Gmail.
-- **Rien n'est poussé, et le dépôt n'est pas créé, tant que le projet n'est pas fini, refait et
-  optimisé.** La branche `public` se prépare en local jusque-là.
-- **Seul zix est crédité.** Aucun tiers dans le README, les messages, les métadonnées. Exception
-  imposée par la licence : la ligne de copyright de CoolCmd reste dans `LICENSE`, c'est la
-  condition de redistribution de la BSD 3-Clause. Rien d'autre ne la cite.
-
-Le commit unique de `public` a été refait en conséquence, puis à chaque report : **`6c11966`**
-(état de `a88d587`, sans `Documentation/`).
-
-**Identité des commits : zix, et non plus huosh1** (décision de Luca, 22 h 50). Cela remplace la
-consigne de la section 1. Réglé par `git config --local user.name zix` dans ce dépôt : les trois
-worktrees l'héritent, la configuration globale (huosh1, utilisée par ses autres projets) n'est pas
-touchée. L'adresse reste `huoshi1@proton.me`. Premier commit signé zix sur `nettoyage` : `2c84d90`
-(README, LICENSE, prénom retiré du harnais). Les commits antérieurs restent signés huosh1 ; ils ne
-partiront pas, l'historique public est neuf.
-
-À faire par A avant la publication — mentions de tiers dans ses fichiers :
-- `manifest.json` : `"author": "Alexander Choporov (CoolCmd)"` → `zix`. Le nom
-  `Alternate Player for Twitch.tv (v2)` est aussi celui du produit d'origine : à renommer.
-- `_locales/en` et `_locales/ru`, messages ~1054 et ~1154 : textes d'aide qui présentent l'auteur
-  d'origine et l'histoire de l'extension sur le Web Store.
-- `common.js:744` et `player.js:6942` : `'CoolCmd'` n'y est pas un crédit mais une valeur
-  sentinelle. Celle de `common.js` est la valeur par défaut d'un réglage persisté
-  (`сНазваниеВарианта`) : la changer demande la migration du groupe 2.
-
-### 8.4 — Fichiers touchés par B
-
-`tools/rename/crosscheck.js` (réécrit), `tools/rename/crosscheck-selftest.js` (nouveau),
-`tools/rename/README.md` (section ajoutée) : **commités par B en `6a2c4b9`**, par-dessus `8576a1a`.
-`tools/harness/settingscheck.py`, `tools/harness/README.md`, `tools/harness/.gitignore` :
-**commités par B en `b24f824`**.
-README, LICENSE, prénom retiré du harnais : `2c84d90`. `verify.py`, les deux références,
-correctifs de `fscheck`/`probe2`/`settingscheck` : `553a02d`.
-`HEAD` a donc avancé de quatre commits depuis `8576a1a` ; le lot de 142 noms d'A est resté intact,
-non indexé. **Reprise pour A : lancer `py -3.14 tools/harness/verify.py` sur l'arbre tel quel —
-il passait à 23 h 07 avec le lot en place — puis corriger les défauts de 8.1 et 8.5.**
-Ce fichier est versionné dans `nettoyage` depuis `6b19491`, et exclu de `public`.
-
-### 8.10 — Passation de B, 23 h 45 (B arrive en fin de quota)
-
-**Fait par B depuis 23 h 20, commité :**
-- `a88d587` : glossaire de traduction supprimé (décision de Luca, audit en 8.8).
-- `admeasure.py` réécrit (8.9) — A l'a embarqué dans `6b19491`, sans dommage.
-- Ce commit : cas 8 de `crosscheck-selftest.js` retravaillé. La correction d'A (viser
-  `scrollindicator-`) détectait bien la casse, mais le cas ne montrait plus sa leçon : sans pendante
-  à réparer, le total montait (6 → 7). Le cas répare désormais lui-même une pendante du moment, et
-  **exige** nom cassé vu + total inchangé ; s'il n'y a plus rien à réparer, il sort INVALIDE au lieu
-  de passer. Auto-test : 8/8, cas 8 à 6 → 6.
-- `public` : dernier report `a88d587` (commit unique `6c11966`). Rien de poussé.
-
-**Pour A, dans l'ordre :**
-1. **Ne pas toucher aux fichiers de B sans le dire ici** (`crosscheck-selftest.js` a été modifié par A
-   en `aa59680`). Signaler le besoin dans ce fichier ; B le traite à sa reprise.
-2. Une fois le lot en cours (clés de réglages, `settings-map.json`, `wordapply.js`) vert et commité :
-   `py -3.14 tools/harness/verify.py`. Il doit signaler `colourcheck` **réparé** dans les réglages.
-   Alors seulement : `verify.py --accepter`, et commiter les deux références avec le lot.
-   Ne pas lancer `--accepter` sur un arbre en cours de modification.
-3. Défauts encore ouverts, fichiers d'A : `optional_permissions: ["contentSettings"]` dans le
-   manifeste (8.5), `data-clear` → `data-очистить` sur `statistics-server` (8.5), code mort
-   `g_bIgnoreAdSegments` (8.8), CoolCmd dans `manifest.json` et `_locales` (8.6).
-4. Suite prévue : 43 clés de réglages + migration, puis retrait des commentaires anglais en double.
-   Quand un lot renomme un élément que le harnais cite, ajouter le nouveau nom à côté de l'ancien
-   dans le script concerné (8.7).
-
-**Référence de performance : pas encore obtenue.** La mesure de 20 min lancée à 23 h 28 sur une
-copie figée de `a88d587` a tourné pendant que A lançait ses essais (2 navigateurs d'essai relevés) :
-elle sortira « MESURE NON PROPRE » et n'enregistrera rien. À refaire **quand aucun autre essai ne
-tourne** (8.9) ; A ne doit pas lancer `verify.py` pendant ces 20 minutes.
-
-**Reste pour B à sa reprise :** référence de performance propre ; reporter `nettoyage` → `public`
-(procédure 8.6, depuis `a88d587`) ; mettre à jour `fscheck`/`probe2` quand A renomme `data-состояние`.
+1. **Exports abrégés.** `return { Get, Set }` : renommer la liaison sans la propriété désynchronise
+   l'interface de ses appelants. Mort au chargement, sans erreur de syntaxe.
+2. **Objet nu en guise de dictionnaire.** `MAP['hasOwnProperty']` rend la méthode héritée
+   d'`Object.prototype`, pas `undefined`. Toujours une `Map`.
+3. **Cibles d'affectation.** `x = 1` n'est ni une lecture ni une déclaration.
+4. **Globales du navigateur.** Traduire `Узел` par `Node` masque l'interface DOM `Node` :
+   `Node.ELEMENT_NODE` devient `undefined` et **tous les gestionnaires de clic cessent de
+   répondre**, en silence.
+5. **Globales inter-fichiers.** Les scripts sont classiques, pas des modules : tout passe par
+   `window`. C'est ce qui rend l'extraction en fichiers possible — et qui interdit de renommer un
+   fichier à la fois.
+6. **Noms écrits aussi en chaîne.** `_oSettings` est indexé par propriété *et* par chaîne ; la
+   méthode de journal est choisie par `m_Log[n > 0 ? 'Here' : 'Oops']`.
+7. **Noms construits par préfixe.** Trois pannes sur ce seul motif. Un nom bâti dans un gabarit —
+   `` GetNode(`scrollindicator-${el.id}`) `` — échappe au découpage de mots, parce que le caractère
+   qui suit le préfixe est le `$` de l'interpolation. Les deux premières fois portaient sur des
+   noms DOM et le contrôle croisé les a rattrapées ; la troisième portait sur un nom d'évènement
+   interne, et rien ne l'a vue.
+8. **L'analyseur de playlist lève sur toute balise inconnue** (`default: Check(false)`). Ne jamais
+   retirer une branche `case "-X-..."`, même vide.
+9. **Ne jamais chercher les chaînes JavaScript à l'expression régulière.** Le motif
+   « guillemet, contenu, guillemet » se désynchronise à la première apostrophe d'un commentaire, et
+   ce dépôt en est plein. Un inventaire bâti ainsi annonçait 211 noms sûrs ; avec l'analyseur, 64.
 
 ---
 
-## Journal des incursions dans les fichiers de l'autre
+## 9. Où en est la phase 1
 
-Consigne d'agent B : ne pas modifier ses fichiers sans l'ecrire ici.
+Terminée. Dernier commit : `4e56f14`.
 
-- **2026-09-13, agent A, `tools/rename/crosscheck-selftest.js`.** Deux cas d'auto-test s'ancraient
-  sur des noms que le dernier lot vient de traduire : `.вводчисла-число` est devenu
-  `.numberinput-number`, et `data-окно-переключить` est devenu `data-window-toggle`. Les deux cas
-  se declaraient invalides et arretaient toute la verification. Ils sont reancres sur les nouveaux
-  noms, avec une valeur de panne differente pour le second, puisque l'ancienne panne porte
-  desormais le nom reel. L'auto-test repasse 8/8.
-- **2026-09-13, agent A, `tools/harness/`.** `migrationcheck.py` ajoute — l'essai de reprise des
-  reglages. Une ligne ajoutee au `.gitignore` du harnais pour ses profils. Signale ici parce que le
-  dossier appartient a l'agent B, meme si le fichier est neuf.
-- **2026-09-13, agent A, commit `6b19491`.** Un `git add -A` a embarque trois fichiers du harnais
-  en cours de modification chez l'agent B (`.gitignore`, `README.md`, `admeasure.py`). Le contenu
-  est intact, il se trouve seulement dans un commit qui parle d'autre chose.
+| | origine | maintenant |
+|---|---|---|
+| `player.js` | 1609 | ~470 |
+| `player.html` | 564 | 125 |
+| `player.css` | 176 | 26 |
+| `worker.js` | 441 | 142 |
+
+Plus un seul identifiant cyrillique dans le dépôt : ce qui reste est du texte, messages de journal
+et commentaires. Les 43 clés de réglages sont traduites avec une migration éprouvée sur quatre cas.
+855 lignes de commentaire redondant retirées.
+
+Un défaut reste ouvert et ne peut pas être fermé au banc : le bouton d'accès aux périphériques
+audio. Sa permission manquante est maintenant déclarée, mais l'accorder exige un clic humain sur
+une invite du navigateur. **C'est à Luca de le vérifier en vrai.**
