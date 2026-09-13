@@ -187,6 +187,11 @@ Jamais l'inverse, sauf accord écrit ici.
 
 Consigne à tenir des deux côtés : ne pas modifier un fichier de l'autre sans l'écrire ici.
 
+- **2026-09-13, agent B, `player.js` et `player.html`, en cours.** Chaque extraction d'un module de
+  B retire sa declaration de `player.js` et ajoute une balise `<script>` a `player.html`. C'est le
+  seul moyen de sortir un module, et `extractcheck.js` prouve a chaque fois que rien d'autre n'a
+  bouge. Un commit par module, et rien d'autre dedans : voir le journal git. Premier :
+  `m_Notification`.
 - **2026-09-13, agent A, `tools/harness/entrycheck.py`.** L'essai cherchait le bouton injecte sur
   twitch.tv par son identifiant russe, que ce lot traduit : il aurait echoue pour une mauvaise
   raison. Il accepte desormais les deux noms, comme `fscheck.py`, et compte les boutons portant
