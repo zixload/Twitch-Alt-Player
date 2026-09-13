@@ -26,3 +26,6 @@ admeasure-*.json
 migrationcheck-*/
 migrationcheck-out.txt
 module-profile/
+cmp-profile-*/
+compare-*.json
+vivaldi-diag*/
