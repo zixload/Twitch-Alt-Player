@@ -161,6 +161,10 @@ Jamais l'inverse, sauf accord écrit ici.
 
 Consigne à tenir des deux côtés : ne pas modifier un fichier de l'autre sans l'écrire ici.
 
+- **2026-09-13, agent A, `tools/harness/entrycheck.py`.** L'essai cherchait le bouton injecte sur
+  twitch.tv par son identifiant russe, que ce lot traduit : il aurait echoue pour une mauvaise
+  raison. Il accepte desormais les deux noms, comme `fscheck.py`, et compte les boutons portant
+  l'identifiant -- ce qui prouve la disparition d'un doublon d'amont (voir le commit).
 - **2026-09-13, agent A, `tools/rename/crosscheck-selftest.js`.** Deux cas d'auto-test s'ancraient
   sur des noms qu'un lot venait de traduire ; réancrés sur les nouveaux noms. Fait deux fois, à la
   demande de Luca.

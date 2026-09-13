@@ -24,9 +24,16 @@ PORT = 9505
 PROFILE = os.path.join(HERE, 'entry-profile')
 CHANNEL = sys.argv[1] if len(sys.argv) > 1 else 'fps_shaka'
 
+# **Deux noms, et un compte.** L'identifiant du bouton a ete traduit, d'ou l'ancien et le nouveau.
+# Le compte vient d'un defaut d'amont : le HTML injecte contenait des lignes « // <button
+# id=...> » heritees de la convention des commentaires jumeaux. Dans un gabarit, ce ne sont pas
+# des commentaires, et le navigateur construisait un second bouton imbrique dans le premier, avec
+# le meme identifiant. Un seul bouton doit exister.
 PROBE = r'''
 (() => {
-  const btn = document.getElementById('tw5-автоперенаправление');
+  const ids = ['tw5-autoredirect', 'tw5-автоперенаправление'];
+  const btn = ids.map((i) => document.getElementById(i)).find(Boolean) || null;
+  const buttonCount = ids.reduce((n, i) => n + document.querySelectorAll('[id="' + i + '"]').length, 0);
   const root = getComputedStyle(document.documentElement);
   const body = getComputedStyle(document.body);
   const names = ['--button-size-default','--border-radius-medium',
@@ -39,6 +46,7 @@ PROBE = r'''
   const cs = btn ? getComputedStyle(btn) : null;
   return JSON.stringify({
     buttonInserted: !!btn,
+    buttonCount: buttonCount,
     computedWidth: cs ? cs.width : null,
     computedHeight: cs ? cs.height : null,
     tokens: tokens

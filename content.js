@@ -308,7 +308,7 @@ function redirectToOurPlayer(sChannelCode) {
   );
   // m_Log.Wow(`[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`);
   document.documentElement.setAttribute(
-    "data-tw5-перенаправление",
+    "data-tw5-redirect",
     sPlayerAddress
   );
   // document.documentElement.setAttribute('data-tw5-redirect', sPlayerAddress);
@@ -347,7 +347,7 @@ function handlePopState(oEvent) {
     }
     pageAddressChanged("POPSTATE");
     // pageAddressChanged('POPSTATE');
-    if (document.documentElement.hasAttribute("data-tw5-перенаправление")) {
+    if (document.documentElement.hasAttribute("data-tw5-redirect")) {
       // if (document.documentElement.hasAttribute('data-tw5-redirect')) {
       m_Log.Wow("[content.js] Скрываю событие popstate");
       // m_Log.Wow('[content.js] Hiding popstate event');
@@ -396,7 +396,7 @@ function handleCloseHelp(oEvent) {
   oEvent.preventDefault();
   m_Log.Wow("[content.js] Закрываю справку");
   // m_Log.Wow('[content.js] Closing help');
-  oEvent.currentTarget.classList.remove("tw5-справка");
+  oEvent.currentTarget.classList.remove("tw5-help");
   // oEvent.currentTarget.classList.remove('tw5-help');
   oEvent.currentTarget.removeEventListener(
     "mouseover",
@@ -416,13 +416,13 @@ function handleCloseHelp(oEvent) {
 }
 
 function getOurButton() {
-  return document.getElementById("tw5-автоперенаправление");
+  return document.getElementById("tw5-autoredirect");
   // return document.getElementById('tw5-autoredirect');
 }
 
 function updateOurButton() {
   getOurButton().classList.toggle(
-    "tw5-запрещено",
+    "tw5-forbidden",
     !m_Settings.Get("bAutoRedirectAllowed")
   );
   // getOurButton().classList.toggle('tw5-forbidden', !m_Settings.Get('bAutoRedirectAllowed'));
@@ -442,10 +442,8 @@ function insertOurButton() {
     nodeToInsert.insertAdjacentHTML(
       "afterend",
       `
-		<div class="tw5-автоперенаправление tw5-js-удалить">
-			<button id="tw5-автоперенаправление">
-		// <div class="tw5-autoredirect tw5-js-remove">
-			// <button id="tw5-autoredirect">
+		<div class="tw5-autoredirect tw5-js-remove">
+			<button id="tw5-autoredirect">
 				<svg viewBox="0 0 128 128">
 					<g>
 						<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
@@ -453,12 +451,12 @@ function insertOurButton() {
 				</svg>
 			</button>
 			<style>
-				.tw5-автоперенаправление
+				.tw5-autoredirect
 				{
 					flex: 0 0 auto;
 					margin: 0 0 0 .5rem;
 				}
-				.tw5-автоперенаправление button
+				.tw5-autoredirect button
 				{
 					align-items: center;
 					background-color: transparent;
@@ -469,26 +467,24 @@ function insertOurButton() {
 					justify-content: center;
 					width: 3.6rem;
 				}
-				.tw-root--theme-dark .tw5-автоперенаправление button
-				// .tw-root--theme-dark .tw5-autoredirect button
+				.tw-root--theme-dark .tw5-autoredirect button
 				{
 					color: #efeff1;
 				}
-				.tw5-автоперенаправление button:active
+				.tw5-autoredirect button:active
 				{
 					background-color: rgba(0, 0, 0, 0.05);
 				}
-				.tw-root--theme-dark .tw5-автоперенаправление button:active
-				// .tw-root--theme-dark .tw5-autoredirect button:active
+				.tw-root--theme-dark .tw5-autoredirect button:active
 				{
 					background-color: rgba(255, 255, 255, 0.15);
 				}
-				.tw5-автоперенаправление svg
+				.tw5-autoredirect svg
 				{
 					fill: currentColor;
 					width: 75%;
 				}
-				.tw5-запрещено svg
+				.tw5-forbidden svg
 				{
 					opacity: .4;
 				}
@@ -509,10 +505,8 @@ function insertOurButton() {
     nodeToInsert.insertAdjacentHTML(
       "afterend",
       `
-		<div class="tw5-автоперенаправление tw5-js-удалить">
-			<button id="tw5-автоперенаправление">
-		// <div class="tw5-autoredirect tw5-js-remove">
-			// <button id="tw5-autoredirect">
+		<div class="tw5-autoredirect tw5-js-remove">
+			<button id="tw5-autoredirect">
 				<svg viewBox="0 0 128 128">
 					<g>
 						<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
@@ -523,13 +517,13 @@ function insertOurButton() {
 				${m_i18n.GetMessage("F0600")}
 			</div>
 			<style>
-				.tw5-автоперенаправление
+				.tw5-autoredirect
 				{
 					flex: 0 0 auto;
 					margin: 0 .5rem;
 					position: relative;
 				}
-				.tw5-автоперенаправление button
+				.tw5-autoredirect button
 				{
 					align-items: center;
 					background-color: var(--color-background-button-text-default);
@@ -540,22 +534,22 @@ function insertOurButton() {
 					justify-content: center;
 					width: var(--button-size-default);
 				}
-				.tw5-автоперенаправление button:hover
+				.tw5-autoredirect button:hover
 				{
 					background-color: var(--color-background-button-text-hover);
 					color: var(--color-fill-button-icon-hover);
 				}
-				.tw5-автоперенаправление button:active
+				.tw5-autoredirect button:active
 				{
 					background-color: var(--color-background-button-text-active);
 					color: var(--color-fill-button-icon-active);
 				}
-				.tw5-автоперенаправление svg
+				.tw5-autoredirect svg
 				{
 					fill: currentColor;
 					width: 75%;
 				}
-				.tw5-запрещено svg
+				.tw5-forbidden svg
 				{
 					opacity: .4;
 				}
@@ -592,11 +586,11 @@ function insertOurButton() {
 					width: 6px;
 					z-index: var(--z-index-below);
 				}
-				.tw5-автоперенаправление:hover .tw5-tooltip
+				.tw5-autoredirect:hover .tw5-tooltip
 				{
 					display: block;
 				}
-				.tw5-справка .tw5-tooltip
+				.tw5-help .tw5-tooltip
 				{
 					background: #f00000;
 					color: #fff;
@@ -622,7 +616,7 @@ function insertOurButton() {
     !m_Settings.Get("bAutoRedirectNoticed")
   ) {
     // if (!g_oParsedAddress.bMobileVersion && !m_Settings.Get('bAutoRedirectNoticed')) {
-    nodeButton.parentNode.classList.add("tw5-справка");
+    nodeButton.parentNode.classList.add("tw5-help");
     // nodeButton.parentNode.classList.add('tw5-help');
     nodeButton.parentNode.addEventListener(
       "mouseover",
@@ -658,7 +652,7 @@ function insertOurButtonFirstTime() {
     });
   } else {
     window.addEventListener(
-      "tw5-изменензаголовок",
+      "tw5-titlechanged",
       insertOurButtonIfNeeded
     );
     // window.addEventListener('tw5-titlechanged', insertOurButtonIfNeeded);
@@ -761,7 +755,7 @@ function changeChatStyle() {
   // nodeStyle.rel = 'stylesheet';
   nodeStyle.href = chrome.runtime.getURL("content.css");
   // nodeStyle.href = chrome.runtime.getURL('content.css');
-  nodeStyle.className = "tw5-js-удалить";
+  nodeStyle.className = "tw5-js-remove";
   // nodeStyle.className = 'tw5-js-remove';
   (document.head || document.documentElement).appendChild(nodeStyle);
 }

@@ -1,0 +1,16 @@
+{
+  "// note": "Noms poses par l'extension sur la page twitch.tv, et variables CSS de content.css. Les variables gardent leur -- dans la carte : le decoupage de mots ne franchit pas un tiret. Les formes anglaises sont celles que le mainteneur d'origine avait ecrites en commentaire, quand il en avait ecrit.",
+  "--tw5-отступокна": "--tw5-windowmargin",
+  "--tw5-вышевводасообщения-в": "--tw5-abovemessageinput",
+  "--tw5-нижнийотступчата": "--tw5-chatbottommargin",
+  "--tw5-ширинаспискасмайликов": "--tw5-emotelistwidth",
+  "--tw5-высотазаголовка": "--tw5-headerheight",
+  "--tw5-высотавводасообщения": "--tw5-messageinputheight",
+  "data-tw5-перенаправление": "data-tw5-redirect",
+  "tw5-автоперенаправление": "tw5-autoredirect",
+  "tw5-справка": "tw5-help",
+  "tw5-запрещено": "tw5-forbidden",
+  "tw5-js-удалить": "tw5-js-remove",
+  "tw5-изменензаголовок": "tw5-titlechanged",
+  "tw5-неперехватывать": "tw5-nointercept"
+}

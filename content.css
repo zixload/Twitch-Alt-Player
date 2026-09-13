@@ -1,6 +1,6 @@
 @charset "utf-8";
 :root {
-	--tw5-ширинаспискасмайликов: 90rem
+	--tw5-emotelistwidth: 90rem
 	/* --tw5-widthofemojilist: 90rem */
 }
 .tw-balloon[data-a-target=chat-settings-balloon],
@@ -21,7 +21,7 @@ html .chat-settings__popover {
 }
 html .emote-picker {
 	max-width: 100%;
-	width: var(--tw5-ширинаспискасмайликов)
+	width: var(--tw5-emotelistwidth)
 	/* width: var(--tw5-widthofemojilist) */
 }
 .community-points-summary+.tw-transition>div>div>.tw-balloon {
@@ -51,26 +51,26 @@ html .viewer-card-layer__draggable {
 }
 @media (max-height:33em) {
 	:root {
-		--tw5-высотазаголовка: 0px;
+		--tw5-headerheight: 0px;
 		/* --tw5-headerheight: 0px; */
-		--tw5-отступокна: .2rem;
+		--tw5-windowmargin: .2rem;
 		/* --tw5-windowindent: .2rem; */
-		--tw5-нижнийотступчата: .4rem;
+		--tw5-chatbottommargin: .4rem;
 		/* --tw5-bottomchatoffset: .4rem; */
-		--tw5-высотавводасообщения: var(--button-size-default);
+		--tw5-messageinputheight: var(--button-size-default);
 		/* --tw5-messageinputheight: var(--button-size-default); */
-		--tw5-вышевводасообщения-в: (var(--tw5-нижнийотступчата) + var(--tw5-высотавводасообщения))
+		--tw5-abovemessageinput: (var(--tw5-chatbottommargin) + var(--tw5-messageinputheight))
 		/* --tw5-abovemessageinput-in: (var(--tw5-bottomchatoffset) + var(--tw5-messageinputheight)) */
 	}
 	html .stream-chat-header {
-		height: var(--tw5-высотазаголовка);
+		height: var(--tw5-headerheight);
 		/* height: var(--tw5-headerheight); */
 		overflow: hidden;
 		z-index: var(--z-index-default)!important
 	}
 	.stream-chat-header>div:last-child {
 		position: fixed!important;
-		bottom: var(--tw5-нижнийотступчата)!important;
+		bottom: var(--tw5-chatbottommargin)!important;
 		/* bottom: var(--tw5-bottomchatoffset)!important; */
 		margin-right: .5rem!important
 	}
@@ -78,12 +78,12 @@ html .viewer-card-layer__draggable {
 		padding-bottom: 0!important
 	}
 	html .chat-input {
-		padding-bottom: var(--tw5-нижнийотступчата)!important;
+		padding-bottom: var(--tw5-chatbottommargin)!important;
 		/* padding-bottom: var(--tw5-bottomchatoffset)!important; */
 		margin-right: var(--button-size-default)
 	}
 	html .chat-input__textarea textarea:empty {
-		height: var(--tw5-высотавводасообщения)!important;
+		height: var(--tw5-messageinputheight)!important;
 		/* height: var(--tw5-messageinputheight)!important; */
 		min-height: unset;
 		padding-top: .3rem;
@@ -116,29 +116,29 @@ html .viewer-card-layer__draggable {
 	.chat-input .ffz-attached--right.ffz-attached--up {
 		position: fixed!important;
 		top: auto!important;
-		right: var(--tw5-отступокна)!important;
+		right: var(--tw5-windowmargin)!important;
 		/* right: var(--tw5-windowindent)!important; */
-		bottom: calc(var(--tw5-вышевводасообщения-в))!important;
+		bottom: calc(var(--tw5-abovemessageinput))!important;
 		/* bottom: calc(var(--tw5-abovemessageinput-in))!important; */
 		left: auto!important;
 		margin: 0!important
 	}
 	.tw-balloon[data-a-target=chat-settings-balloon] {
-		bottom: var(--tw5-отступокна)!important
+		bottom: var(--tw5-windowmargin)!important
 		/* bottom: var(--tw5-windowindent)!important */
 	}
 	.chat-input__badge-carousel div[direction=top-right] {
 		position: fixed;
-		bottom: var(--tw5-отступокна);
+		bottom: var(--tw5-windowmargin);
 		/* bottom: var(--tw5-windowindent); */
-		left: var(--tw5-отступокна);
+		left: var(--tw5-windowmargin);
 		/* left: var(--tw5-windowindent); */
 		margin: 0
 	}
 	html .chat-settings__popover {
 		display: flex;
 		flex-direction: column;
-		max-height: calc(100vh - var(--tw5-отступокна) * 2)!important
+		max-height: calc(100vh - var(--tw5-windowmargin) * 2)!important
 		/* max-height: calc(100vh - var(--tw5-windowindent) * 2)!important */
 	}
 	.chat-settings__popover>.scrollable-area {
@@ -155,7 +155,7 @@ html .viewer-card-layer__draggable {
 		padding: 0!important
 	}
 	.emote-picker__search-content+div {
-		max-height: calc(100vh - var(--tw5-вышевводасообщения-в) - 3rem - var(--tw5-отступокна));
+		max-height: calc(100vh - var(--tw5-abovemessageinput) - 3rem - var(--tw5-windowmargin));
 		/* max-height: calc(100vh - var(--tw5-abovemessageinput-in) - 3rem - var(--tw5-windowindent)); */
 		overflow-y: hidden
 	}
@@ -204,7 +204,7 @@ html .viewer-card-layer__draggable {
 	.channel-leaderboard>div>div:not(.channel-leaderboard-header-rotating) {
 		display: flex;
 		flex-direction: column;
-		max-height: calc(100vh - var(--tw5-вышевводасообщения-в) - var(--tw5-высотазаголовка))
+		max-height: calc(100vh - var(--tw5-abovemessageinput) - var(--tw5-headerheight))
 		/* max-height: calc(100vh - var(--tw5-abovemessageinput-in) - var(--tw5-headerheight)) */
 	}
 	html .bits-leaderboard-expanded__scrollable {
@@ -238,7 +238,7 @@ html .viewer-card-layer__draggable {
 		border-left: 1px solid var(--color-border-base)
 	}
 	.community-points-summary+.tw-transition>div>div[direction=top-left] {
-		bottom: calc(0px - var(--tw5-нижнийотступчата))!important
+		bottom: calc(0px - var(--tw5-chatbottommargin))!important
 		/* bottom: calc(0px - var(--tw5-bottomchatoffset))!important */
 	}
 	html .reward-center__content {
@@ -253,7 +253,7 @@ html .viewer-card-layer__draggable {
 		top: 0
 	}
 	.bttv-rs-popover[class*=bttv-EmoteMenuPopover-module__popover-] {
-		bottom: calc(var(--tw5-вышевводасообщения-в))!important;
+		bottom: calc(var(--tw5-abovemessageinput))!important;
 		/* bottom: calc(var(--tw5-abovemessageinput-in))!important; */
 		height: auto!important
 	}
@@ -265,7 +265,7 @@ html .viewer-card-layer__draggable {
 		height: auto!important
 	}
 	div[class*=bttv-EmoteMenu-module__content-] {
-		max-height: calc(100vh - var(--tw5-вышевводасообщения-в) - 37px)
+		max-height: calc(100vh - var(--tw5-abovemessageinput) - 37px)
 		/* max-height: calc(100vh - var(--tw5-abovemessageinput-in) - 37px) */
 	}
 	div[class*=bttv-Emotes-module__emotesContainer-] {
@@ -276,12 +276,12 @@ html .viewer-card-layer__draggable {
 		display: none
 	}
 	html .ffz--emote-picker {
-		width: var(--tw5-ширинаспискасмайликов);
+		width: var(--tw5-emotelistwidth);
 		/* width: var(--tw5-widthofemojilist); */
 		display: block!important
 	}
 	.ffz--emote-picker .emote-picker>.tw-flex {
-		max-height: calc(100vh - var(--tw5-вышевводасообщения-в) - 3.7rem - 1px - var(--tw5-отступокна))!important;
+		max-height: calc(100vh - var(--tw5-abovemessageinput) - 3.7rem - 1px - var(--tw5-windowmargin))!important;
 		/* max-height: calc(100vh - var(--tw5-abovemessageinput-in) - 3.7rem - 1px - var(--tw5-windowindent))!important; */
 		overflow-y: hidden
 	}
