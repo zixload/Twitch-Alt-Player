@@ -52,19 +52,16 @@ html .viewer-card-layer__draggable {
 @media (max-height:33em) {
 	:root {
 		--tw5-headerheight: 0px;
-		/* --tw5-headerheight: 0px; */
 		--tw5-windowmargin: .2rem;
 		/* --tw5-windowindent: .2rem; */
 		--tw5-chatbottommargin: .4rem;
 		/* --tw5-bottomchatoffset: .4rem; */
 		--tw5-messageinputheight: var(--button-size-default);
-		/* --tw5-messageinputheight: var(--button-size-default); */
 		--tw5-abovemessageinput: (var(--tw5-chatbottommargin) + var(--tw5-messageinputheight))
 		/* --tw5-abovemessageinput-in: (var(--tw5-bottomchatoffset) + var(--tw5-messageinputheight)) */
 	}
 	html .stream-chat-header {
 		height: var(--tw5-headerheight);
-		/* height: var(--tw5-headerheight); */
 		overflow: hidden;
 		z-index: var(--z-index-default)!important
 	}
@@ -84,7 +81,6 @@ html .viewer-card-layer__draggable {
 	}
 	html .chat-input__textarea textarea:empty {
 		height: var(--tw5-messageinputheight)!important;
-		/* height: var(--tw5-messageinputheight)!important; */
 		min-height: unset;
 		padding-top: .3rem;
 		padding-bottom: 0
