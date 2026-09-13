@@ -76,6 +76,24 @@ Un commit d'extraction se verifie seul : `extractcheck.js` compare HEAD a l'arbr
 fichier charge modifie ailleurs le fera echouer. C'est voulu. Pour un commit deja fait :
 `node extractcheck.js --base <rev>~1 --head <rev>`.
 
+## L'auto-test travaille sur une fixture
+
+`fixture.js` ecrit une extension minuscule — quatre fichiers, une page, un monde de scripts de
+contenu — qui porte tous les pieges a la fois : un module qui ne touche rien, un module partage par
+les deux contextes, un module qui a besoin du prelude de son fichier pendant que le demarrage le
+reclame par une microtache, un module qui en appelle un autre pendant sa construction, un nom
+declare dans deux mondes.
+
+La premiere version travaillait sur l'extension et prenait `m_Notification` comme cobaye. Elle a
+casse le jour ou `m_Notification` a vraiment ete extrait : le module n'etait plus dans `player.js`,
+et les treize cas echouaient pour cette seule raison. Un outil qui doit accompagner toute la phase
+ne peut pas dependre de l'avancement de cette phase.
+
+Deux cas restent sur l'extension, parce qu'une fixture ne peut pas les prouver : qu'un vrai module
+s'extrait, et qu'apres l'extraction le controle croise, l'appariement des evenements et l'ordre de
+construction rapportent exactement ce qu'ils rapportaient avant. Leur cobaye est choisi a
+l'execution : le premier module que l'outil accepte encore.
+
 ## Limites connues
 
 - Le monde des scripts de contenu est la reunion de toutes les entrees du manifeste, sans departager
