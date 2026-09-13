@@ -491,7 +491,7 @@ const m_Debug = (() => {
   function ShowAndSendReport(oReport, bufSend) {
     ShowPage().then((oDocument) => {
       let nodeForm;
-      if (oReport.TerminationReason === "ОТПРАВИТЬ ОТЗЫВ") {
+      if (oReport.TerminationReason === "SEND FEEDBACK") {
         nodeForm = oDocument.getElementById("debug-feedback");
       } else {
         nodeForm = oDocument.getElementById("debug-error");
@@ -764,7 +764,7 @@ const m_Debug = (() => {
   }
   function TerminateAndSendFeedback() {
     try {
-      TerminateAndSendReport("ОТПРАВИТЬ ОТЗЫВ");
+      TerminateAndSendReport("SEND FEEDBACK");
     } catch (_) { }
   }
   return {
@@ -985,7 +985,7 @@ class NumberInput {
     this._nInterval = 0;
     this._nTimer = 0;
     m_Events.AddHandler(
-      `тащилка-перетаскивание-${sNodeId}`,
+      `dragger-drag-${sNodeId}`,
       (oParameters) => this._HandleDrag(oParameters)
     );
     this._nodeNumber = document.querySelector(`#${sNodeId} > .numberinput-number`);
@@ -2189,7 +2189,7 @@ const m_Window = (() => {
     Check(elWindow.classList.contains("window"));
     elWindow.classList.add("windowopen", "windowanimation");
     document.body.setAttribute("data-window-opened", sWindowId);
-    m_Events.SendEvent(`окно-открыто-${sWindowId}`);
+    m_Events.SendEvent(`window-opened-${sWindowId}`);
   }
   function closeWindow(sWindowId, bWithAnimation = true) {
     const elWindow = GetNode(sWindowId);
@@ -2424,7 +2424,7 @@ const m_Dragger = (() => {
   let _nLastDragTime;
   let _nInitialX, _nInitialY;
   let _nLastX, _nLastY;
-  function Параметры(nodePressed, nodeDragging) {
+  function DragParameters(nodePressed, nodeDragging) {
     this.nodePressed = nodePressed;
     this.nodeDragging = nodeDragging;
     this.nStep = 1;
@@ -2443,7 +2443,7 @@ const m_Dragger = (() => {
       return;
     }
     _nPointerId = oEvent.pointerId;
-    _oParameters = new Параметры(
+    _oParameters = new DragParameters(
       nodePressed,
       GetNode(nodePressed.getAttribute("data-dragger"))
     );
@@ -2481,7 +2481,7 @@ const m_Dragger = (() => {
     m_FullscreenMode.GetElement().classList.add("dragger-capture");
     _oParameters.nodeDragging.classList.add("dragger");
     m_Events.SendEvent(
-      `тащилка-перетаскивание-${_oParameters.nodeDragging.id}`,
+      `dragger-drag-${_oParameters.nodeDragging.id}`,
       _oParameters
     );
   });
@@ -2505,7 +2505,7 @@ const m_Dragger = (() => {
             _oParameters.nDeltaX = _nLastX - _nInitialX;
             _oParameters.nDeltaY = _nLastY - _nInitialY;
             m_Events.SendEvent(
-              `тащилка-перетаскивание-${_oParameters.nodeDragging.id}`,
+              `dragger-drag-${_oParameters.nodeDragging.id}`,
               _oParameters
             );
           }
@@ -2542,7 +2542,7 @@ const m_Dragger = (() => {
       );
       _oParameters.nStep = 3;
       m_Events.SendEvent(
-        `тащилка-перетаскивание-${_oParameters.nodeDragging.id}`,
+        `dragger-drag-${_oParameters.nodeDragging.id}`,
         _oParameters
       );
       m_FullscreenMode.GetElement().style.removeProperty("cursor");
