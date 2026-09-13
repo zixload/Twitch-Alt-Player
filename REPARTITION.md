@@ -349,38 +349,68 @@ une invite du navigateur. **C'est à Luca de le vérifier en vrai.**
 
 | module | agent | état |
 |---|---|---|
-| `m_Notification` | B | sorti dans `modules/notification.js` |
-| `m_Window` | B | sorti dans `modules/window.js` |
-| `m_Menu` | B | sorti dans `modules/menu.js` |
-| `m_MediaQuery` | B | sortie en cours |
-| `m_Log` | A | réécrit — `4d5e937`, test `tests/log.test.js` |
-| `m_Settings` | A | réécrit — `f628c6c`, test + auto-test de ce test |
-| `m_AutoHide` | B | sorti dans `modules/auto-hide.js` |
-| `m_FocusManager` | B | réécrit |
-| `m_MediaQuery` | B | réécrit |
-| `m_Events` | A | décrit : `tests/events.test.js`, 29 constats qui passent sur le code actuel |
-| `m_GarbageCollector` | A | décrit : `tests/garbage-collector.test.js`, 23 constats |
+| `m_Notification` | B | sorti, réécrit |
+| `m_Window` | B | sorti, réécrit |
+| `m_Menu` | B | sorti, réécrit |
+| `m_MediaQuery` | B | sorti, réécrit |
+| `m_FocusManager` | B | sorti, réécrit |
+| `m_AutoHide` | B | sorti, réécrit |
+| `m_Log` | A | réécrit — `4d5e937`, `tests/log.test.js` |
+| `m_Settings` | A | réécrit — `f628c6c`, `tests/settings.test.js` + son auto-test |
+| chaîne de démarrage | A | sortie dans `modules/startup.js` — `28e58b1` |
+| `m_Events` | A | sorti par B ; décrit, `tests/events.test.js` (29 constats) ; réécriture en cours |
+| `m_GarbageCollector` | A | sorti par B ; décrit, `tests/garbage-collector.test.js` (23 constats) |
 
-Un test unitaire par module réécrit, plus — depuis `m_Settings` — **un auto-test de ce test**.
-Même exigence que pour `crosscheck` : une suite qui affiche soixante-trois « ok » ne prouve rien
-tant qu'on ne l'a pas vue afficher autre chose. `tests/settings-selftest.js` abîme le module en
-huit endroits, un à la fois, et exige que la suite tombe sur le constat prévu à chaque fois.
+### Le verrou du démarrage est levé
 
-### Ce dont A a besoin de B, maintenant
+La dernière instruction de `player.js` programmait le démarrage. Tant qu'elle y vivait, un module
+qui a besoin des utilitaires du début de `player.js` pour se construire ne pouvait aller ni avant,
+ni après. Sortie dans `modules/startup.js`, elle libère **six modules d'un coup** : les quatre du
+nœud de A, et `m_Dragger` et `m_FullscreenMode` chez B. L'outil glisse désormais chaque nouveau
+module entre `player.js` et `startup.js`, à la place qu'il lui faut. `extract.js m_Controls --dry`
+passe.
 
-**Tous les modules qui restent à A vivent dans `player.js`** : `m_Events` (l. 1068),
-`m_GarbageCollector` (l. 1120), puis le nœud `m_Controls` + `m_Player` + `m_Playlist` + `m_Twitch`.
-Tant qu'ils y sont, A ne peut pas les réécrire sans écrire dans le fichier que B est en train de
-découper — exactement la collision que ce document existe pour éviter. `m_Settings` a pu passer
-avant parce qu'il vivait dans `common.js`.
+Vérifié au navigateur, puisque c'est le code qui lance la lecture : zéro exception, 1802 images à
+60 im/s sur caedrel.
 
-Demande à B, dans cet ordre : **sortir `m_Events` puis `m_GarbageCollector`**, qui sont petits
-(56 et 76 lignes) et sans dépendance vers la périphérie. A enchaîne dès qu'ils sont dans
-`modules/`.
+### Qui touche quoi en ce moment
 
-Ensuite, et c'est le résultat de la section 4 : **`m_Twitch`, puis `m_Playlist`, puis
-`m_Controls` + `m_Player` ensemble**. Les deux premiers ne tiennent au reste du nœud que par un
-membre chacun, appelé à un seul endroit ; le troisième est le seul vrai couple.
+- **B est dans `common.js`** pour `m_i18n`. A n'y écrit pas tant que ce n'est pas commité.
+  `tests/log.test.js` et `tests/settings.test.js` découpent `common.js` par ancres —
+  `const DO_NOT_REDIRECT_ADDRESS`, `const m_Log = (() => {`, `const m_Settings = (() => {` — et
+  aucune ne tombe dans `m_i18n` : le sortir ou le réécrire ne les casse pas. S'ils cassaient,
+  l'étape 8 le dirait.
+- **A est dans `modules/events.js` et `modules/garbage-collector.js`**, puis dans `player.js` pour
+  le nœud. B y revient pour `m_Dragger` et `m_FullscreenMode` : un extrait à la fois, commit entre
+  les deux, et chacun relit `git log` avant de lancer `extract.js`.
+
+Ordre du nœud, résultat de la section 4 : **`m_Twitch`, puis `m_Playlist`, puis `m_Controls` +
+`m_Player` ensemble.**
+
+### Décision : `tests/` est commun, et un critère dit qui y entre
+
+`tests/` était à A seulement parce que A l'a créé. Il devient commun. Mais la règle n'est pas « un
+test unitaire par module » : ce serait écrire des tests qui éprouvent surtout leurs propres faux.
+
+**Un module a un test sans navigateur quand il porte un comportement qui survit sans DOM et
+qu'une sonde ne peut pas montrer.** L'anneau de `m_Log` qui tourne après 1500 lignes, la
+prédéfinie de `m_Settings` qui couvre la valeur rangée, le tampon que `m_GarbageCollector` détache
+— rien de tout ça n'atteint un pixel. À l'inverse, un module qui *est* son interaction avec le DOM
+se prouve mieux par une sonde qui pilote le vrai DOM qu'avec un DOM imité.
+
+Appliqué à la périphérie :
+
+- **Oui** : `m_i18n` (formats de nombres, pluriels, repli de langue — un pluriel faux est
+  invisible à une sonde), `m_Statistics` (~880 lignes de compteurs et de moyennes).
+- **Non, la sonde suffit** : `m_Menu`, `m_Window`, `m_FocusManager`, `m_AutoHide`,
+  `m_MediaQuery`, `m_Notification`. **Les six modules déjà réécrits par B n'ont donc pas de dette.**
+- **À juger module par module** pour le reste, avec ce critère.
+
+Deux obligations pour toute suite qui entre dans `tests/` : un fichier par module,
+`tests/<module>.test.js`, pour que la propriété se lise dans le nom ; et **la preuve qu'elle peut
+échouer** — un `-selftest.js` qui abîme le module et exige la chute au constat prévu, ou à défaut
+une mutation faite à la main et consignée dans le message de commit. Une suite jamais vue en échec
+ne mérite pas sa ligne à l'étape 8.
 
 ### Trois points à traiter côté B — les trois sont faits
 
