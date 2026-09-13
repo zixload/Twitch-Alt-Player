@@ -124,8 +124,9 @@ const analysePage = (page) => {
 	// Tout ce qu'il faut pour resoudre, releve une fois sur les scripts de la page.
 	const globalConsts = new Map();      // nom -> [{ path }]   (scripts classiques : tout est global)
 	const stringProps = new Map();       // sNom -> [{ path du noeud valeur }]
-	const callSites = new Map();         // nom -> [{ file, path }] pour F(...) et objet.F(...)
-	const newSites = new Map();          // nom -> [{ file, path }] pour new F(...)
+	// nom -> [{ file, path, objet }] ; objet est « m_X » pour m_X.F(...), null pour F(...).
+	const callSites = new Map();
+	const newSites = new Map();
 	const push = (map, k, v) => { if (!map.has(k)) map.set(k, []); map.get(k).push(v); };
 
 	for (const { f, ast } of files) {
@@ -148,11 +149,16 @@ const analysePage = (page) => {
 			},
 			CallExpression(p) {
 				const c = p.node.callee;
-				if (c.type === 'Identifier') push(callSites, c.name, { file: f, path: p });
-				else if (c.type === 'MemberExpression' && !c.computed && c.property.type === 'Identifier') push(callSites, c.property.name, { file: f, path: p });
+				if (c.type === 'Identifier') push(callSites, c.name, { file: f, path: p, objet: null });
+				else if (c.type === 'MemberExpression' && !c.computed && c.property.type === 'Identifier') {
+					push(callSites, c.property.name, {
+						file: f, path: p,
+						objet: c.object.type === 'Identifier' ? c.object.name : '?',
+					});
+				}
 			},
 			NewExpression(p) {
-				if (p.node.callee.type === 'Identifier') push(newSites, p.node.callee.name, { file: f, path: p });
+				if (p.node.callee.type === 'Identifier') push(newSites, p.node.callee.name, { file: f, path: p, objet: null });
 			},
 		});
 	}
@@ -225,6 +231,22 @@ const analysePage = (page) => {
 		return flat.every((v) => v === flat[0]) ? values[0] : [HOLE];
 	};
 
+	/*
+		Le module qui contient une fonction, ou null si elle est globale.
+
+		Suivre un parametre par le seul nom de l'appele confond les homonymes : m_Window a une
+		fonction Show interne, m_Notification en exporte une, et « m_Notification.Show("svg-fail") »
+		se mettait a fournir des noms de fenetre. Un site d'appel ne compte donc que s'il vise
+		vraiment cette fonction-la : un appel nu doit etre dans le meme module (ou viser une fonction
+		globale), un appel « objet.F() » doit nommer le module qui la porte.
+	*/
+	const moduleOf = (p) => {
+		const st = p.find((x) => x.parentPath && x.parentPath.isProgram());
+		if (!st || !st.isVariableDeclaration()) return null;
+		const d = st.node.declarations[0];
+		return d && d.id.type === 'Identifier' ? { name: d.id.name, node: st.node } : null;
+	};
+
 	const resolveParam = (binding, depth) => {
 		if (depth <= 0) return [HOLE];
 		const fn = binding.path.parentPath;
@@ -232,7 +254,15 @@ const analysePage = (page) => {
 		const index = fn.node.params.indexOf(binding.path.node);
 		const target = index === -1 ? null : functionName(fn);
 		if (!target) return [HOLE];
-		const sites = (target.isNew ? newSites : callSites).get(target.name) || [];
+		const home = moduleOf(fn);
+		const vise = (s) => {
+			if (s.objet === null) {
+				// Un appel nu : la fonction est globale, ou l'appel est dans le meme module.
+				return home === null || !!s.path.find((x) => x.node === home.node);
+			}
+			return home !== null && s.objet === home.name;
+		};
+		const sites = ((target.isNew ? newSites : callSites).get(target.name) || []).filter(vise);
 		const values = [];
 		for (const s of sites) {
 			const args = s.path.get('arguments');

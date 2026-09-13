@@ -72,6 +72,35 @@ const CASES = [
 		{ 'sans-emetteur': ['ghost-event'] },
 		[['player.html', /<script src=channelbar\.js defer><\/script>/, '$&\n<script src=ghost.js defer></script>'],
 			['ghost.js', null, 'm_Events.AddHandler("ghost-event", () => {});\n']]],
+	/*
+		Un faux positif paye : suivre un parametre par le seul nom de son appele confondait les
+		homonymes. m_Window a eu une fonction Show interne, m_Notification en exporte une, et les
+		« m_Notification.Show("svg-fail") » se sont mis a fournir des noms de fenetre inventes. Le
+		cas plante les deux cotes lui-meme : un module qui batit un nom d'evenement depuis son
+		parametre, et un homonyme ailleurs qui n'a rien a voir. Rien ne doit apparaitre.
+	*/
+	['homonyme dans un autre module : aucun nom invente',
+		{ rien: true },
+		[['channelbar.js', /$/, [
+			'',
+			'const m_SondeEmetteur = (() => {',
+			'\tfunction Diffuser(sQuoi) {',
+			'\t\tm_Events.SendEvent(`sonde-ouverte-${sQuoi}`);',
+			'\t}',
+			'\tm_Events.AddHandler(\'sonde-ouverte-reelle\', () => {});',
+			'\treturn { Diffuser };',
+			'})();',
+			'm_SondeEmetteur.Diffuser(\'reelle\');',
+			'',
+			'const m_SondeHomonyme = (() => {',
+			'\tfunction Diffuser(sAutreChose) {',
+			'\t\tdocument.title = sAutreChose;',
+			'\t}',
+			'\treturn { Diffuser };',
+			'})();',
+			'm_SondeHomonyme.Diffuser(\'ceci-n-est-pas-une-fenetre\');',
+			'',
+		].join('\n')]]],
 	['renommage coherent des deux cotes : rien ne doit apparaitre',
 		{ rien: true },
 		[[SCRIPTS, /"player-paused"/g, '"player-pause-toggled"']]],
