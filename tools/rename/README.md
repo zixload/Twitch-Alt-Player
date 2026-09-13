@@ -59,3 +59,33 @@ renommage qui touche un de ces chemins se verifie a la main.
 Le premier jet lisait le script a l'expression reguliere. Il ne voyait ni les gabarits, ni les
 `name=`, ni les `data-*`, ni les constantes, ni `GetNode` appele nu, et comptait 150 pendantes
 dont presque toutes etaient du bruit. Sur les huit casses de l'auto-test, il en voyait deux.
+
+## L'appariement des evenements internes : eventcheck.js
+
+    node eventcheck.js                          # zero defaut et zero angle mort, sinon sortie 1
+    node eventcheck-selftest.js                 # prouve que l'appariement sait encore echouer
+
+Un nom d'evenement interne n'est ni dans le balisage ni dans une feuille de style : il n'existe
+que dans deux chaines du script, `m_Events.SendEvent(x)` d'un cote et `m_Events.AddHandler(x)` de
+l'autre. Le controle croise ne le voit donc pas. C'est ainsi que le lecteur a emis
+`окно-открыто-${sWindowId}` pendant qu'il ecoutait `window-opened-mainmenu` : le menu principal,
+le glisser du panneau de statistiques et celui de la taille du chat ne notifiaient plus personne.
+Rejoue sur `7fbffdc`, l'outil trouve les trois.
+
+Il apparie par page, parce que chaque page de l'extension est un monde JavaScript a part, sur les
+scripts que ses balises `<script src>` chargent : un module extrait dans son fichier est lu sans
+rien changer ici. Il signale quatre defauts — envoye sans auditeur, ecoute sans emetteur, retire
+sans ajout, trou de motif hors du balisage — et ne compare pas a une reference : l'arbre est a zero.
+
+Les noms se resolvent avec l'analyseur : litteraux, constantes, gabarits, parametres suivis sur un
+niveau jusqu'aux appels et aux `new` (`new NumberInput(..., "opacity")`), et proprietes de chaine
+hongroises (`oMetadata.sEvent`). Ce qui reste dynamique devient un motif. **Un motif ne suffit pas
+a apparier** : `window-opened-${…}` accepterait n'importe quel suffixe, alors ce que remplit le trou
+doit etre un id porte par le balisage de la page. Renommer `id=mainmenu` sans renommer
+`window-opened-mainmenu` est vu ici.
+
+Ce que l'outil ne sait pas lire est un angle mort, et un angle mort fait echouer : un nom
+entierement dynamique, ou le bus utilise autrement que par un appel direct
+(`const f = m_Events.SendEvent`). Si une reecriture renomme le bus ou ses methodes, les constantes
+sont en tete du fichier ; une page qui n'emet ou n'ecoute plus rien fait echouer aussi, pour que
+le renommage ne rende pas le controle muet.

@@ -11,11 +11,14 @@ de message.
                       des traductions.
   2. controle croise  crosscheck.js, compare NOM PAR NOM a une reference acceptee.
   3. auto-test        crosscheck-selftest.js : le controle sait encore echouer.
-  4. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
-  5. console          errors.py : zero exception, zero console.error.
-  6. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
-  7. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
-  8. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
+  4. evenements       eventcheck.js : chaque SendEvent a son AddHandler et reciproquement, zero
+                      defaut et zero angle mort. Pas de reference : l'arbre est a zero.
+  5. auto-test        eventcheck-selftest.js : l'appariement sait encore echouer.
+  6. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
+  7. console          errors.py : zero exception, zero console.error.
+  8. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
+  9. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
+ 10. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
 
 **Des references, pas des seuils.** Le controle croise et les reglages portent aujourd'hui des
 defauts connus. Exiger zero ferait echouer chaque lot jusqu'a leur correction, et un outil qui
@@ -27,9 +30,9 @@ echoue toujours finit par ne plus etre lu. Ils sont donc compares a une referenc
 ce que le passage rapporte : c'est une decision, pas une formalite.
 
 Usage: py -3.14 tools/harness/verify.py [--statique] [--chaines a,b,c] [--accepter]
-  --statique  etapes 1 a 3 seulement, quelques secondes, sans navigateur
+  --statique  etapes 1 a 5 seulement, quelques secondes, sans navigateur
   --chaines   candidates, essayees dans l'ordre (defaut : zerator)
-  --accepter  enregistre les resultats des etapes 2 et 8 comme reference
+  --accepter  enregistre les resultats des etapes 2 et 10 comme reference
 """
 import io
 import json
@@ -177,6 +180,23 @@ def etape_autotest():
     return out.strip().splitlines()[-1]
 
 
+def etape_evenements():
+    code, out = run(['node', 'eventcheck.js'], 120, cwd=RENAME)
+    last = out.strip().splitlines()[-1] if out.strip() else u''
+    if code != 0 or not last.startswith(u'TOTAL DEFAUTS : '):
+        raise Echec(u'un evenement interne a perdu un cote, ou le controle ne voit plus tout\n' + tail(out)
+                    + u'\n      Detail : tools/rename/eventcheck-report.txt')
+    envois = [l.strip() for l in out.splitlines() if u' envois, ' in l]
+    return u'zero defaut, zero angle mort' + (u' — ' + u' ; '.join(envois) if envois else u'')
+
+
+def etape_autotest_evenements():
+    code, out = run(['node', 'eventcheck-selftest.js'], 600, cwd=RENAME)
+    if code != 0:
+        raise Echec(u'l\'appariement des evenements ne detecte plus toutes les casses\n' + tail(out, 20))
+    return out.strip().splitlines()[-1]
+
+
 def en_direct(chaine):
     """L'apercu public d'une chaine hors ligne redirige vers une image « 404 » ; en direct, il est servi."""
     class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -302,6 +322,8 @@ def main():
         (u'syntaxe', lambda: etape_syntaxe()),
         (u'controle croise', lambda: etape_croise(etat)),
         (u'auto-test du controle', lambda: etape_autotest()),
+        (u'evenements internes', lambda: etape_evenements()),
+        (u'auto-test des evenements', lambda: etape_autotest_evenements()),
     ]
     if not STATIQUE:
         etapes += [

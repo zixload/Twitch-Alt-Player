@@ -109,7 +109,8 @@ et il vaut mieux le dire que de faire semblant de l'équilibrer.
 
 **D'abord, et avant toute réécriture :**
 
-1. **Le contrôle des noms d'évènement interne.** C'est le trou connu, et il a déjà coûté une panne
+1. **Le contrôle des noms d'évènement interne.** *Fait : `tools/rename/eventcheck.js`, étapes 4
+   et 5 de `verify.py`.* C'est le trou connu, et il a déjà coûté une panne
    silencieuse : le lecteur émettait `окно-открыто-mainmenu` pendant qu'il écoutait
    `window-opened-mainmenu`, et l'ouverture du menu principal n'avertissait plus personne. Le
    contrôle croisé ne voit que les noms DOM ; un nom d'évènement interne n'est ni dans le balisage
@@ -193,9 +194,10 @@ python tools/harness/verify.py --chaines <chaînes en direct>
 python tools/harness/migrationcheck.py chrome <chaîne>
 ```
 
-`verify.py` enchaîne huit étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
-comparé nom par nom à une référence, auto-test du contrôle, chaîne réellement en direct, console,
-lecture, plein écran, contrôles de réglages.
+`verify.py` enchaîne dix étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
+comparé nom par nom à une référence, auto-test du contrôle, appariement des évènements internes,
+son auto-test, chaîne réellement en direct, console, lecture, plein écran, contrôles de réglages.
+Les cinq premières tournent sans navigateur en onze secondes : `--statique`.
 
 **Prendre une chaîne réellement en direct.** Sur une chaîne hors ligne le résultat est zéro image
 et ressemble à un succès. `zerator` marchait au moment d'écrire.
