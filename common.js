@@ -387,137 +387,164 @@ const m_i18n = (() => {
 	};
 })();
 
+/*
+	Everything the user has chosen, kept across launches.
+
+	Three things are easy to confuse here, so they are named apart:
+
+	  - the SCHEMA (_oSettings) says what a setting's default is and which values it will accept;
+	  - the STORE (chrome.storage.local) is what the browser has actually written down;
+	  - the PRESETS sit above both -- a named bundle of values that overrides the store for as long
+	    as it is selected.
+
+	Validation never rejects a stored value, it corrects it: out of range clamps, off the list
+	falls back to the default. The one thing it refuses is a value of the wrong type, because only
+	this module writes the store and a type mismatch means a bug, not a stale profile.
+
+	Nothing may read a setting before Restore() has resolved. That is asserted in both directions:
+	every pCurrent is undefined until then, and Restore() refuses to run a second time.
+*/
 const m_Settings = (() => {
+	/*
+		Stamped into the store on every write. A store carrying a HIGHER version was written by a
+		newer extension, cannot be understood, and is dropped whole rather than half-read.
+	*/
 	const SETTINGS_VERSION = 2;
-	const _amBufferingPresets = new Map([ [ 'J0126', {
-		nConcurrentDownloads: 1,
-		nPlaybackStart: 3,
-		nBufferSize: 5,
-		nBufferStretch: 15
-	} ], [ 'J0127', {
-		nConcurrentDownloads: 2,
-		nPlaybackStart: 3,
-		nBufferSize: 8.5,
-		nBufferStretch: 20
-	} ], [ 'J0128', {
-		nConcurrentDownloads: 2,
-		nPlaybackStart: 17,
-		nBufferSize: 9.5,
-		nBufferStretch: 30
-	} ] ]);
-	const _amAppearancePresets = new Map([ [ 'J0122', {
-		sBackgroundColour: '#282828',
-		// sBackgroundColor: '#282828',
-		sGradientColour: '#d4d4d4',
-		// sGradientColor: '#d4d4d4',
-		sButtonColour: '#d3be96',
-		// sButtonColor: '#d3be96',
-		sHeadingColour: '#cdbdec',
-		// sHeaderColor: '#cdbdec',
-		sAccentColour: '#ffd862',
-		// sHighlightColor: '#ffd862',
-		nOpacity: 25
-	} ], [ 'J0121', {
-		sBackgroundColour: '#405b77',
-		// sBackgroundColor: '#405b77',
-		sGradientColour: '#aaccf2',
-		// sGradientColor: '#aaccf2',
-		sButtonColour: '#ffffff',
-		// sButtonColor: '#ffffff',
-		sHeadingColour: '#c2e4ff',
-		// sHeaderColor: '#c2e4ff',
-		sAccentColour: '#fef17c',
-		// sHighlightColor: '#fef17c',
-		nOpacity: 30
-	} ], [ 'J0138', {
-		sBackgroundColour: '#4b4b4b',
-		// sBackgroundColor: '#4b4b4b',
-		sGradientColour: '#aaaaaa',
-		// sGradientColor: '#aaaaaa',
-		sButtonColour: '#bad4f8',
-		// sButtonColor: '#bad4f8',
-		sHeadingColour: '#e2ebb4',
-		// sHeaderColor: '#e2ebb4',
-		sAccentColour: '#75a9f0',
-		// sHighlightColor: '#75a9f0',
-		nOpacity: 5
-	} ], [ 'J0125', {
-		sBackgroundColour: '#161616',
-		// sBackgroundColor: '#161616',
-		sGradientColour: '#a0a0a0',
-		// sGradientColor: '#a0a0a0',
-		sButtonColour: '#f0f0f0',
-		// sButtonColor: '#f0f0f0',
-		sHeadingColour: '#baccda',
-		// sHeaderColor: '#baccda',
-		sAccentColour: '#6cb6ff',
-		// sHighlightColor: '#6cb6ff',
-		nOpacity: 20
-	} ] ]);
-	const _moPresetMetadata = [ {
-		amData: _amBufferingPresets,
-		sCustomizable: 'J0129',
+	/*
+		The preset bundles. The J0nnn keys are i18n names: the same string identifies the preset in
+		the store and labels it in the list.
+	*/
+	const _amBufferingPresets = new Map([
+		[ 'J0126', { nConcurrentDownloads: 1, nPlaybackStart: 3, nBufferSize: 5, nBufferStretch: 15 } ],
+		[ 'J0127', { nConcurrentDownloads: 2, nPlaybackStart: 3, nBufferSize: 8.5, nBufferStretch: 20 } ],
+		[ 'J0128', { nConcurrentDownloads: 2, nPlaybackStart: 17, nBufferSize: 9.5, nBufferStretch: 30 } ]
+	]);
+	const _amAppearancePresets = new Map([
+		[ 'J0122', {
+			sBackgroundColour: '#282828',
+			sGradientColour: '#d4d4d4',
+			sButtonColour: '#d3be96',
+			sHeadingColour: '#cdbdec',
+			sAccentColour: '#ffd862',
+			nOpacity: 25
+		} ],
+		[ 'J0121', {
+			sBackgroundColour: '#405b77',
+			sGradientColour: '#aaccf2',
+			sButtonColour: '#ffffff',
+			sHeadingColour: '#c2e4ff',
+			sAccentColour: '#fef17c',
+			nOpacity: 30
+		} ],
+		[ 'J0138', {
+			sBackgroundColour: '#4b4b4b',
+			sGradientColour: '#aaaaaa',
+			sButtonColour: '#bad4f8',
+			sHeadingColour: '#e2ebb4',
+			sAccentColour: '#75a9f0',
+			nOpacity: 5
+		} ],
+		[ 'J0125', {
+			sBackgroundColour: '#161616',
+			sGradientColour: '#a0a0a0',
+			sButtonColour: '#f0f0f0',
+			sHeadingColour: '#baccda',
+			sAccentColour: '#6cb6ff',
+			nOpacity: 20
+		} ]
+	]);
+	/*
+		One entry per preset family. sCustom is the sentinel the sSelected setting holds when no
+		bundle is active and the user's own values are in force; it is an i18n name too, because it
+		also labels the last entry of the list.
+
+		sList is an element id and sEvent an internal event name: both have a twin elsewhere in the
+		extension and neither may be renamed on this side alone.
+	*/
+	const _aoPresetFamilies = [ {
+		amPresets: _amBufferingPresets,
+		sCustom: 'J0129',
 		sSelected: 'sPresetSelected_buffering',
 		sFilled: 'bPresetFilled_buffering',
 		sList: 'preset-buffering',
 		sEvent: 'settings-presetchanged-buffering'
-		// sEvent: 'settings-presetChanged-buffering'
 	}, {
-		amData: _amAppearancePresets,
-		sCustomizable: 'J0123',
+		amPresets: _amAppearancePresets,
+		sCustom: 'J0123',
 		sSelected: 'sPresetSelected_appearance',
 		sFilled: 'bPresetFilled_appearance',
 		sList: 'preset-appearance',
 		sEvent: 'settings-presetchanged-appearance'
-		// sEvent: 'settings-presetChanged-appearance'
 	} ];
+	/*
+		Bookkeeping rather than preferences: they survive a reset, they survive an import, and they
+		never appear in an export -- carrying someone else's random number or version history into
+		your own profile would be meaningless at best.
+	*/
 	const _mnoPermanentSettings = new Set([ 'nSettingsVersion', 'nRandomNumber', 'sPreviousVersion', 'nLastExtensionUpdateCheck', 'bAutoRedirectNoticed' ]);
-	// const _mnoPermanentSettings = new Set([ 'nSettingsVersion', 'nRandomNumber', 'sPreviousVersion', 'nLastExtensionUpdateCheck', 'bAutoredirectNoticed' ]);
-	const _mnoDoNotShow = new Set();
+	/*
+		One setting's declaration: its default, and the rule its values must satisfy. Three shapes
+		of rule, and Create / CreateEnum / CreateRange are the only way to build one.
+	*/
 	class Setting {
-		constructor(pInitial, mpEnumeration, nMinimum, nMaximum, sAutoTune) {
+		constructor(pInitial, apEnumeration, nMinimum, nMaximum, sAutoTune) {
 			this.pCurrent = void 0;
 			this.pInitial = pInitial;
-			this.mpEnumeration = mpEnumeration;
+			this.apEnumeration = apEnumeration;
 			this.nMinimum = nMinimum;
 			this.nMaximum = nMaximum;
 			this.sAutoTune = sAutoTune;
 		}
+		// Anything of the default's type.
 		static Create(pInitial) {
-			return new this(pInitial, null, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
+			return new Setting(pInitial, null, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
 		}
-		static CreateEnum(pInitial, mpEnumeration) {
-		// static CreateEnumeration(pInitial, mpEnumeration) {
-			return new this(pInitial, mpEnumeration, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
+		// A closed list; anything else falls back to the default.
+		static CreateEnum(pInitial, apEnumeration) {
+			return new Setting(pInitial, apEnumeration, MIN_SETTING_VALUE, MAX_SETTING_VALUE, '');
 		}
+		/*
+			A numeric interval. sAutoTune, when given, is the i18n name of the label shown in place
+			of a number, and is what makes the AUTO_SETTING sentinel an acceptable value: a setting
+			without that label has no automatic mode to fall into.
+		*/
 		static CreateRange(pInitial, nMinimum, nMaximum, sAutoTune = '') {
-			return new this(pInitial, null, nMinimum, nMaximum, sAutoTune);
+			return new Setting(pInitial, null, nMinimum, nMaximum, sAutoTune);
 		}
+		// Rules out what could not have come from this module: NaN, the infinities, objects, holes.
 		static CheckValue(pValue) {
-			Check(pValue == pValue && pValue !== Infinity && pValue !== -Infinity && pValue !== void 0 && typeof pValue != 'function' && typeof pValue != 'symbol' && typeof pValue != 'object');
+			Check(pValue == pValue && pValue !== Infinity && pValue !== -Infinity && pValue !== void 0
+				&& typeof pValue != 'function' && typeof pValue != 'symbol' && typeof pValue != 'object');
 		}
 		CorrectValue(pValue) {
 			Setting.CheckValue(pValue);
 			Check(typeof pValue == typeof this.pInitial);
-			if (this.mpEnumeration) {
-				if (!this.mpEnumeration.includes(pValue)) {
-					pValue = this.pInitial;
-				}
-			} else if (typeof pValue == 'number') {
-				if (pValue === AUTO_SETTING) {
-				// if (pValue === AUTO_TUNE) {
-					if (this.sAutoTune === '') {
-						pValue = this.pInitial;
-					}
-				} else if (pValue < this.nMinimum) {
-					pValue = this.nMinimum;
-				} else if (pValue > this.nMaximum) {
-					pValue = this.nMaximum;
-				}
+			if (this.apEnumeration) {
+				return this.apEnumeration.includes(pValue) ? pValue : this.pInitial;
+			}
+			if (typeof pValue != 'number') {
+				return pValue;
+			}
+			if (pValue === AUTO_SETTING) {
+				return this.sAutoTune === '' ? this.pInitial : pValue;
+			}
+			if (pValue < this.nMinimum) {
+				return this.nMinimum;
+			}
+			if (pValue > this.nMaximum) {
+				return this.nMaximum;
 			}
 			return pValue;
 		}
 	}
+	/*
+		The schema. These names are the keys the store is written under: changing one here without
+		a migration entry loses whatever the user had set.
+
+		The four buffering values and the six appearance ones default to zero or to an empty
+		string on purpose. A preset is selected out of the box, so the schema value is never the
+		one in force until the user customises the family and Change fills them in.
+	*/
 	const _oSettings = {
 		nSettingsVersion: Setting.Create(SETTINGS_VERSION),
 		nRandomNumber: Setting.Create(Math.random()),
@@ -527,10 +554,8 @@ const m_Settings = (() => {
 		bMute: Setting.Create(false),
 		sAudioDeviceId: Setting.Create(''),
 		sVariantLabel: Setting.Create('CoolCmd'),
-		// sVariantName: Setting.Create('CoolCmd'),
 		nVariantBitrate: Setting.Create(MAX_SETTING_VALUE),
 		nReplayDuration2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
-		// nRepeatDuration2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
 		bScaleImage: Setting.Create(true),
 		nChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
 		nClosedChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
@@ -541,15 +566,12 @@ const m_Settings = (() => {
 		nChatPanelWidth: Setting.CreateRange(340, 100, MAX_SETTING_VALUE),
 		nChatPanelHeight: Setting.CreateRange(250, 100, MAX_SETTING_VALUE),
 		bFullChat: Setting.Create(true),
-		// bFullFeaturedChat: Setting.Create(true),
 		bDimChat: Setting.Create(false),
 		nInterfaceSize: Setting.CreateRange(isMobileDevice() ? 115 : 100, 50, 200),
 		nAutoHideInterval: Setting.CreateRange(4, .5, 60),
 		bInterfaceAnimation: Setting.Create(!isMobileDevice()),
 		bWheelVolume: Setting.Create(true),
-		// bChangeVolumeWithWheel: Setting.Create(true),
 		nWheelVolumeStep: Setting.CreateRange(5, -10, 10),
-		// nVolumeChangeStepWithWheel: Setting.CreateRange(5, -10, 10),
 		bShowStatistics: Setting.Create(false),
 		sPresetSelected_buffering: Setting.Create('J0127'),
 		bPresetFilled_buffering: Setting.Create(false),
@@ -560,23 +582,14 @@ const m_Settings = (() => {
 		sPresetSelected_appearance: Setting.Create('J0122'),
 		bPresetFilled_appearance: Setting.Create(false),
 		sBackgroundColour: Setting.Create(''),
-		// sBackgroundColor: Setting.Create(''),
 		sGradientColour: Setting.Create('#ffffff'),
-		// sGradientColor: Setting.Create('#ffffff'),
 		sButtonColour: Setting.Create(''),
-		// sButtonColor: Setting.Create(''),
 		sHeadingColour: Setting.Create(''),
-		// sHeaderColor: Setting.Create(''),
 		sAccentColour: Setting.Create(''),
-		// sHighlightColor: Setting.Create(''),
 		nOpacity: Setting.CreateRange(0, 0, 80),
 		bAutoRedirectAllowed: Setting.Create(true),
 		bAutoRedirectNoticed: Setting.Create(false)
 	};
-	const DELAY_SAVE_FOR = THIS_IS_CONTENT_SCRIPT ? 50 : 500;
-	let _nDelayedSaveTimer = 0;
-	let _oDelayedSave = null;
-	let _bDelayedDelete = false;
 	/*
 		Settings saved under the old Russian key names, carried over to the new English ones.
 
@@ -584,16 +597,21 @@ const m_Settings = (() => {
 		used at the time. Renaming the keys without this step would not raise an error: the schema
 		would simply find nothing for each name and fall back to its default, and the user would
 		discover on the next launch that their buffer size, their chat position and their colours
-		had all gone back to factory settings — silently, with no way to tell what happened.
+		had all gone back to factory settings -- silently, with no way to tell what happened.
 
 		The old names live here and nowhere else. They are data, not code: this table is the only
 		place in the extension where Cyrillic identifiers are still meaningful, and it stays for as
 		long as someone might still be carrying a profile written before the rename.
 
-		A value already stored under the new name always wins — re-running this must never undo a
+		A value already stored under the new name always wins -- re-running this must never undo a
 		setting the user has changed since.
+
+		The old key is dropped from the copy being read, not from the store. Deleting it there
+		would open a window where the delete succeeded and the write of the new name did not, and
+		the setting would be gone for good; a handful of keys nothing ever reads again costs less
+		than that.
 	*/
-	const _moOldSettingNames = new Map(Object.entries({
+	const _amOldSettingNames = new Map(Object.entries({
 		'кОдновременныхЗагрузок': 'nConcurrentDownloads',
 		'лАвтоПоложениеЧата': 'bAutoChatPosition',
 		'лАвтоперенаправлениеЗамечено': 'bAutoRedirectNoticed',
@@ -638,27 +656,41 @@ const m_Settings = (() => {
 		'чШагИзмененияГромкостиКолесом': 'nWheelVolumeStep',
 		'чШиринаПанелиЧата': 'nChatPanelWidth',
 	}));
-	function MigrateSettingNames(oRestoredSettings) {
+	/*
+		Writes are deferred so that a drag on a slider, which fires a change per pixel, costs one
+		write instead of a hundred. The content script uses a shorter delay because its page can be
+		torn down without warning.
+	*/
+	const DELAY_SAVE_FOR = THIS_IS_CONTENT_SCRIPT ? 50 : 500;
+	let _nDelayedSaveTimer = 0;
+	let _oDelayedSave = null;
+	let _bDelayedWipe = false;
+	// Every public reader asserts this: no setting has a value before Restore() has resolved.
+	function CheckRestored() {
+		Check(_oSettings.nSettingsVersion.pCurrent !== void 0);
+	}
+	function MigrateSettingNames(oStore) {
 		let nCarried = 0;
-		for (const [sOld, sNew] of _moOldSettingNames) {
-			if (!oRestoredSettings.hasOwnProperty(sOld)) {
+		for (const [ sOld, sNew ] of _amOldSettingNames) {
+			if (!oStore.hasOwnProperty(sOld)) {
 				continue;
 			}
-			if (!oRestoredSettings.hasOwnProperty(sNew)) {
-				oRestoredSettings[sNew] = oRestoredSettings[sOld];
+			if (!oStore.hasOwnProperty(sNew)) {
+				oStore[sNew] = oStore[sOld];
 				++nCarried;
 			}
-			delete oRestoredSettings[sOld];
+			delete oStore[sOld];
 		}
 		if (nCarried) {
-			m_Log.Here(`[Settings] ${nCarried} reglage(s) repris sous leur nouveau nom`);
+			m_Log.Here(`[Settings] ${nCarried} setting(s) carried over under their new name`);
 		}
-		return oRestoredSettings;
+		return oStore;
 	}
 	function Restore() {
 		m_Log.Here('[Settings] Restoring settings');
 		return new Promise((fResolve, fReject) => {
-			chrome.storage.local.get(null, oRestoredSettings => {
+			chrome.storage.local.get(null, oStore => {
+				// Work was abandoned while the store was being read: settle nothing, do nothing.
 				if (g_bWorkFinished) {
 					return;
 				}
@@ -667,8 +699,8 @@ const m_Settings = (() => {
 						console.error('storage.local.get', chrome.runtime.lastError.message);
 						m_Debug.FinishWorkAndShowMessage('J0221');
 					}
-					m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oRestoredSettings)}`);
-					FinishRestoring(MigrateSettingNames(oRestoredSettings));
+					m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oStore)}`);
+					ApplyStore(MigrateSettingNames(oStore));
 					fResolve();
 				} catch (pException) {
 					fReject(pException);
@@ -676,88 +708,114 @@ const m_Settings = (() => {
 			});
 		});
 	}
-	function FinishRestoring(oRestoredSettings) {
-		Check(IsObject(oRestoredSettings));
-		Check(!_oSettings.nSettingsVersion.pCurrent);
+	/*
+		Turns what the store holds into the values in force, and writes back only what had to be
+		repaired: a value the schema corrected, a permanent setting the store did not have yet, or
+		the whole store when its version made it unusable.
+	*/
+	function ApplyStore(oStore) {
+		Check(IsObject(oStore));
+		Check(_oSettings.nSettingsVersion.pCurrent === void 0);
 		const oSave = {};
-		const bDeleteRest = CheckSettingsVersion(oRestoredSettings, oSave);
-		for (let sName of Object.keys(_oSettings)) {
-			if (oRestoredSettings.hasOwnProperty(sName)) {
-				const pValue = _oSettings[sName].CorrectValue(oRestoredSettings[sName]);
-				if (pValue !== oRestoredSettings[sName]) {
+		const bWipeFirst = ValidateStore(oStore, oSave);
+		for (const sName of Object.keys(_oSettings)) {
+			if (oStore.hasOwnProperty(sName)) {
+				const pValue = _oSettings[sName].CorrectValue(oStore[sName]);
+				if (pValue !== oStore[sName]) {
 					oSave[sName] = pValue;
 				}
 				_oSettings[sName].pCurrent = pValue;
 			} else {
+				/*
+					A permanent setting absent from the store is written at once rather than on the
+					next change: nRandomNumber has to be drawn one single time, and the version
+					history has to start from this launch and not from whenever a preference next
+					happens to be touched.
+				*/
 				if (_mnoPermanentSettings.has(sName)) {
 					oSave[sName] = _oSettings[sName].pInitial;
 				}
 				_oSettings[sName].pCurrent = _oSettings[sName].pInitial;
 			}
 		}
-		StartSaving(oSave, bDeleteRest);
+		StartSaving(oSave, bWipeFirst);
 	}
-	function CheckSettingsVersion(oSettings, oSave) {
-		if (!Number.isInteger(oSettings.nSettingsVersion) || oSettings.nSettingsVersion < 1 || oSettings.nSettingsVersion > SETTINGS_VERSION) {
-			for (let sName of Object.keys(oSettings)) {
-				delete oSettings[sName];
+	/*
+		Checks a set of stored values and repairs what can be repaired, in oStore and in oSave at
+		once. Returns true when nothing could be salvaged and the whole store must go.
+
+		Import passes the same object twice: there, repairing a value and recording the repair are
+		the same act.
+	*/
+	function ValidateStore(oStore, oSave) {
+		if (!Number.isInteger(oStore.nSettingsVersion) || oStore.nSettingsVersion < 1 || oStore.nSettingsVersion > SETTINGS_VERSION) {
+			for (const sName of Object.keys(oStore)) {
+				delete oStore[sName];
 			}
 			return true;
 		}
-		for (let oMetadata of _moPresetMetadata) {
-			let sName = oSettings[oMetadata.sSelected];
-			if (sName !== void 0 && sName !== oMetadata.sCustomizable) {
-				for (let sPresetName of oMetadata.amData.keys()) {
-					if (sName === sPresetName) {
-						sName = void 0;
-						break;
-					}
-				}
-				if (sName !== void 0) {
-					oSave[oMetadata.sSelected] = oSettings[oMetadata.sSelected] = _oSettings[oMetadata.sSelected].pInitial;
-				}
+		/*
+			A preset that no longer exists -- renamed or dropped between versions -- leaves the
+			family pointing at nothing, and Get would fall through to schema defaults nobody chose.
+			The family goes back to its default bundle instead.
+		*/
+		for (const oFamily of _aoPresetFamilies) {
+			const sSelected = oStore[oFamily.sSelected];
+			if (sSelected === void 0 || sSelected === oFamily.sCustom || oFamily.amPresets.has(sSelected)) {
+				continue;
 			}
+			oSave[oFamily.sSelected] = oStore[oFamily.sSelected] = _oSettings[oFamily.sSelected].pInitial;
 		}
-		if (oSettings.nClosedChatState !== oSettings.nChatState && (oSettings.nChatState === CHAT_UNLOADED || oSettings.nChatState === CHAT_HIDDEN)) {
-			oSave.nClosedChatState = oSettings.nClosedChatState = oSettings.nChatState;
+		/*
+			nClosedChatState remembers which of the two closed states to return to. While the chat
+			is not in its panel the two must agree, otherwise closing the panel would restore a
+			state the user left long ago.
+		*/
+		if (oStore.nClosedChatState !== oStore.nChatState && (oStore.nChatState === CHAT_UNLOADED || oStore.nChatState === CHAT_HIDDEN)) {
+			oSave.nClosedChatState = oStore.nClosedChatState = oStore.nChatState;
 		}
-		if (oSettings.nSettingsVersion === SETTINGS_VERSION) {
-			return false;
+		if (oStore.nSettingsVersion !== SETTINGS_VERSION) {
+			oSave.nSettingsVersion = oStore.nSettingsVersion = SETTINGS_VERSION;
 		}
-		oSave.nSettingsVersion = oSettings.nSettingsVersion = SETTINGS_VERSION;
 		return false;
 	}
-	function StartSaving(oSave, bDeleteRest) {
+	/*
+		Queues a write. Successive calls merge into the one pending object, so a drag costs a
+		single write.
+
+		A wipe REPLACES what is pending instead of merging into it: the pending values describe a
+		store that is about to cease to exist, and carrying them across would resurrect settings
+		the reset or the import was meant to drop.
+	*/
+	function StartSaving(oSave, bWipeFirst) {
 		Check(IsObject(oSave));
-		if (Object.keys(oSave).length !== 0 || bDeleteRest) {
-			if (_nDelayedSaveTimer === 0) {
-				m_Log.Here(`[Settings] Postponing settings save by ${DELAY_SAVE_FOR}ms`);
-				// m_Log.Here(`[Settings] Delaying settings save for ${DELAY_SAVE_FOR}ms`);
-				_oDelayedSave = oSave;
-				_bDelayedDelete = bDeleteRest;
-				_nDelayedSaveTimer = setTimeout(AddExceptionHandler(FinishSaving), DELAY_SAVE_FOR);
-			} else if (bDeleteRest) {
-				_oDelayedSave = oSave;
-				_bDelayedDelete = bDeleteRest;
-			} else {
-				Object.assign(_oDelayedSave, oSave);
-			}
+		if (Object.keys(oSave).length === 0 && !bWipeFirst) {
+			return;
+		}
+		if (_nDelayedSaveTimer === 0) {
+			m_Log.Here(`[Settings] Postponing settings save by ${DELAY_SAVE_FOR}ms`);
+			_oDelayedSave = oSave;
+			_bDelayedWipe = bWipeFirst;
+			_nDelayedSaveTimer = setTimeout(AddExceptionHandler(FinishSaving), DELAY_SAVE_FOR);
+		} else if (bWipeFirst) {
+			_oDelayedSave = oSave;
+			_bDelayedWipe = bWipeFirst;
+		} else {
+			Object.assign(_oDelayedSave, oSave);
 		}
 	}
 	function FinishSaving() {
 		m_Log.Here('[Settings] Finishing postponed save');
-		// m_Log.Here('[Settings] Finishing delayed save');
 		Check(_nDelayedSaveTimer !== 0);
 		_nDelayedSaveTimer = 0;
 		Check(IsObject(_oDelayedSave));
-		Save(_oDelayedSave, _bDelayedDelete);
+		WriteToStorage(_oDelayedSave, _bDelayedWipe);
 		_oDelayedSave = null;
 	}
-	function Save(oSave, bDeleteRest) {
-		if (bDeleteRest) {
+	function WriteToStorage(oSave, bWipeFirst) {
+		if (bWipeFirst) {
 			chrome.storage.local.clear(CheckSaveResult);
 			m_Log.Here('[Settings] All settings removed from storage');
-			// m_Log.Here('[Settings] All settings deleted from storage');
 		}
 		chrome.storage.local.set(oSave, CheckSaveResult);
 		m_Log.Here(`[Settings] Settings written to storage: ${m_Log.O(oSave)}`);
@@ -768,11 +826,18 @@ const m_Settings = (() => {
 			m_Debug.FinishWorkAndShowMessage('J0221');
 		}
 	}
+	// Flushes a pending write now, rather than when its timer would have fired.
+	function SaveChanges() {
+		if (_nDelayedSaveTimer !== 0) {
+			clearTimeout(_nDelayedSaveTimer);
+			FinishSaving();
+		}
+	}
 	function Reset() {
 		m_Log.Wow('[Settings] Resetting settings');
-		Check(_oSettings.nSettingsVersion.pCurrent);
+		CheckRestored();
 		const oSave = {};
-		for (let sName of _mnoPermanentSettings) {
+		for (const sName of _mnoPermanentSettings) {
 			oSave[sName] = _oSettings[sName].pCurrent;
 		}
 		StartSaving(oSave, true);
@@ -780,22 +845,29 @@ const m_Settings = (() => {
 	}
 	function Export() {
 		m_Log.Wow('[Settings] Exporting settings');
-		Check(_oSettings.nSettingsVersion.pCurrent);
-		const oExport = {
-			nSettingsVersion: SETTINGS_VERSION
-		};
-		for (let sName of Object.keys(_oSettings)) {
-			if (!_mnoPermanentSettings.has(sName) && !_mnoDoNotShow.has(sName)) {
+		CheckRestored();
+		const oExport = { nSettingsVersion: SETTINGS_VERSION };
+		for (const sName of Object.keys(_oSettings)) {
+			if (!_mnoPermanentSettings.has(sName)) {
 				oExport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
 		m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
 		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', GetText('J0133'));
-		// WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Text('J0133'));
 	}
+	/*
+		Reads an exported file back. Anything the file gets wrong is a reason to refuse the whole
+		file rather than to import half of it: the wrong file gets picked far more often than a
+		good one gets hand-edited.
+	*/
 	function Import(oFromFile) {
 		m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
-		Check(_oSettings.nSettingsVersion.pCurrent);
+		CheckRestored();
+		/*
+			An export of this schema is under two kilobytes. The bound is there so that a video
+			file picked by mistake is refused on sight instead of being read into memory and
+			handed to JSON.parse.
+		*/
 		if (oFromFile.size === 0 || oFromFile.size > 1e4) {
 			m_Log.Oops(`[Settings] File size: ${oFromFile.size}`);
 			m_Notification.ShowAss();
@@ -813,16 +885,17 @@ const m_Settings = (() => {
 			try {
 				oSave = JSON.parse(oReader.result);
 				if (!IsObject(oSave)) {
-					throw 1;
+					throw new Error('the file does not hold an object');
 				}
-				if (CheckSettingsVersion(oSave, oSave)) {
-					throw 2;
+				if (ValidateStore(oSave, oSave)) {
+					throw new Error('the file carries an unusable settings version');
 				}
-				for (let sName of Object.keys(oSave)) {
-					if (!_oSettings.hasOwnProperty(sName) || _mnoDoNotShow.has(sName)) {
+				for (const sName of Object.keys(oSave)) {
+					if (!_oSettings.hasOwnProperty(sName)) {
 						delete oSave[sName];
 					} else {
 						oSave[sName] = _oSettings[sName].CorrectValue(oSave[sName]);
+						// A value equal to the default is not worth a line in the store.
 						if (oSave[sName] === _oSettings[sName].pInitial) {
 							delete oSave[sName];
 						}
@@ -833,7 +906,8 @@ const m_Settings = (() => {
 				m_Notification.ShowAss();
 				return;
 			}
-			for (let sName of _mnoPermanentSettings) {
+			// Taken from memory, not from the file: an export never carries them.
+			for (const sName of _mnoPermanentSettings) {
 				oSave[sName] = _oSettings[sName].pCurrent;
 			}
 			StartSaving(oSave, true);
@@ -841,46 +915,64 @@ const m_Settings = (() => {
 		}));
 		oReader.readAsText(oFromFile);
 	}
-	function Get2(sName) {
+	/*
+		The value in force: the selected preset's, when it defines this setting, otherwise the
+		stored one. A preset overriding the store rather than replacing it is what lets the user
+		try bundles and come back without having lost anything.
+	*/
+	function LookUp(sName) {
 		Check(typeof sName == 'string');
 		Check(_oSettings.hasOwnProperty(sName));
-		Check(_oSettings.nSettingsVersion.pCurrent);
-		for (let oMetadata of _moPresetMetadata) {
-			const oPreset = oMetadata.amData.get(_oSettings[oMetadata.sSelected].pCurrent);
-			if (oPreset) {
-				const pValue = oPreset[sName];
-				if (pValue !== void 0) {
-					return pValue;
-				}
+		CheckRestored();
+		for (const oFamily of _aoPresetFamilies) {
+			const oPreset = oFamily.amPresets.get(_oSettings[oFamily.sSelected].pCurrent);
+			if (oPreset && oPreset[sName] !== void 0) {
+				return oPreset[sName];
 			}
 		}
 		return _oSettings[sName].pCurrent;
 	}
+	/*
+		nMaxBufferSize is not a setting and is not stored. The buffer has to hold whichever of the
+		two is the larger, and every caller that needs that number asks for it by this name.
+	*/
 	function Get(sName) {
 		if (sName === 'nMaxBufferSize') {
-			return Math.max(Get2('nPlaybackStart'), Get2('nBufferSize'));
+			return Math.max(LookUp('nPlaybackStart'), LookUp('nBufferSize'));
 		}
-		return Get2(sName);
+		return LookUp(sName);
 	}
+	/*
+		Sets a value, and takes the family out of its preset when the value belongs to one.
+
+		Leaving a bundle cannot simply flip the selection: the other values of the bundle were
+		never written to the store, so the switch alone would silently send them all back to their
+		schema defaults. The bundle is copied into the store first, and only then does the one
+		value the user asked for move. Writing the value the bundle already holds changes nothing
+		at all, so it is not a reason to leave it.
+	*/
 	function Change(sName, pValue, bNoSave = false) {
 		Check(typeof sName == 'string');
+		Check(_oSettings.hasOwnProperty(sName));
 		Check(_oSettings[sName].CorrectValue(pValue) === pValue);
 		const oSave = {};
-		for (let oMetadata of _moPresetMetadata) {
-			const oPreset = oMetadata.amData.get(_oSettings[oMetadata.sSelected].pCurrent);
-			if (oPreset && oPreset.hasOwnProperty(sName)) {
-				if (pValue === oPreset[sName]) {
-					return;
-				}
-				Check(!bNoSave);
-				oSave[oMetadata.sSelected] = _oSettings[oMetadata.sSelected].pCurrent = oMetadata.sCustomizable;
-				oSave[oMetadata.sFilled] = _oSettings[oMetadata.sFilled].pCurrent = true;
-				for (let sPresetName of Object.keys(oPreset)) {
-					oSave[sPresetName] = _oSettings[sPresetName].pCurrent = oPreset[sPresetName];
-				}
-				UpdatePresetList(oMetadata);
-				break;
+		for (const oFamily of _aoPresetFamilies) {
+			const oPreset = oFamily.amPresets.get(_oSettings[oFamily.sSelected].pCurrent);
+			if (!oPreset || !oPreset.hasOwnProperty(sName)) {
+				continue;
 			}
+			if (pValue === oPreset[sName]) {
+				return;
+			}
+			// Leaving a preset is a change worth storing: it can never be a no-save change.
+			Check(!bNoSave);
+			oSave[oFamily.sSelected] = _oSettings[oFamily.sSelected].pCurrent = oFamily.sCustom;
+			oSave[oFamily.sFilled] = _oSettings[oFamily.sFilled].pCurrent = true;
+			for (const sPresetName of Object.keys(oPreset)) {
+				oSave[sPresetName] = _oSettings[sPresetName].pCurrent = oPreset[sPresetName];
+			}
+			UpdatePresetList(oFamily);
+			break;
 		}
 		if (_oSettings[sName].pCurrent !== pValue) {
 			oSave[sName] = _oSettings[sName].pCurrent = pValue;
@@ -889,57 +981,63 @@ const m_Settings = (() => {
 			StartSaving(oSave, false);
 		}
 	}
-	function UpdatePresetList(oMetadata) {
-		const nodeList = GetNode(oMetadata.sList);
-		// const nodeList = Node(oMetadata.sList);
+	/*
+		Rebuilds a family's list from its bundles, plus the custom entry once the user has one.
+		Returns the element, so that the caller can go on wiring it.
+	*/
+	function UpdatePresetList(oFamily) {
+		const nodeList = GetNode(oFamily.sList);
 		nodeList.length = 0;
-		const sSelect = _oSettings[oMetadata.sSelected].pCurrent;
-		for (let sName of oMetadata.amData.keys()) {
-			nodeList.add(new Option(GetText(sName), sName, sName === sSelect, sName === sSelect));
-			// nodeList.add(new Option(Text(sName), sName, sName === sSelect, sName === sSelect));
+		const sSelected = _oSettings[oFamily.sSelected].pCurrent;
+		const AddOption = sName => nodeList.add(new Option(GetText(sName), sName, sName === sSelected, sName === sSelected));
+		for (const sName of oFamily.amPresets.keys()) {
+			AddOption(sName);
 		}
-		if (_oSettings[oMetadata.sFilled].pCurrent) {
-			nodeList.add(new Option(GetText(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
-			// nodeList.add(new Option(Text(oMetadata.sCustomizable), oMetadata.sCustomizable, oMetadata.sCustomizable === sSelect, oMetadata.sCustomizable === sSelect));
+		if (_oSettings[oFamily.sFilled].pCurrent) {
+			AddOption(oFamily.sCustom);
 		}
+		// The selection must have landed on one of the entries just added.
 		Check(nodeList.value);
 		return nodeList;
 	}
 	const ProcessPresetChange = AddExceptionHandler(oEvent => {
-		for (let oMetadata of _moPresetMetadata) {
-			if (oMetadata.sList === oEvent.target.id) {
+		for (const oFamily of _aoPresetFamilies) {
+			if (oFamily.sList === oEvent.target.id) {
 				Check(oEvent.target.value);
-				Change(oMetadata.sSelected, oEvent.target.value);
-				m_Events.SendEvent(oMetadata.sEvent);
+				Change(oFamily.sSelected, oEvent.target.value);
+				m_Events.SendEvent(oFamily.sEvent);
 				return;
 			}
 		}
+		// The handler is wired to those lists and to nothing else.
 		Check(false);
 	});
 	function ConfigurePresetLists() {
-		for (let oMetadata of _moPresetMetadata) {
-			UpdatePresetList(oMetadata).addEventListener('change', ProcessPresetChange);
+		for (const oFamily of _aoPresetFamilies) {
+			UpdatePresetList(oFamily).addEventListener('change', ProcessPresetChange);
 		}
 	}
+	/*
+		The declaration behind a name. The interface reads pInitial, nMinimum, nMaximum and
+		sAutoTune off it to drive the number inputs, which is why they are plain fields.
+	*/
 	function GetSettingParameters(sName) {
 		Check(typeof sName == 'string');
 		Check(_oSettings.hasOwnProperty(sName));
 		return _oSettings[sName];
 	}
+	/*
+		For the bug report: the bookkeeping, plus whatever the user has actually changed. A default
+		tells the reader nothing, and forty of them would bury the three lines that matter.
+	*/
 	function GetDataForReport() {
 		const oReport = {};
-		for (let sName of Object.keys(_oSettings)) {
-			if (!_mnoDoNotShow.has(sName) && (_mnoPermanentSettings.has(sName) || _oSettings[sName].pCurrent !== _oSettings[sName].pInitial)) {
+		for (const sName of Object.keys(_oSettings)) {
+			if (_mnoPermanentSettings.has(sName) || _oSettings[sName].pCurrent !== _oSettings[sName].pInitial) {
 				oReport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
 		return oReport;
-	}
-	function SaveChanges() {
-		if (_nDelayedSaveTimer !== 0) {
-			clearTimeout(_nDelayedSaveTimer);
-			FinishSaving();
-		}
 	}
 	window.addEventListener('beforeunload', SaveChanges);
 	return {
