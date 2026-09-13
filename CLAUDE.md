@@ -68,7 +68,6 @@ Twitch's native video player with a custom implementation featuring:
 | `rules.json` | Net Rules | `declarativeNetRequest` rules — strips ad-related request/response headers |
 | `_locales/en/messages.json` | i18n | English UI strings |
 | `_locales/ru/messages.json` | i18n | Russian UI strings |
-| `recycler.js` | Util | Memory recycler — reuses typed-array buffers to reduce GC pressure |
 | `pointerevent.js` | Util | Pointer event / drag utilities |
 | `report.html` / `report.css` | UI | Extension report/feedback page |
 
@@ -212,8 +211,11 @@ bloated by it — the debt is the identifiers themselves, not the size. See **Tr
    and can be terminated at any time. Do not store state in module globals there.
 4. **Web Worker scope** — `worker.js` has no access to `chrome.*` APIs or the DOM.
 5. **wasm.wasm is a binary** — never open or edit it as text. Never delete it.
-6. **recycler.js** — the memory recycler in `worker.js` pools `Uint8Array` buffers. Do not
-   replace it with plain `new Uint8Array()` without understanding GC implications on long sessions.
+6. **Finished media buffers are detached, not dropped** — `m_GarbageCollector`
+   (`modules/garbage-collector.js`) posts each one to a closed `MessagePort` with a transfer list,
+   which frees it at the call. Do not replace that with letting buffers fall to the garbage
+   collector: on long sessions memory saw-tooths, and nothing throws to say so.
+   `tests/garbage-collector.test.js` asserts the detach.
 7. **gql_injection.js page context** — this script runs in the Twitch page context (not extension
    context) to intercept the GQL token. Changes here affect token capture for follows/bonus claims.
 8. **Two container paths** — Twitch serves MPEG-TS on most channels and fMP4 (CMAF) on a

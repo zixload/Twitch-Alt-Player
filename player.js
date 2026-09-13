@@ -8645,7 +8645,6 @@ function Terminate(bFast) {
     if (!bFast) {
       m_Transcoder.Stop();
       m_Player.Stop();
-      m_GarbageCollector.Burn();
     }
     m_Log.Wow("[Launcher] Work ended");
   } catch (_) { }

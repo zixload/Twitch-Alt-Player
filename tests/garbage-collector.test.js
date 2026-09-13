@@ -15,15 +15,9 @@
 	Node implements the same transfer semantics, so the assertions here are the real thing and not
 	an imitation.
 
-	This suite is written BEFORE the module is rewritten. It is the description the rewrite has to
-	satisfy, not a report on the old code.
-
-	ONE CASE READS manifest.json. The module keeps a second, older flavour that hands buffers to a
-	worker thread, chosen when the browser engine is below 67. The manifest requires Chrome 92, and
-	MV3 itself requires 88, so that flavour cannot run in any browser able to load this extension:
-	`recycler.js` is a whole file kept alive by an unreachable branch. Case 5 pins that down from
-	the manifest, so that the day someone lowers the floor below 67 the test says so instead of
-	quietly resurrecting dead code.
+	This suite was written BEFORE the module was rewritten, as the description the rewrite had to
+	satisfy. The rewrite changed two parts of it on purpose, and the cases say so where they stand:
+	the worker-thread flavour and recycler.js are gone, and Burn() went with them.
 
 	Usage: node tests/garbage-collector.test.js [chemin/vers/le/fichier]
 */
@@ -150,9 +144,9 @@ cas(() => {
 cas(() => {
 	const { G, asJournal } = charger();
 	G.Discard(new Uint8Array(4096));
-	// L'etiquette du journal n'est pas verifiee : elle dit « Recycler » alors que le module
-	// s'appelle GarbageCollector, et la reecriture a le droit de trancher.
 	ok(asJournal.some(s => s.includes('4096')), 'la taille jetee est portee au journal');
+	ok(asJournal.some(s => s.includes('[GarbageCollector]')),
+		'sous le nom du module -- l ancienne etiquette disait « Recycler »');
 });
 
 titre('2. Ce qui n est pas un tampon');
@@ -171,15 +165,16 @@ cas(() => {
 	ok(asJournal.length === 0, 'et ne compte pas comme une liberation');
 });
 
-titre('3. Burn');
+titre('3. Burn n existe plus');
+/*
+	Burn() servait a la saveur a fil de travail, qui terminait le fil pour vider sa poubelle. Dans
+	toutes les configurations capables de tourner, c'etait une fonction vide appelee une fois, a
+	l'arret. Partie avec la saveur ; l'appel dans Terminate aussi.
+*/
 cas(() => {
 	const { G } = charger();
-	ok(typeof G.Burn == 'function', 'Burn existe dans les deux saveurs');
-	ok(!leve(() => G.Burn()), 'et ne fait rien de visible sur celle-ci');
-	const auOctets = new Uint8Array(512);
-	G.Discard(auOctets);
-	G.Burn();
-	ok(auOctets.byteLength === 0, 'la memoire jetee avant reste jetee apres');
+	ok(G.Burn === void 0, 'l interface ne l expose plus');
+	ok(Object.keys(G).join(' ') === 'Discard', 'Discard est le seul membre');
 });
 
 titre('4. Sur mobile, le module s efface');
@@ -190,19 +185,24 @@ cas(() => {
 	ok(auOctets.byteLength === 4096,
 		'rien n est detache : sur mobile le module ne fait deliberement rien');
 	ok(asJournal.length === 0, 'et ne dit rien');
-	ok(!leve(() => G.Burn()), 'Burn reste appelable');
+	ok(Object.keys(G).join(' ') === 'Discard', 'meme interface qu ailleurs');
 });
 
-titre('5. La saveur a fil de travail est hors de portee');
+titre('5. Plus aucun fil de travail, quelle que soit la version');
+/*
+	La saveur retiree etait choisie sous Chrome 67, et recycler.js n'etait charge que par elle. Le
+	module ne lit plus la version du navigateur : ce cas le fait tourner sous une version tres
+	ancienne et une recente, et exige que le meme chemin serve et qu'aucun Worker ne naisse.
+*/
 cas(() => {
-	const oManifest = JSON.parse(fs.readFileSync(path.join(RACINE, 'manifest.json'), 'utf8'));
-	const nPlancher = Number.parseInt(oManifest.minimum_chrome_version, 10);
-	ok(oManifest.manifest_version === 3 && nPlancher >= 67,
-		`manifest.json : MV3 et Chrome ${nPlancher} minimum, donc la branche « < 67 » est morte`);
-	const { G, aoWorkers } = charger({ nVersion: nPlancher });
-	G.Discard(new Uint8Array(1024));
-	ok(aoWorkers.length === 0,
-		'au plancher de version declare, aucun Worker n est cree : recycler.js ne sert plus');
+	for (const nVersion of [ 50, 150 ]) {
+		const { G, aoWorkers } = charger({ nVersion });
+		const auOctets = new Uint8Array(1024);
+		G.Discard(auOctets);
+		ok(aoWorkers.length === 0 && auOctets.byteLength === 0,
+			`version ${nVersion} : detache par le port, aucun Worker cree`);
+	}
+	ok(!fs.existsSync(path.join(RACINE, 'recycler.js')), 'recycler.js n est plus dans l arbre');
 });
 
 for (const oPort of aoPortsOuverts) {
