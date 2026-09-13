@@ -135,7 +135,6 @@ kbd {
 .windowopen .scrollindicator {
 /* .windowopen .scrollindicator */
 	animation: 2.5s linear infinite scrollindicator
-	/* animation: 2.5s linear infinite scrollindicator */
 }
 @keyframes scrollindicator {
 /* @keyframes scrollindicator */

@@ -4,7 +4,7 @@
  * Channel bar under the video.
  *
  * The player already fetches everything this bar shows — the channel window and the
- * top panel are filled by `ПоказатьМетаданныеКанала` and `ПоказатьМетаданныеТрансляции`.
+ * top panel are filled by `ShowChannelMetadata` and `ShowBroadcastMetadata`.
  * Rather than duplicating that plumbing, this module mirrors those nodes with a
  * MutationObserver and proxies its buttons to the ones the player already wires up.
  *
@@ -28,7 +28,7 @@ const m_ChannelBar = (() => {
 	const INFO_BUTTON_SELECTOR = '#toppanel [data-window-toggle="channel"]';
 
 	/**
-	 * `data-subscription` values, straight from the ПОДПИСКА_* constants in player.js.
+	 * `data-subscription` values, straight from the SUBSCRIPTION_* constants in player.js.
 	 * They are not a boolean: 0 means following is unavailable — the viewer is not
 	 * signed in — and the player hides its own row for it in CSS. 1 means "not
 	 * following yet", 2 and 3 mean following, without and with notifications.

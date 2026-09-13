@@ -9,15 +9,15 @@ function AsmjsModule(stdlib, foreign, heap)
 
 	function SearchStartCodePrefix(pStream, pStreamEnd)
 	// ITU-T H.264:2014 Annex B
-	// Ищет start code prefix: минимум два нулевых байта, за ними единица.
-	// Состав префикса в зависимости от его длины:
+	// Finds a start code prefix: at least two zero bytes followed by a one.
+	// Prefix layout depending on its length:
 	// =3 - start_code_prefix_one_3bytes
 	// =4 - zero_byte + start_code_prefix_one_3bytes
-	// >4 - leading_zero_8bits или trailing_zero_8bits + zero_byte + start_code_prefix_one_3bytes
-	// Возвращает указатель на начало префикса. В Int32Array(heap)[0] возвращает размер префикса.
-	// Если префикс не найден, то возвращает pStreamEnd. Размер не определен.
-	// Если данные повреждены, то возвращает -2.
-	// Выход параметров функции за пределы буфера не проверяется.
+	// >4 - leading_zero_8bits or trailing_zero_8bits + zero_byte + start_code_prefix_one_3bytes
+	// Returns a pointer to the start of the prefix. Int32Array(heap)[0] receives the prefix length.
+	// If no prefix is found, returns pStreamEnd. The length is undefined.
+	// If the data is corrupt, returns -2.
+	// Function arguments running past the end of the buffer are not checked.
 	{
 		pStream = pStream|0;
 		pStreamEnd = pStreamEnd|0;
@@ -32,7 +32,7 @@ function AsmjsModule(stdlib, foreign, heap)
 
 		for (;;)
 		{
-			// Большую часть времени выполняется следующий код
+			// Most of the time is spent in the following code
 			// ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 			uByte = _abHeap[(pStream + 2) >> 0]|0;
 			if ((uByte|0) > 1)
@@ -67,7 +67,7 @@ function AsmjsModule(stdlib, foreign, heap)
 		}
 
 		pStart = pStream;
-		// Chrome 67 теряет скорость если прибавить 3.
+		// Chrome 67 slows down if 3 is added.
 		pStream = (pStream + 2)|0;
 
 		while ((uByte|0) == 0)
@@ -81,8 +81,8 @@ function AsmjsModule(stdlib, foreign, heap)
 		}
 		if ((uByte|0) != 1)
 		{
-			// Twitch: Иногда в filler data встречаются последовательности нулевых байтов произвольной длины.
-			// Они не мешают просмотру, но нарушают несколько правил стандарта H.264.
+			// Twitch: filler data sometimes contains runs of zero bytes of arbitrary length.
+			// They do not disturb playback, but break several rules of the H.264 standard.
 			return -2|0;
 		}
 

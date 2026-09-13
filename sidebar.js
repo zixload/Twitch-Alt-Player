@@ -9,7 +9,7 @@
  * is on right now, both fetched straight from Twitch's GraphQL API.
  *
  * It is deliberately self-contained — it reads the auth cookie itself and never calls
- * into `м_Twitch` — so that a failure here can never take the player down with it.
+ * into `m_Twitch` — so that a failure here can never take the player down with it.
  * Every entry point is guarded; on any error the sidebar degrades to a status line.
  */
 const m_Sidebar = (() => {

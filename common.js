@@ -73,18 +73,11 @@ if (!HTMLCollection.prototype[Symbol.iterator]) {
 	HTMLCollection.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 }
 
-if (!THIS_IS_CONTENT_SCRIPT && !window.PointerEvent) {
-	const nodeScript = document.createElement('script');
-	nodeScript.src = 'pointerevent.js';
-	document.currentScript.parentNode.appendChild(nodeScript);
-}
-
 const STUB = () => {};
 
 function Check(pCondition) {
 	if (!pCondition) {
-		throw new Error('Проверка не пройдена');
-		// throw new Error('Check failed');
+		throw new Error('Check failed');
 	}
 }
 
@@ -311,8 +304,7 @@ const m_i18n = (() => {
 		Check(sSubstitution === void 0 || typeof sSubstitution == 'string');
 		const sMessageText = chrome.i18n.getMessage(sMessageName, sSubstitution);
 		if (!sMessageText) {
-			throw new Error(`Не найден текст ${sMessageName}`);
-			// throw new Error(`Text not found ${sMessageName}`);
+			throw new Error(`Text not found ${sMessageName}`);
 		}
 		return sMessageText;
 	}
@@ -332,8 +324,7 @@ const m_i18n = (() => {
 		return elInsertTo;
 	}
 	function TranslateDocument(oDocument) {
-		m_Log.Here('[i18n] Перевод документа');
-		// m_Log.Here('[i18n] Translating document');
+		m_Log.Here('[i18n] Translating document');
 		for (let elTranslate, celTranslate = oDocument.querySelectorAll('*[data-i18n]'), i = 0; elTranslate = celTranslate[i]; ++i) {
 			const sNames = elTranslate.getAttribute('data-i18n');
 			const sNamesDelimiter = sNames.indexOf('^');
@@ -368,21 +359,20 @@ const m_i18n = (() => {
 	}
 	function SecondsToString(nSeconds, bNeedSeconds) {
 		let h = Math.floor(nSeconds / 60 % 60);
-		let с = Math.floor(nSeconds / 60 / 60) + (h < 10 ? ' : 0' : ' : ') + h;
+		let sTime = Math.floor(nSeconds / 60 / 60) + (h < 10 ? ' : 0' : ' : ') + h;
 		// let s = Math.floor(nSeconds / 60 / 60) + (h < 10 ? ' : 0' : ' : ') + h;
 		if (bNeedSeconds) {
 			h = Math.floor(nSeconds % 60);
-			с += (h < 10 ? ' : 0' : ' : ') + h;
+			sTime += (h < 10 ? ' : 0' : ' : ') + h;
 			// s += (h < 10 ? ' : 0' : ' : ') + h;
 		}
-		return с;
+		return sTime;
 		// return s;
 	}
 	function GetLanguageName(sLanguageCode) {
 		const sLanguageName = LANGUAGE_NAMES[sLanguageCode.toUpperCase()];
 		if (!sLanguageName) {
-			throw new Error(`Неизвестный код языка: ${sLanguageCode}`);
-			// throw new Error(`Unknown language code: ${sLanguageCode}`);
+			throw new Error(`Unknown language code: ${sLanguageCode}`);
 		}
 		return sLanguageName;
 	}
@@ -661,13 +651,12 @@ const m_Settings = (() => {
 			delete oRestoredSettings[sOld];
 		}
 		if (nCarried) {
-			m_Log.Here(`[Настройки] ${nCarried} reglage(s) repris sous leur nouveau nom`);
+			m_Log.Here(`[Settings] ${nCarried} reglage(s) repris sous leur nouveau nom`);
 		}
 		return oRestoredSettings;
 	}
 	function Restore() {
-		m_Log.Here('[Настройки] Восстанавливаю settings');
-		// m_Log.Here('[Settings] Restoring settings');
+		m_Log.Here('[Settings] Restoring settings');
 		return new Promise((fResolve, fReject) => {
 			chrome.storage.local.get(null, oRestoredSettings => {
 				if (g_bWorkFinished) {
@@ -678,8 +667,7 @@ const m_Settings = (() => {
 						console.error('storage.local.get', chrome.runtime.lastError.message);
 						m_Debug.FinishWorkAndShowMessage('J0221');
 					}
-					m_Log.Here(`[Настройки] Настройки прочитаны из хранилища: ${m_Log.O(oRestoredSettings)}`);
-					// m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oRestoredSettings)}`);
+					m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oRestoredSettings)}`);
 					FinishRestoring(MigrateSettingNames(oRestoredSettings));
 					fResolve();
 				} catch (pException) {
@@ -743,7 +731,7 @@ const m_Settings = (() => {
 		Check(IsObject(oSave));
 		if (Object.keys(oSave).length !== 0 || bDeleteRest) {
 			if (_nDelayedSaveTimer === 0) {
-				m_Log.Here(`[Настройки] Откладываю сохранение настроек на ${DELAY_SAVE_FOR}мс`);
+				m_Log.Here(`[Settings] Postponing settings save by ${DELAY_SAVE_FOR}ms`);
 				// m_Log.Here(`[Settings] Delaying settings save for ${DELAY_SAVE_FOR}ms`);
 				_oDelayedSave = oSave;
 				_bDelayedDelete = bDeleteRest;
@@ -757,7 +745,7 @@ const m_Settings = (() => {
 		}
 	}
 	function FinishSaving() {
-		m_Log.Here('[Настройки] Завершаю отложенное сохранение');
+		m_Log.Here('[Settings] Finishing postponed save');
 		// m_Log.Here('[Settings] Finishing delayed save');
 		Check(_nDelayedSaveTimer !== 0);
 		_nDelayedSaveTimer = 0;
@@ -768,12 +756,11 @@ const m_Settings = (() => {
 	function Save(oSave, bDeleteRest) {
 		if (bDeleteRest) {
 			chrome.storage.local.clear(CheckSaveResult);
-			m_Log.Here('[Настройки] Все settings удалены из хранилища');
+			m_Log.Here('[Settings] All settings removed from storage');
 			// m_Log.Here('[Settings] All settings deleted from storage');
 		}
 		chrome.storage.local.set(oSave, CheckSaveResult);
-		m_Log.Here(`[Настройки] Настройки записаны в хранилище: ${m_Log.O(oSave)}`);
-		// m_Log.Here(`[Settings] Settings written to storage: ${m_Log.O(oSave)}`);
+		m_Log.Here(`[Settings] Settings written to storage: ${m_Log.O(oSave)}`);
 	}
 	function CheckSaveResult() {
 		if (chrome.runtime.lastError) {
@@ -782,8 +769,7 @@ const m_Settings = (() => {
 		}
 	}
 	function Reset() {
-		m_Log.Wow('[Настройки] Сбрасываю settings');
-		// m_Log.Wow('[Settings] Resetting settings');
+		m_Log.Wow('[Settings] Resetting settings');
 		Check(_oSettings.nSettingsVersion.pCurrent);
 		const oSave = {};
 		for (let sName of _mnoPermanentSettings) {
@@ -793,8 +779,7 @@ const m_Settings = (() => {
 		window.location.reload(true);
 	}
 	function Export() {
-		m_Log.Wow('[Настройки] Экспортирую settings');
-		// m_Log.Wow('[Settings] Exporting settings');
+		m_Log.Wow('[Settings] Exporting settings');
 		Check(_oSettings.nSettingsVersion.pCurrent);
 		const oExport = {
 			nSettingsVersion: SETTINGS_VERSION
@@ -804,31 +789,26 @@ const m_Settings = (() => {
 				oExport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
-		m_Log.Here(`[Настройки] Отобраны settings для экспорта: ${m_Log.O(oExport)}`);
-		// m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
+		m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
 		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', GetText('J0133'));
 		// WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Text('J0133'));
 	}
 	function Import(oFromFile) {
-		m_Log.Wow(`[Настройки] Импортирую settings из файла ${oFromFile.name}`);
-		// m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
+		m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
 		Check(_oSettings.nSettingsVersion.pCurrent);
 		if (oFromFile.size === 0 || oFromFile.size > 1e4) {
-			m_Log.Oops(`[Настройки] Размер файла: ${oFromFile.size}`);
-			// m_Log.Oops(`[Settings] File size: ${oFromFile.size}`);
+			m_Log.Oops(`[Settings] File size: ${oFromFile.size}`);
 			m_Notification.ShowAss();
 			return;
 		}
 		const oReader = new FileReader();
 		oReader.addEventListener('loadend', AddExceptionHandler(() => {
 			if (!IsNonEmptyString(oReader.result)) {
-				m_Log.Oops(`[Настройки] Результат чтения файла: ${oReader.result}`);
-				// m_Log.Oops(`[Settings] File read result: ${oReader.result}`);
+				m_Log.Oops(`[Settings] File read result: ${oReader.result}`);
 				m_Notification.ShowAss();
 				return;
 			}
-			m_Log.Here(`[Настройки] Настройки прочитаны из файла: ${oReader.result}`);
-			// m_Log.Here(`[Settings] Settings read from file: ${oReader.result}`);
+			m_Log.Here(`[Settings] Settings read from file: ${oReader.result}`);
 			let oSave;
 			try {
 				oSave = JSON.parse(oReader.result);
@@ -849,8 +829,7 @@ const m_Settings = (() => {
 					}
 				}
 			} catch (pException) {
-				m_Log.Oops(`[Настройки] Поймано исключение во время разбора настроек: ${pException}`);
-				// m_Log.Oops(`[Settings] Exception caught while parsing settings: ${pException}`);
+				m_Log.Oops(`[Settings] Exception caught while parsing settings: ${pException}`);
 				m_Notification.ShowAss();
 				return;
 			}

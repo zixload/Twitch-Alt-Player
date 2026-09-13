@@ -27,7 +27,7 @@ function finishWork(pExceptionOrMessageCode) {
     console.error(pExceptionOrMessageCode);
     try {
       g_bWorkFinished = true;
-      m_Log.Wow("[content.js] Работа ended");
+      m_Log.Wow("[content.js] Work ended");
       // m_Log.Wow('[content.js] Work finished');
     } catch (_) {}
   }
@@ -127,7 +127,7 @@ function parseAddress(oAddress) {
     }
   }
   m_Log.Wow(
-    `[content.js] Адрес разобран: Страница=${sPage} КодКанала=${sChannelCode} МожноПеренаправлять=${bCanRedirect}`
+    `[content.js] Address parsed: Page=${sPage} ChannelCode=${sChannelCode} CanRedirect=${bCanRedirect}`
   );
   // m_Log.Wow(`[content.js] Address parsed: Page=${sPage} ChannelCode=${sChannelCode} CanRedirect=${bCanRedirect}`);
   return {
@@ -200,15 +200,14 @@ function pageAddressChanged(sMethod) {
 
 function cancelRequest() {
   if (g_oRequest) {
-    m_Log.Wow("[content.js] Отменяю незавершенный запрос");
+    m_Log.Wow("[content.js] Cancelling unfinished request");
     // m_Log.Wow('[content.js] Canceling pending request');
     g_oRequest.abort();
   }
 }
 
 function sendRequest() {
-  m_Log.Wow(`[content.js] Посылаю запрос для канала ${g_sChannelCode}`);
-  // m_Log.Wow(`[content.js] Sending request for channel ${g_sChannelCode}`);
+  m_Log.Wow(`[content.js] Sending request for channel ${g_sChannelCode}`);
   g_oRequest = new XMLHttpRequest();
   g_oRequest.addEventListener("loadend", processResponse);
   // g_oRequest.addEventListener('loadend', processResponse);
@@ -295,8 +294,7 @@ function processResponse({ target: oRequest }) {
 
 function launchOurPlayer(sChannelCode) {
   const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  m_Log.Wow(`[content.js] Перехожу на страницу ${sPlayerAddress}`);
-  // m_Log.Wow(`[content.js] Navigating to page ${sPlayerAddress}`);
+  m_Log.Wow(`[content.js] Navigating to page ${sPlayerAddress}`);
   disableAutoRedirectForThisPage();
   setPageAddress(sPlayerAddress);
 }
@@ -304,7 +302,7 @@ function launchOurPlayer(sChannelCode) {
 function redirectToOurPlayer(sChannelCode) {
   const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
   m_Log.Wow(
-    `[content.js] Меняю адрес страницы с ${location.href} на ${sPlayerAddress}`
+    `[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`
   );
   // m_Log.Wow(`[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`);
   document.documentElement.setAttribute(
@@ -330,7 +328,7 @@ function handlePointerDownAndClick(oEvent) {
     ) {
       // if (nodeLink && oEvent.isPrimary !== false && oEvent.button === LEFT_BUTTON && !oEvent.shiftKey && !oEvent.ctrlKey && !oEvent.altKey && !oEvent.metaKey) {
       m_Log.Wow(
-        `[content.js] Произошло событие ${oEvent.type} у ссылки ${nodeLink.href}`
+        `[content.js] Event ${oEvent.type} on link ${nodeLink.href}`
       );
       // m_Log.Wow(`[content.js] Event ${oEvent.type} occurred on link ${nodeLink.href}`);
       requestChannelState(parseAddress(nodeLink));
@@ -340,7 +338,7 @@ function handlePointerDownAndClick(oEvent) {
 
 function handlePopState(oEvent) {
   if (g_oParsedAddress) {
-    m_Log.Wow(`[content.js] Произошло событие popstate ${location.href}`);
+    m_Log.Wow(`[content.js] popstate event ${location.href}`);
     // m_Log.Wow(`[content.js] popstate event occurred ${location.href}`);
     if (getBrowserEngineVersion() < 67) {
       document.title = "Twitch";
@@ -349,7 +347,7 @@ function handlePopState(oEvent) {
     // pageAddressChanged('POPSTATE');
     if (document.documentElement.hasAttribute("data-tw5-redirect")) {
       // if (document.documentElement.hasAttribute('data-tw5-redirect')) {
-      m_Log.Wow("[content.js] Скрываю событие popstate");
+      m_Log.Wow("[content.js] Hiding popstate event");
       // m_Log.Wow('[content.js] Hiding popstate event');
       oEvent.stopImmediatePropagation();
     }
@@ -358,7 +356,7 @@ function handlePopState(oEvent) {
 
 function handlePushState(oEvent) {
   m_Log.Wow(
-    `[content.js] Произошло событие tw5-pushstate ${location.href}`
+    `[content.js] tw5-pushstate event ${location.href}`
   );
   // m_Log.Wow(`[content.js] tw5-pushstate event occurred ${location.href}`);
   pageAddressChanged("PUSHSTATE");
@@ -375,7 +373,7 @@ function handleLaunchOurPlayer(oEvent) {
     launchOurPlayer(g_oParsedAddress.sChannelCode);
   } else {
     m_Log.Wow(
-      `[content.js] Не запускать player Кнопка=${oEvent.button} Страница=${g_oParsedAddress.sPage}`
+      `[content.js] Not starting the player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`
     );
     // m_Log.Wow(`[content.js] Do not launch player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`);
   }
@@ -385,8 +383,7 @@ function handleToggleAutoRedirect(oEvent) {
   oEvent.preventDefault();
   const b = !m_Settings.Get("bAutoRedirectAllowed");
   // const b = !m_Settings.Get('bAutoRedirectAllowed');
-  m_Log.Wow(`[content.js] Автоперенаправление разрешено: ${b}`);
-  // m_Log.Wow(`[content.js] Auto-redirect allowed: ${b}`);
+  m_Log.Wow(`[content.js] Auto-redirect allowed: ${b}`);
   m_Settings.Change("bAutoRedirectAllowed", b);
   // m_Settings.Change('bAutoRedirectAllowed', b);
   updateOurButton();
@@ -394,7 +391,7 @@ function handleToggleAutoRedirect(oEvent) {
 
 function handleCloseHelp(oEvent) {
   oEvent.preventDefault();
-  m_Log.Wow("[content.js] Закрываю справку");
+  m_Log.Wow("[content.js] Closing help");
   // m_Log.Wow('[content.js] Closing help');
   oEvent.currentTarget.classList.remove("tw5-help");
   // oEvent.currentTarget.classList.remove('tw5-help');
@@ -437,7 +434,7 @@ function insertOurButton() {
     if (!nodeToInsert) {
       return false;
     }
-    m_Log.Wow("[content.js] Вставляю нашу кнопку для мобильного сайта");
+    m_Log.Wow("[content.js] Inserting our button for the mobile site");
     // m_Log.Wow('[content.js] Inserting our button for mobile site');
     nodeToInsert.insertAdjacentHTML(
       "afterend",
@@ -500,7 +497,7 @@ function insertOurButton() {
     if (!nodeToInsert) {
       return false;
     }
-    m_Log.Wow("[content.js] Вставляю нашу кнопку");
+    m_Log.Wow("[content.js] Inserting our button");
     // m_Log.Wow('[content.js] Inserting our button');
     nodeToInsert.insertAdjacentHTML(
       "afterend",
@@ -707,14 +704,14 @@ function insertThirdPartyExtensions() {
       // }, oMessage => {
       if (chrome.runtime.lastError) {
         m_Log.Wow(
-          `[content.js] Не удалось послать запрос на вставку сторонних расширений: ${chrome.runtime.lastError.message}`
+          `[content.js] Could not send the request to insert third-party extensions: ${chrome.runtime.lastError.message}`
         );
         // m_Log.Wow(`[content.js] Failed to send request to insert third-party extensions: ${chrome.runtime.lastError.message}`);
         return;
       }
-      //! оСообщение.сСторонниеРасширения contains a limited set of known browser extensions that are currently
+      //! oMessage.sThirdPartyExtensions contains a limited set of known browser extensions that are currently
       // ! oMessage.sThirdPartyExtensions contains a limited set of known browser extensions that are currently
-      //! installed and enabled in the browser. See обработатьСообщениеЧата() in player.js. Load those
+      //! installed and enabled in the browser. See handleChatMessage() in player.js. Load those
       // ! installed and enabled in the browser. See handleChatMessage() in player.js. Load those
       //! extensions into <iframe>. Chrome itself cannot load installed extensions into another extension.
       //! See https://bugs.chromium.org/p/chromium/issues/detail?id=599167
@@ -776,7 +773,7 @@ function changeChatBehavior() {
         return;
       }
       m_Log.Wow(
-        `[content.js] Открываю ссылку в новой вкладке: ${nodeLink.getAttribute(
+        `[content.js] Opening link in a new tab: ${nodeLink.getAttribute(
           "href"
         )}`
       );
@@ -810,7 +807,7 @@ function removeOldVersionTails() {}
 
 AddExceptionHandler(() => {
   m_Log.Wow(
-    `[content.js] Запущен ${performance.now().toFixed()}мс ${location.href}`
+    `[content.js] Started ${performance.now().toFixed()}ms ${location.href}`
   );
   // m_Log.Wow(`[content.js] Launched ${performance.now().toFixed()}ms ${location.href}`);
   if (parseAddress(location).sPage === "CHANNEL_CHAT") {

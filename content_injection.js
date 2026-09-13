@@ -5,7 +5,7 @@
     // This self-executing function contains the code previously injected by content.js
     // This is the Manifest V3 compatible way to run code in the page's MAIN world.
 
-    // Function from content.js: перехватитьФункции()
+    // Function from content.js: interceptFunctions()
     // Function from content.js: interceptFunctions()
     let _bDoNotIntercept = false;
     window.addEventListener('tw5-nointercept', () => {
@@ -23,10 +23,8 @@
             if (_bDoNotIntercept) {
                 oTitleDescriptor.set.call(this, title);
             } else if (this.documentElement.hasAttribute('data-tw5-redirect')) {} else {
-            // } else if (this.documentElement.hasAttribute('data-tw5-redirect')) {} else {
                 oTitleDescriptor.set.call(this, title);
                 window.dispatchEvent(new CustomEvent('tw5-titlechanged'));
-                // window.dispatchEvent(new CustomEvent('tw5-titlechanged'));
             }
         }
     });
@@ -35,7 +33,6 @@
         if (_bDoNotIntercept) {
             fPushState.apply(this, arguments);
         } else if (document.documentElement.hasAttribute('data-tw5-redirect')) {} else {
-        // } else if (document.documentElement.hasAttribute('data-tw5-redirect')) {} else {
             const sWas = location.pathname;
             fPushState.apply(this, arguments);
             if (sWas !== location.pathname) {
@@ -45,7 +42,7 @@
         }
     };
 
-    // Function from content.js: разрешитьРаботуЧата()
+    // Function from content.js: allowChatToWork()
     // Function from content.js: allowChatToWork()
     const fGetItem = Storage.prototype.getItem;
     Storage.prototype.getItem = function (sName) {
