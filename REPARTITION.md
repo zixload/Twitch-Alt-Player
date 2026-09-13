@@ -360,7 +360,7 @@ une invite du navigateur. **C'est à Luca de le vérifier en vrai.**
 | chaîne de démarrage | A | sortie dans `modules/startup.js` — `28e58b1` |
 | `m_Events` | A | réécrit — `23eeea8`, une seule convention d'appel |
 | `m_GarbageCollector` | A | réécrit — `ebfca7e`, `recycler.js` et `Burn` retirés |
-| `m_Twitch` | A | sorti — `4ac86ab` ; description en cours |
+| `m_Twitch` | A | réécrit — `5a8f07a`, 119 constats ; les trois fonctions de pub laissées telles quelles |
 
 ### Le verrou du démarrage est levé
 
