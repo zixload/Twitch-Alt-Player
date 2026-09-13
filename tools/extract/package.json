@@ -1,0 +1,11 @@
+{
+  "name": "extract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sortir un module de son fichier, et prouver que rien d'autre n'a bouge",
+  "type": "commonjs",
+  "dependencies": {
+    "@babel/parser": "^8.0.5",
+    "@babel/traverse": "^8.0.5"
+  }
+}

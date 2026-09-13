@@ -76,6 +76,8 @@ const snapshot = (name) => {
 	for (const f of fs.readdirSync(ROOT)) {
 		if (COPY.test(f) && fs.statSync(path.join(ROOT, f)).isFile()) fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
 	}
+	// Les modules extraits vivent dans modules/ : sans eux, la copie ne chargerait pas les memes scripts.
+	if (fs.existsSync(path.join(ROOT, 'modules'))) fs.cpSync(path.join(ROOT, 'modules'), path.join(dir, 'modules'), { recursive: true });
 	return dir;
 };
 

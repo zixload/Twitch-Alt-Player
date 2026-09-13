@@ -14,11 +14,16 @@ de message.
   4. evenements       eventcheck.js : chaque SendEvent a son AddHandler et reciproquement, zero
                       defaut et zero angle mort. Pas de reference : l'arbre est a zero.
   5. auto-test        eventcheck-selftest.js : l'appariement sait encore echouer.
-  6. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
-  7. console          errors.py : zero exception, zero console.error.
-  8. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
-  9. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
- 10. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
+  6. construction     tools/extract/graph.js : rien n'est utilise pendant le chargement avant
+                      d'etre defini, et aucun module n'en appelle un autre que m_Log ou m_Events
+                      pendant sa construction (exceptions nommees dans graph.js).
+  7. auto-test        extract-selftest.js : l'extraction extrait, refuse, et sa verification
+                      attrape ce qui n'est pas un deplacement.
+  8. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
+  9. console          errors.py : zero exception, zero console.error.
+ 10. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
+ 11. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
+ 12. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
 
 **Des references, pas des seuils.** Le controle croise et les reglages portent aujourd'hui des
 defauts connus. Exiger zero ferait echouer chaque lot jusqu'a leur correction, et un outil qui
@@ -30,9 +35,9 @@ echoue toujours finit par ne plus etre lu. Ils sont donc compares a une referenc
 ce que le passage rapporte : c'est une decision, pas une formalite.
 
 Usage: py -3.14 tools/harness/verify.py [--statique] [--chaines a,b,c] [--accepter]
-  --statique  etapes 1 a 5 seulement, quelques secondes, sans navigateur
+  --statique  etapes 1 a 7 seulement, quelques secondes, sans navigateur
   --chaines   candidates, essayees dans l'ordre (defaut : zerator)
-  --accepter  enregistre les resultats des etapes 2 et 10 comme reference
+  --accepter  enregistre les resultats des etapes 2 et 12 comme reference
 """
 import io
 import json
@@ -49,6 +54,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 RENAME = os.path.join(ROOT, 'tools', 'rename')
+EXTRACT = os.path.join(ROOT, 'tools', 'extract')
 REF_CROSS = os.path.join(RENAME, 'crosscheck-reference.json')
 REF_SETTINGS = os.path.join(HERE, 'settingscheck-reference.json')
 LOG = os.path.join(HERE, 'verify-out.txt')
@@ -108,6 +114,9 @@ class Echec(Exception):
 
 def etape_syntaxe():
     scripts = sorted(f for f in os.listdir(ROOT) if f.endswith('.js') and f not in NOT_LOADED)
+    # Les modules extraits de player.js et de common.js.
+    if os.path.isdir(os.path.join(ROOT, 'modules')):
+        scripts += sorted('modules/' + f for f in os.listdir(os.path.join(ROOT, 'modules')) if f.endswith('.js'))
     bad = []
     for f in scripts:
         code, out = run(['node', '--check', f], 60)
@@ -194,6 +203,26 @@ def etape_autotest_evenements():
     code, out = run(['node', 'eventcheck-selftest.js'], 600, cwd=RENAME)
     if code != 0:
         raise Echec(u'l\'appariement des evenements ne detecte plus toutes les casses\n' + tail(out, 20))
+    return out.strip().splitlines()[-1]
+
+
+def etape_construction():
+    if not os.path.isdir(os.path.join(EXTRACT, 'node_modules')):
+        raise Echec(u'tools/extract/node_modules absent : lancer « npm install » dans tools/extract')
+    code, out = run(['node', 'graph.js'], 120, cwd=EXTRACT)
+    if code != 0 or u'TOTAL : 0' not in out:
+        lignes = [l for l in out.splitlines() if u'viole : ' in l or u'INTERDIT' in l or u'ABSENT' in l
+                  or u'REDEFINITION' in l or l.startswith(u'      ') and u'utilise par' in l]
+        raise Echec(u'ordre de construction ou regle de construction viole\n' + u'\n'.join(u'      ' + l.strip() for l in lignes[:20])
+                    + u'\n      Detail : tools/extract/graph-report.txt')
+    appels = [l.strip() for l in out.splitlines() if u'appels de construction entre modules' in l]
+    return u'zero violation' + (u' — ' + u' ; '.join(appels) if appels else u'')
+
+
+def etape_autotest_extraction():
+    code, out = run(['node', 'extract-selftest.js'], 600, cwd=EXTRACT)
+    if code != 0:
+        raise Echec(u'l\'extraction ou sa verification ne se comporte plus comme attendu\n' + tail(out, 30))
     return out.strip().splitlines()[-1]
 
 
@@ -324,6 +353,8 @@ def main():
         (u'auto-test du controle', lambda: etape_autotest()),
         (u'evenements internes', lambda: etape_evenements()),
         (u'auto-test des evenements', lambda: etape_autotest_evenements()),
+        (u'ordre de construction', lambda: etape_construction()),
+        (u'auto-test de l\'extraction', lambda: etape_autotest_extraction()),
     ]
     if not STATIQUE:
         etapes += [

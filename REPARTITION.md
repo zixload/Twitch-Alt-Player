@@ -79,6 +79,28 @@ qu'on ne peut pas le réécrire par morceaux.
 construction là où il n'y en avait pas. C'est un des contrôles que l'outil d'extraction doit
 porter.
 
+**Correction mesurée (agent B, 2026-09-13, `tools/extract/graph.js`).** Deux points de ce qui
+précède ne tiennent pas tels quels. La règle reste bonne ; l'outil qui la porte dit où elle plie.
+
+1. **Un douzième appel de construction, et il vise `m_i18n`.** `m_FullscreenMode` appelle
+   `Update()` à la fin de sa construction ; `Update` appelle `ChangeButton`, qui appelle `GetText`
+   dès que le bouton porte une infobulle, et `GetText` appelle `m_i18n.GetMessage`. Le relevé des
+   onze ne suivait que les appels directs. Rien ne casse aujourd'hui — `m_i18n` est dans
+   `common.js`, chargé avant tout — mais « tout le reste dans n'importe quel ordre » est faux d'un
+   module. Déclaré comme exception nommée dans `graph.js`, à retirer quand B réécrira
+   `m_FullscreenMode`.
+2. **« Une fois tout chargé » n'est pas vrai des microtâches.** Un `then` programmé pendant le
+   chargement d'un script s'exécute dès que ce script se termine, *avant* le script `defer`
+   suivant. Or la dernière instruction de `player.js` lance le démarrage par une chaîne de `then`
+   qui atteint `m_Controls`, `m_Player`, `m_Heartbeat` et la plupart des autres. Tant qu'elle est
+   dans `player.js`, un module qui a besoin des utilitaires du début de `player.js` pour se
+   construire ne peut aller ni avant `player.js` ni après : `extract.js m_Controls` refuse, et dit
+   pourquoi. **Le premier fichier à sortir est donc le démarrage lui-même**, vers un fichier
+   chargé en dernier :
+   `node tools/extract/extract.js --line <n> --from player.js --as startup.js`.
+   Essayé sur une copie : après lui, `m_Controls`, `m_Player`, `m_Heartbeat` et `m_FullscreenMode`
+   s'extraient tous, chacun vérifié. C'est un fichier de A.
+
 ---
 
 ## 4. Ce que les dépendances imposent
@@ -119,9 +141,13 @@ et il vaut mieux le dire que de faire semblant de l'équilibrer.
    préfixe dans un gabarit.
 2. **L'outil d'extraction** : sortir un module dans son fichier, mettre à jour `player.html`, et
    refuser l'opération si le module appelle un autre module que `m_Log` ou `m_Events` pendant sa
-   construction — voir la règle d'ordre en section 3.
+   construction — voir la règle d'ordre en section 3. *Fait : `tools/extract/extract.js`. Les
+   modules sortent dans `modules/<nom>.js` ; depuis `common.js`, dans `player.html` et dans les
+   scripts de contenu du manifeste, chacun à sa place. Mode d'emploi : `tools/extract/README.md`.*
 3. **La vérification de l'extraction** : un module extrait doit se comporter exactement comme
-   avant. Comparaison de l'arbre syntaxique du corps, à l'identique.
+   avant. Comparaison de l'arbre syntaxique du corps, à l'identique. *Fait :
+   `tools/extract/extractcheck.js`, lancé par `extract.js` avant d'écrire, et à relancer seul avant
+   de commiter (HEAD contre l'arbre de travail). Étapes 6 et 7 de `verify.py`.*
 
 **Ensuite, les modules de périphérie**, du plus isolé au moins isolé :
 
@@ -198,10 +224,15 @@ python tools/harness/verify.py --chaines <chaînes en direct>
 python tools/harness/migrationcheck.py chrome <chaîne>
 ```
 
-`verify.py` enchaîne dix étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
+`verify.py` enchaîne douze étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
 comparé nom par nom à une référence, auto-test du contrôle, appariement des évènements internes,
-son auto-test, chaîne réellement en direct, console, lecture, plein écran, contrôles de réglages.
-Les cinq premières tournent sans navigateur en onze secondes : `--statique`.
+son auto-test, ordre de construction, auto-test de l'extraction, chaîne réellement en direct,
+console, lecture, plein écran, contrôles de réglages. Les sept premières tournent sans navigateur
+en vingt-cinq secondes : `--statique`.
+
+Pour un commit d'extraction, en plus : `node tools/extract/extractcheck.js` avant de commiter. Il
+échoue si un fichier chargé a changé ailleurs que par le déplacement — un commit d'extraction se
+fait seul.
 
 **Prendre une chaîne réellement en direct.** Sur une chaîne hors ligne le résultat est zéro image
 et ressemble à un succès. `zerator` marchait au moment d'écrire.
