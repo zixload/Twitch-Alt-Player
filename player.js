@@ -292,7 +292,7 @@ function getAllCookies(sAddress) {
       oParameters,
       AddExceptionHandler((maCookies) => {
         if (!chrome.runtime.lastError && Array.isArray(maCookies)) {
-          m_Log.Вот(`[API] Количество печенек: ${maCookies.length}`);
+          m_Log.Here(`[API] Количество печенек: ${maCookies.length}`);
           fResolve(maCookies);
         } else {
           console.error(
@@ -751,7 +751,7 @@ const m_Debug = (() => {
         FinishWorkAndShowMessage("J0200");
       }
       try {
-        m_Player.ShowState("Вот", "Завершаю работу");
+        m_Player.ShowState("Here", "Завершаю работу");
         g_maQueue.ShowState();
       } catch (_) { }
       Terminate(false);
@@ -867,7 +867,7 @@ class Segment {
         Check(false);
     }
     if (typeof pData == "number") {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Очередь] Добавлен сегмент ${nNumber} Состояние=${pData} Обработка=${nProcessing}`
       );
     }
@@ -947,7 +947,7 @@ g_maQueue.Remove = function (pElement, nAmount = 1) {
     switch (this[nIndex].nProcessing) {
       case PROCESSING_DOWNLOADING:
         if (IsObject(this[nIndex].pData)) {
-          m_Log.Вот(`[Очередь] Отменяю загрузку ${this[nIndex]}`);
+          m_Log.Here(`[Очередь] Отменяю загрузку ${this[nIndex]}`);
           this[nIndex].pData.Cancel();
         }
         break;
@@ -962,7 +962,7 @@ g_maQueue.Remove = function (pElement, nAmount = 1) {
           m_GarbageCollector.Discard(this[nIndex].pData.mbMediaSegment);
         }
     }
-    m_Log.Вот(`[Очередь] Удаляю ${this[nIndex]}`);
+    m_Log.Here(`[Очередь] Удаляю ${this[nIndex]}`);
     this.splice(nIndex, 1);
   }
 };
@@ -972,7 +972,7 @@ g_maQueue.Clear = function () {
 };
 
 g_maQueue.ShowState = function () {
-  m_Log.Вот(`[Очередь] ${this.join(" ")}`);
+  m_Log.Here(`[Очередь] ${this.join(" ")}`);
 };
 
 class NumberInput {
@@ -1090,7 +1090,7 @@ const m_Events = (() => {
   }
   function SendEvent(sEvent, pData) {
     Check(IsNonEmptyString(sEvent));
-    m_Log.Вот(`[События] Event occurred: ${sEvent}`);
+    m_Log.Here(`[События] Event occurred: ${sEvent}`);
     const setEventHandlers = _amHandlers.get(sEvent);
     if (setEventHandlers !== void 0) {
       Check(setEventHandlers.size !== 0);
@@ -1126,7 +1126,7 @@ const m_GarbageCollector = (() => {
       if (IsObject(pJunk)) {
         const bufJunk = pJunk.buffer ? pJunk.buffer : pJunk;
         if (bufJunk.byteLength) {
-          m_Log.Вот(`[Помойка] Выбрасываю ${bufJunk.byteLength} байтов`);
+          m_Log.Here(`[Помойка] Выбрасываю ${bufJunk.byteLength} байтов`);
           if (this._oMessageChannel === null) {
             this._oMessageChannel = new MessageChannel();
             this._oMessageChannel.port2.close();
@@ -1159,7 +1159,7 @@ const m_GarbageCollector = (() => {
       if (IsObject(pJunk)) {
         const bufJunk = pJunk.buffer ? pJunk.buffer : pJunk;
         if (bufJunk.byteLength) {
-          m_Log.Вот(`[Помойка] Выбрасываю ${bufJunk.byteLength} байтов`);
+          m_Log.Here(`[Помойка] Выбрасываю ${bufJunk.byteLength} байтов`);
           if (this._oWorkerThread === null) {
             this._oWorkerThread = new Worker("/recycler.js");
           }
@@ -1173,7 +1173,7 @@ const m_GarbageCollector = (() => {
     }
     Burn() {
       if (this._oWorkerThread !== null) {
-        m_Log.Вот(`[Помойка] Сжигаю ${this._kbInGarbage} байтов`);
+        m_Log.Here(`[Помойка] Сжигаю ${this._kbInGarbage} байтов`);
         this._oWorkerThread.postMessage(null);
         this._oWorkerThread = null;
         this._kbInGarbage = 0;
@@ -1205,7 +1205,7 @@ const m_FocusManager = (() => {
     };
   }
   const HandleEvent = AddExceptionHandler((oEvent) => {
-    m_Log.Вот(
+    m_Log.Here(
       `[Фокусник] Событие ${oEvent.type}, старое state ${m_Log.O(
         _oState
       )}`
@@ -1218,14 +1218,14 @@ const m_FocusManager = (() => {
       _oState.bShown !== oNewState.bShown ||
       _oState.bActive !== oNewState.bActive
     ) {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Фокусник] Новое state ${m_Log.O(oNewState)}`
       );
       _oState = oNewState;
       m_Events.SendEvent("focus-statechanged", oNewState);
     }
   });
-  m_Log.Вот(`[Фокусник] Начальное state ${m_Log.O(_oState)}`);
+  m_Log.Here(`[Фокусник] Начальное state ${m_Log.O(_oState)}`);
   document.addEventListener("visibilitychange", HandleEvent);
   window.addEventListener("focus", HandleEvent);
   window.addEventListener("blur", HandleEvent);
@@ -1253,7 +1253,7 @@ const m_Heartbeat = (() => {
       nTimeDeviation > MAX_TIME_DEVIATION ||
       Math.abs(nDateDeviation) > MAX_DATE_DEVIATION
     ) {
-      m_Log.Ой(
+      m_Log.Oops(
         `[Пульс] ${m_Log.F0(nTimeDeviation)} ${m_Log.F0(
           nDateDeviation
         )}`
@@ -1274,12 +1274,12 @@ const m_Heartbeat = (() => {
       nState === STATE_REPEAT
     ) {
       if (_nTimer !== 0) {
-        m_Log.Вот("[Пульс] Таймер остановлен");
+        m_Log.Here("[Пульс] Таймер остановлен");
         clearTimeout(_nTimer);
         _nTimer = 0;
       }
     } else if (_nTimer === 0) {
-      m_Log.Вот("[Пульс] Таймер запущен");
+      m_Log.Here("[Пульс] Таймер запущен");
       _nTime = performance.now();
       _nDate = Date.now();
       _nTimer = setTimeout(CheckHeartbeat, CHECK_INTERVAL);
@@ -1527,7 +1527,7 @@ const m_Statistics = (() => {
       case 44:
         return "CAVLC 4:4:4 Intra";
     }
-    m_Log.Ой(
+    m_Log.Oops(
       `[Статистика] Неизвестный профиль H.264 ProfileIndication=${nProfileIndication} ConstraintSetFlag=${nConstraintSetFlag}`
     );
     return `P${nProfileIndication}C${nConstraintSetFlag}`;
@@ -1993,7 +1993,7 @@ const m_Statistics = (() => {
           nRelativeDeviation <= HIGHLIGHT_VIDEO_LOSS_REL &&
           nAbsoluteDeviation >= HIGHLIGHT_VIDEO_LOSS_ABS
         ) {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Статистика] Превышено отклонение длительности кадра в сегменте ${oSegment.nNumber}` +
             ` СредняяДлительностьКадра=${m_Log.F0(
               oData.nAvgVideoSampleDuration
@@ -2310,7 +2310,7 @@ const m_FullscreenMode = (() => {
   }
   function Update() {
     const bEnabled = Enabled();
-    m_Log.Окак(`[ПолноэкранныйРежим] Режим включен: ${bEnabled}`);
+    m_Log.Wow(`[ПолноэкранныйРежим] Режим включен: ${bEnabled}`);
     ChangeButton("togglefullscreen", bEnabled);
     // Tell the stylesheets we are fullscreen. The sidebar is a sibling of the fullscreen
     // element, so in principle the browser stops painting it — but its `backdrop-filter`
@@ -2324,7 +2324,7 @@ const m_FullscreenMode = (() => {
     if (Enabled()) {
       return false;
     }
-    m_Log.Вот("[ПолноэкранныйРежим] Включаю режим");
+    m_Log.Here("[ПолноэкранныйРежим] Включаю режим");
     m_AutoHide.Hide(false);
     m_PictureInPicture.disable();
     GetElement()[_sRequestFullscreen]();
@@ -2334,7 +2334,7 @@ const m_FullscreenMode = (() => {
     if (!Enabled()) {
       return false;
     }
-    m_Log.Вот("[ПолноэкранныйРежим] Отключаю режим");
+    m_Log.Here("[ПолноэкранныйРежим] Отключаю режим");
     m_AutoHide.Hide(false);
     document[_sExitFullscreen]();
     return true;
@@ -2363,14 +2363,14 @@ const m_PictureInPicture = (() => {
   }
   function update() {
     const bEnabled = enabled();
-    m_Log.Окак(`[КартинкаВКартинке] Режим включен: ${bEnabled}`);
+    m_Log.Wow(`[КартинкаВКартинке] Режим включен: ${bEnabled}`);
     ChangeButton("togglepictureinpicture", bEnabled);
   }
   function enable() {
     if (enabled()) {
       return false;
     }
-    m_Log.Вот("[КартинкаВКартинке] Включаю режим");
+    m_Log.Here("[КартинкаВКартинке] Включаю режим");
     m_FullscreenMode.Disable();
     _oMediaElement.requestPictureInPicture();
     return true;
@@ -2379,7 +2379,7 @@ const m_PictureInPicture = (() => {
     if (!enabled()) {
       return false;
     }
-    m_Log.Вот("[КартинкаВКартинке] Отключаю режим");
+    m_Log.Here("[КартинкаВКартинке] Отключаю режим");
     document.exitPictureInPicture();
     return true;
   }
@@ -2393,7 +2393,7 @@ const m_PictureInPicture = (() => {
       !document.pictureInPictureEnabled ||
       oMediaElement.disablePictureInPicture
     ) {
-      m_Log.Ой(
+      m_Log.Oops(
         `[КартинкаВКартинке] pictureInPictureEnabled=${document.pictureInPictureEnabled} disablePictureInPicture=${oMediaElement.disablePictureInPicture}`
       );
       return;
@@ -2450,7 +2450,7 @@ const m_Dragger = (() => {
     _nLastDragTime = 0;
     _nInitialX = _nLastX = oEvent.clientX;
     _nInitialY = _nLastY = oEvent.clientY;
-    m_Log.Окак(
+    m_Log.Wow(
       `[Тащилка] Начинаю перетаскивать ${_oParameters.nodeDragging.id} X=${_nInitialX} Y=${_nInitialY} id=${_nPointerId} type=${oEvent.pointerType} primary=${oEvent.isPrimary}`
     );
     document.addEventListener(
@@ -2537,7 +2537,7 @@ const m_Dragger = (() => {
   }
   function FinishDrag(sReason) {
     if (_oParameters.nStep !== 3) {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Тащилка] Заканчиваю перетаскивание: ${sReason} X=${_nLastX} Y=${_nLastY}`
       );
       _oParameters.nStep = 3;
@@ -2904,7 +2904,7 @@ const m_Scale = (() => {
       (_nEnd - _nStart) +
       _nStart
     );
-    m_Log.Окак(`[Шкала] Перематываю до ${nSeekTo}`);
+    m_Log.Wow(`[Шкала] Перематываю до ${nSeekTo}`);
     m_Player.SeekReplayTo(nSeekTo);
   });
   function SetStartAndEnd(nStart, nEnd) {
@@ -3185,7 +3185,7 @@ const m_News = (() => {
     const { pCurrent: sPreviousVersion, pInitial: sInitialVersion } =
       m_Settings.GetSettingParameters("sPreviousVersion");
     if (sPreviousVersion !== EXTENSION_VERSION) {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Новости] Версия расширения изменилась с ${sPreviousVersion} на ${EXTENSION_VERSION}`
       );
       if (
@@ -3255,7 +3255,7 @@ const m_Controls = (() => {
       )
     ) {
       oEvent.preventDefault();
-      m_Log.Вот(
+      m_Log.Here(
         `[Управление] Движение колеса deltaY=${oEvent.deltaY} deltaMode=${oEvent.deltaMode}`
       );
       if (oEvent.deltaY !== 0) {
@@ -3291,7 +3291,7 @@ const m_Controls = (() => {
     ) {
       return false;
     }
-    m_Log.Окак("[Управление] Останавливаю просмотр трансляции");
+    m_Log.Wow("[Управление] Останавливаю просмотр трансляции");
     m_Playlist.Stop();
     m_Transcoder.Stop();
     g_maQueue.Clear();
@@ -3301,7 +3301,7 @@ const m_Controls = (() => {
   }
   function ToggleWatchingBroadcast() {
     if (!StopWatchingBroadcast()) {
-      m_Log.Окак("[Управление] Начинаю просмотр трансляции");
+      m_Log.Wow("[Управление] Начинаю просмотр трансляции");
       g_maQueue.Clear();
       m_Player.Reload(STATE_START);
       m_Playlist.Start();
@@ -3332,11 +3332,11 @@ const m_Controls = (() => {
       .writeText(sText)
       .then(
         () => {
-          m_Log.Вот("[Управление] Копирование в буфер обмена завершено");
+          m_Log.Here("[Управление] Копирование в буфер обмена завершено");
           m_Notification.ShowHappiness();
         },
         (pReason) => {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Управление] Error copying to clipboard: ${pReason}`
           );
           m_Notification.ShowAss();
@@ -3349,15 +3349,15 @@ const m_Controls = (() => {
       return;
     }
     CopyBroadcastUrlToClipboard.bInProgress = true;
-    m_Log.Окак("[Управление] Получаю адрес трансляции для копирования");
+    m_Log.Wow("[Управление] Получаю адрес трансляции для копирования");
     m_Twitch
       .GetAbsoluteVariantListUrl(null, true, false)
       .then((sResult) => {
-        m_Log.Вот("[Управление] Копирую адрес трансляции в буфер обмена");
+        m_Log.Here("[Управление] Копирую адрес трансляции в буфер обмена");
         return navigator.clipboard.writeText(sResult).then(
           () => {
             CopyBroadcastUrlToClipboard.bInProgress = false;
-            m_Log.Вот("[Управление] Копирование в буфер обмена завершено");
+            m_Log.Here("[Управление] Копирование в буфер обмена завершено");
             m_Controls.StopWatchingBroadcast();
             m_Notification.ShowHappiness();
           },
@@ -3370,7 +3370,7 @@ const m_Controls = (() => {
         AddExceptionHandler((pReason) => {
           CopyBroadcastUrlToClipboard.bInProgress = false;
           if (typeof pReason == "string") {
-            m_Log.Ой(
+            m_Log.Oops(
               `[Управление] Ошибка при копировании адреса трансляции в буфер обмена: ${pReason}`
             );
             m_Notification.ShowAss();
@@ -3587,7 +3587,7 @@ const m_Controls = (() => {
         break;
 
       case "copychannelurl":
-        m_Log.Вот("[Управление] Копирую адрес канала в буфер обмена");
+        m_Log.Here("[Управление] Копирую адрес канала в буфер обмена");
         CopyTextToClipboard(m_Twitch.GetChannelUrl(false));
         break;
 
@@ -3739,7 +3739,7 @@ const m_Controls = (() => {
         case 74:
         case 37:
           if (bPress && _nState === STATE_REPEAT) {
-            m_Log.Окак(
+            m_Log.Wow(
               `[Управление] Перематываю на -${SEEK_BY_ARROWS_BY}с`
             );
             m_Player.SeekReplayBy(
@@ -3753,7 +3753,7 @@ const m_Controls = (() => {
         case 76:
         case 39:
           if (bPress && _nState === STATE_REPEAT) {
-            m_Log.Окак(
+            m_Log.Wow(
               `[Управление] Перематываю на +${SEEK_BY_ARROWS_BY}с`
             );
             m_Player.SeekReplayBy(
@@ -3767,7 +3767,7 @@ const m_Controls = (() => {
         case 74 + SHIFT_KEY:
         case 37 + SHIFT_KEY:
           if (bPress && _nState === STATE_REPEAT) {
-            m_Log.Окак(
+            m_Log.Wow(
               `[Управление] Перематываю на -${SEEK_BY_FRAMES_BY} кадров`
             );
             m_Player.SeekReplayBy(
@@ -3780,7 +3780,7 @@ const m_Controls = (() => {
         case 76 + SHIFT_KEY:
         case 39 + SHIFT_KEY:
           if (bPress && _nState === STATE_REPEAT) {
-            m_Log.Окак(`[Управление] Перематываю на +1 кадр`);
+            m_Log.Wow(`[Управление] Перематываю на +1 кадр`);
             m_Player.SeekReplayBy(true, 1);
           }
           break;
@@ -4015,7 +4015,7 @@ const m_Controls = (() => {
   const HandleBroadcastVariantChange = AddExceptionHandler(
     ({ target: { selectedIndex } }) => {
       if (selectedIndex !== -1) {
-        m_Log.Окак(`[Управление] Выбран вариант ${selectedIndex}`);
+        m_Log.Wow(`[Управление] Выбран вариант ${selectedIndex}`);
         m_Playlist.ChangeBroadcastVariant(selectedIndex);
       }
     }
@@ -4036,7 +4036,7 @@ const m_Controls = (() => {
   );
   const HandleChatUrlChange = AddExceptionHandler(
     (oEvent) => {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Управление] Выбран адрес чата ${oEvent.target.selectedIndex}`
       );
       switch (oEvent.target.selectedIndex) {
@@ -4177,7 +4177,7 @@ const m_Controls = (() => {
     if (_nState === nNewState) {
       return;
     }
-    m_Log.Вот(
+    m_Log.Here(
       `[Управление] Состояние трансляции изменилось с ${_nState} на ${nNewState}`
     );
     _nState = nNewState;
@@ -4460,7 +4460,7 @@ const m_Chat = (() => {
       return;
     }
     const sAddress = m_Twitch.openChat();
-    m_Log.Вот(`[Чат] Вставляю iframe ${sAddress}`);
+    m_Log.Here(`[Чат] Вставляю iframe ${sAddress}`);
     _nodeChat = document.createElement("iframe");
     _nodeChat.src = sAddress;
     _nodeChat.id = "chat";
@@ -4470,7 +4470,7 @@ const m_Chat = (() => {
   }
   function RemovePanel() {
     if (_nodeChat) {
-      m_Log.Вот(`[Чат] Удаляю iframe ${_nodeChat.src}`);
+      m_Log.Here(`[Чат] Удаляю iframe ${_nodeChat.src}`);
       m_Twitch.closeChat();
       _nodeChat.remove();
       _nodeChat = null;
@@ -4478,14 +4478,14 @@ const m_Chat = (() => {
   }
   function ApplyUrl() {
     if (_nodeChat) {
-      m_Log.Окак("[Чат] Меняю адрес iframe");
+      m_Log.Wow("[Чат] Меняю адрес iframe");
       RemovePanel();
       InsertPanel();
     }
   }
   function ApplyPanelState() {
     const nState = m_Settings.Get("nChatState");
-    m_Log.Окак(`[Чат] Новое state панели: ${nState}`);
+    m_Log.Wow(`[Чат] Новое state панели: ${nState}`);
     CancelPanelDrag();
     switch (nState) {
       case CHAT_UNLOADED:
@@ -4607,7 +4607,7 @@ const m_Chat = (() => {
       oParameters.nStep !== 1 &&
       oParameters._nInitialPosition !== nPosition
     ) {
-      m_Log.Ой(
+      m_Log.Oops(
         `[Чат] Положение перетаскиваемой панели изменилось с ${oParameters._nInitialPosition} на ${nPosition}`
       );
       CancelPanelDrag();
@@ -4759,18 +4759,18 @@ const m_AudioDevice = (() => {
   let _oMediaElement = null;
   function refreshDeviceListAndSelectDevice() {
     const nodeDeviceList = GetNode("audiodevices-list");
-    m_Log.Окак("[Аудиоустройства] Получаю список медиаустройств");
+    m_Log.Wow("[Аудиоустройства] Получаю список медиаустройств");
     navigator.mediaDevices
       .enumerateDevices()
       .then(
         (moMediaDevices) => {
           if (!Array.isArray(moMediaDevices)) {
-            m_Log.Ой("[Аудиоустройства] Список аудиоустройств недоступен");
+            m_Log.Oops("[Аудиоустройства] Список аудиоустройств недоступен");
             ShowElement("audiodevices", false);
             return;
           }
           nodeDeviceList.length = 0;
-          m_Log.Вот(
+          m_Log.Here(
             `[Аудиоустройства] Текущее устройство ${_oMediaElement.sinkId}`
           );
           const sCurrentDevice =
@@ -4785,7 +4785,7 @@ const m_AudioDevice = (() => {
             bHasCurrentDevice = sCurrentDevice === "",
             bHasSavedDevice = sSavedDevice === "";
           for (const oMediaDevice of moMediaDevices) {
-            m_Log.Вот(
+            m_Log.Here(
               `[Аудиоустройства] Медиаустройство kind=${oMediaDevice.kind} deviceId=${oMediaDevice.deviceId} groupId=${oMediaDevice.groupId} label=${oMediaDevice.label}`
             );
             if (oMediaDevice.kind === "audiooutput") {
@@ -4857,14 +4857,14 @@ const m_AudioDevice = (() => {
               sSelect = "";
             }
             if (sSelect !== void 0) {
-              m_Log.Окак(`[Аудиоустройства] Выбираю устройство ${sSelect}`);
+              m_Log.Wow(`[Аудиоустройства] Выбираю устройство ${sSelect}`);
               return _oMediaElement.setSinkId(sSelect).then(
                 () => {
-                  m_Log.Вот("[Аудиоустройства] Устройство выбрано");
+                  m_Log.Here("[Аудиоустройства] Устройство выбрано");
                   nodeDeviceList.value = sSelect;
                 },
                 (pReason) => {
-                  m_Log.Ой(
+                  m_Log.Oops(
                     `[Аудиоустройства] Не удалось выбрать устройство: ${pReason}`
                   );
                 }
@@ -4873,7 +4873,7 @@ const m_AudioDevice = (() => {
           }
         },
         (pReason) => {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Аудиоустройства] Не удалось получить список медиаустройств: ${pReason}`
           );
           nodeDeviceList.length = 0;
@@ -4886,14 +4886,14 @@ const m_AudioDevice = (() => {
     if (sCallsign !== "audiodevices-access") {
       return;
     }
-    m_Log.Окак("[Аудиоустройства] Запрашиваю разрешение contentSettings");
+    m_Log.Wow("[Аудиоустройства] Запрашиваю разрешение contentSettings");
     chrome.permissions.request(
       {
         permissions: ["contentSettings"],
       },
       AddExceptionHandler((bPermissionGranted) => {
         if (bPermissionGranted) {
-          m_Log.Окак("[Аудиоустройства] Получаю доступ к аудиоустройствам");
+          m_Log.Wow("[Аудиоустройства] Получаю доступ к аудиоустройствам");
           chrome.contentSettings.microphone.set(
             {
               primaryPattern: `*://${chrome.runtime.id}/*`,
@@ -4904,7 +4904,7 @@ const m_AudioDevice = (() => {
             },
             AddExceptionHandler(() => {
               if (chrome.runtime.lastError) {
-                m_Log.Ой(
+                m_Log.Oops(
                   `[Аудиоустройства] Доступ не получен: ${chrome.runtime.lastError.message}`
                 );
                 m_Notification.ShowAss();
@@ -4913,7 +4913,7 @@ const m_AudioDevice = (() => {
             })
           );
         } else {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Аудиоустройства] Разрешение не получено: ${chrome.runtime.lastError && chrome.runtime.lastError.message
             }`
           );
@@ -4925,18 +4925,18 @@ const m_AudioDevice = (() => {
   const handleDeviceChoice = AddExceptionHandler((oEvent) => {
     if (oEvent.target.selectedIndex !== -1) {
       const sSelect = oEvent.target.value;
-      m_Log.Окак(
+      m_Log.Wow(
         `[Аудиоустройства] Выбираю устройство ${sSelect} вместо ${_oMediaElement.sinkId}`
       );
       _oMediaElement
         .setSinkId(sSelect)
         .then(
           () => {
-            m_Log.Вот("[Аудиоустройства] Устройство выбрано");
+            m_Log.Here("[Аудиоустройства] Устройство выбрано");
             m_Settings.Change("sAudioDeviceId", sSelect);
           },
           (pReason) => {
-            m_Log.Ой(
+            m_Log.Oops(
               `[Аудиоустройства] Не удалось выбрать устройство: ${pReason}`
             );
             m_Notification.ShowAss();
@@ -4952,13 +4952,13 @@ const m_AudioDevice = (() => {
     }
     _oMediaElement = oMediaElement;
     if (!("setSinkId" in _oMediaElement)) {
-      m_Log.Ой(
+      m_Log.Oops(
         "[Аудиоустройства] Браузер не поддерживает MediaElement.setSinkId"
       );
       return;
     }
     if (!("addEventListener" in navigator.mediaDevices)) {
-      m_Log.Ой(
+      m_Log.Oops(
         "[Аудиоустройства] Браузер не поддерживает MediaDevices.ondevicechange"
       );
     } else {
@@ -5090,7 +5090,7 @@ const m_Player = (() => {
           break;
         }
         if (bStartFromBeginning) {
-          ShowState("Ой", `Бесконечная перемотка Время=${nTime}`);
+          ShowState("Oops", `Бесконечная перемотка Время=${nTime}`);
           return;
         }
         nSeekTo = m_Scale.GetStart();
@@ -5099,7 +5099,7 @@ const m_Player = (() => {
       }
       if (nSeekTo !== nCurrentTime) {
         ShowState(
-          "Окак",
+          "Wow",
           `${sSeekReason}Перематываю до ${nSeekTo}`
         );
         _oMediaElement.currentTime = nSeekTo;
@@ -5118,14 +5118,14 @@ const m_Player = (() => {
     const sRanges = RangesToString(_oMediaElement.buffered);
     const bRangesEqual = sBufferRanges === sRanges;
     if (
-      sImportance === "Вот" &&
+      sImportance === "Here" &&
       ((oBuffer && oBuffer.buffered.length > 1) ||
         _oMediaElement.buffered.length > 1)
     ) {
-      sImportance = "Окак";
+      sImportance = "Wow";
     }
     if (_oMediaElement.error || !bRangesEqual) {
-      sImportance = "Ой";
+      sImportance = "Oops";
     }
     m_Log[sImportance](
       `${sRecord.charAt(0) === "[" ? "" : "[Проигрыватель] "}${sRecord} •••` +
@@ -5229,7 +5229,7 @@ const m_Player = (() => {
         oSegment.pData.nBroadcastPosition -
         oSegment.pData.nEncodingPosition;
       m_Log[
-        Math.abs(nBroadcastOffset - _nBroadcastOffset) > 2 ? "Ой" : "Вот"
+        Math.abs(nBroadcastOffset - _nBroadcastOffset) > 2 ? "Oops" : "Here"
       ](
         `[Проигрыватель] Смещение трансляции: ${m_Log.F1(
           nBroadcastOffset
@@ -5255,7 +5255,7 @@ const m_Player = (() => {
       const sLatency = `${nFetch.toFixed(1)} + ${nPlayback.toFixed(
         1
       )} = ${(nFetch + nPlayback).toFixed(1)}`;
-      m_Log[nFetch > 0 && nPlayback > -0.1 ? "Вот" : "Ой"](
+      m_Log[nFetch > 0 && nPlayback > -0.1 ? "Here" : "Oops"](
         `[Проигрыватель] Задержка трансляции: ${sLatency}с`
       );
       GetNode("statistics-broadcastlatency").textContent = sLatency;
@@ -5271,7 +5271,7 @@ const m_Player = (() => {
     ReloadPlayer(nNewState);
   }
   function ReloadPlayer(nNewState) {
-    ShowState("Окак", "Перезагрузка проигрывателя");
+    ShowState("Wow", "Перезагрузка проигрывателя");
     m_Controls.ChangeState(nNewState);
     _oBehaviour = _oLiveBroadcast;
     _oMediaSourceBuffer = null;
@@ -5289,17 +5289,17 @@ const m_Player = (() => {
       const sRecord = `[MediaSource] ${oEvent.type}`;
       switch (oEvent.type) {
         case "sourceopen":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           _oBehaviour.HandleSourceOpen();
           break;
 
         case "sourceended":
         case "sourceclose":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           break;
 
         default:
-          m_Log.Вот(sRecord);
+          m_Log.Here(sRecord);
       }
     }
   );
@@ -5310,47 +5310,47 @@ const m_Player = (() => {
       switch (oEvent.type) {
         case "loadstart":
           ShowState(
-            "Вот",
+            "Here",
             `${sRecord} src=${_oMediaElement.src} currentSrc=${_oMediaElement.currentSrc}`
           );
           break;
 
         case "progress":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           _oBehaviour.HandleProgress();
           break;
 
         case "abort":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           break;
 
         case "waiting":
-          ShowState("Окак", sRecord);
+          ShowState("Wow", sRecord);
           _oBehaviour.HandleWaiting();
           break;
 
         case "playing":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           _oBehaviour.HandlePlaying();
           break;
 
         case "seeking":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           _oBehaviour.HandleSeeking();
           break;
 
         case "seeked":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           _oBehaviour.HandleSeeked();
           break;
 
         case "ended":
-          ShowState("Вот", sRecord);
+          ShowState("Here", sRecord);
           _oBehaviour.HandleEnded();
           break;
 
         case "timeupdate":
-          m_Log.Вот(
+          m_Log.Here(
             `${sRecord} readyState=${_oMediaElement.readyState} currentTime=${_oMediaElement.currentTime
             } НеПросмотрено=${m_Log.F2(
               GetBufferFill().nUnwatched
@@ -5360,7 +5360,7 @@ const m_Player = (() => {
           break;
 
         default:
-          m_Log.Вот(sRecord);
+          m_Log.Here(sRecord);
       }
     }
   );
@@ -5443,7 +5443,7 @@ const m_Player = (() => {
         nSeekTo = _oMediaElement.currentTime;
       }
       ShowState(
-        sSeekReason ? "Ой" : "Окак",
+        sSeekReason ? "Oops" : "Wow",
         `${sSeekReason}Перематываю до ${nSeekTo}`
       );
       _bSeekNeeded = false;
@@ -5467,32 +5467,32 @@ const m_Player = (() => {
       const { nUnwatched } = GetBufferFill();
       const nBufferSize = m_Settings.Get(_sBufferSize);
       if (nUnwatched < nBufferSize) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Проигрыватель] В буфере не просмотрено ${m_Log.F3(
             nUnwatched
           )}с < ${nBufferSize}с`
         );
         return;
       }
-      m_Log.Окак(
+      m_Log.Wow(
         `[Проигрыватель] В буфере не просмотрено ${m_Log.F3(
           nUnwatched
         )}с >= ${nBufferSize}с`
       );
     } else {
-      m_Log.Окак("[Проигрыватель] Не нужно ждать заполнения буфера");
+      m_Log.Wow("[Проигрыватель] Не нужно ждать заполнения буфера");
     }
     switch (CheckPlaybackPosition(CHECK_PLAYBACK_START)) {
       case PLAYBACK_IMPOSSIBLE:
         ShowState(
-          "Ой",
+          "Oops",
           `Не найдена область >= ${MIN_BUFFER_SIZE}с для начала воспроизведения`
         );
         _bWaitForBufferFill = true;
         break;
 
       case PLAYBACK_POSSIBLE:
-        ShowState("Окак", "Начало воспроизведения");
+        ShowState("Wow", "Начало воспроизведения");
         _bWaitForBufferFill = true;
         _oMediaElement.play();
         m_Controls.ChangeState(STATE_PLAYBACK_START);
@@ -5520,7 +5520,7 @@ const m_Player = (() => {
       nUnwatched + nWillBeAdded >= nBufferSize
     ) {
       ShowState(
-        bEarly ? "Ой" : "Окак",
+        bEarly ? "Oops" : "Wow",
         `Буфер исчерпан, остановка не нужна БудетДобавлено=${m_Log.F3(
           nWillBeAdded
         )}с ДоКонцаПоследнейОбласти=${m_Log.F3(
@@ -5531,7 +5531,7 @@ const m_Player = (() => {
       );
     } else {
       ShowState(
-        bEarly ? "Ой" : "Окак",
+        bEarly ? "Oops" : "Wow",
         `Приостанавливаю воспроизведение для заполнения буфера ДоКонцаПоследнейОбласти=${m_Log.F3(
           nToLastRangeEnd
         )}с НеПросмотрено=${m_Log.F3(
@@ -5544,7 +5544,7 @@ const m_Player = (() => {
   }
   function EndStream(oSegment) {
     ShowState(
-      "Окак",
+      "Wow",
       `Сегмент ${oSegment.nNumber} вызвал окончание потока`
     );
     if (
@@ -5580,7 +5580,7 @@ const m_Player = (() => {
     const nRemoveUntil = _oMediaElement.currentTime - nReplayDuration;
     return new Promise((fResolve, fReject) => {
       ShowState(
-        "Вот",
+        "Here",
         `Удаляю просмотренное видео Просмотрено=${m_Log.F3(
           nWatched
         )}с УдалитьДо=${m_Log.F3(nRemoveUntil)}с`
@@ -5600,8 +5600,8 @@ const m_Player = (() => {
             );
             ShowState(
               nElapsedTime > 100 || nWatched < MIN_BUFFER_SIZE
-                ? "Ой"
-                : "Вот",
+                ? "Oops"
+                : "Here",
               `Просмотренное видео удалено за ${m_Log.F0(
                 nElapsedTime
               )}мс Просмотрено=${m_Log.F0(nWatched)}с`
@@ -5631,7 +5631,7 @@ const m_Player = (() => {
   function AppendSegment(oSegment, mbAppend, sAppend) {
     WatchForErrors();
     return new Promise((fResolve, fReject) => {
-      ShowState("Вот", `Добавляю ${sAppend} ${oSegment.nNumber}`);
+      ShowState("Here", `Добавляю ${sAppend} ${oSegment.nNumber}`);
       _oMediaSourceBuffer.addEventListener("updateend", Appended);
       let nElapsedTime = -performance.now();
       _oMediaSourceBuffer.appendBuffer(mbAppend);
@@ -5643,7 +5643,7 @@ const m_Player = (() => {
             nElapsedTime += performance.now();
             _oMediaSourceBuffer.removeEventListener("updateend", Appended);
             ShowState(
-              nElapsedTime > 100 ? "Ой" : "Вот",
+              nElapsedTime > 100 ? "Oops" : "Here",
               `Добавлен ${sAppend} ${oSegment.nNumber} за ${m_Log.F0(
                 nElapsedTime
               )}мс`
@@ -5699,7 +5699,7 @@ const m_Player = (() => {
       return;
     }
     if (pReason === PromiseCancellation.REASON) {
-      m_Log.Вот("[Проигрыватель] Отменено добавление сегмента");
+      m_Log.Here("[Проигрыватель] Отменено добавление сегмента");
     } else {
       throw pReason;
     }
@@ -5707,7 +5707,7 @@ const m_Player = (() => {
   function PreventQueueOverflow() {
     const { nDuration } = g_maQueue.CountConvertedSegments();
     if (nDuration >= BUFFER_OVERFLOW) {
-      m_Log.Ой(
+      m_Log.Oops(
         `[Проигрыватель] MediaSource закрыт слишком долго ${nDuration}с >= ${BUFFER_OVERFLOW}с`
       );
       Check(
@@ -5769,7 +5769,7 @@ const m_Player = (() => {
     }
     const sReadyState = _oMediaSource.readyState;
     if (sReadyState !== "open") {
-      m_Log.Вот(
+      m_Log.Here(
         `[Проигрыватель] Добавление сегмента ${oSegment.nNumber} отложено MediaSource.readyState=${sReadyState} MediaElement.src=${_oMediaElement.src}`
       );
       if (sReadyState === "closed" && _nPlaybackStarted === 0) {
@@ -5831,10 +5831,10 @@ const m_Player = (() => {
   function TogglePause() {
     Check(m_Controls.GetState() === STATE_REPEAT);
     if ((_oReplay.bPause = !_oReplay.bPause)) {
-      m_Log.Окак("[Проигрыватель] Ставлю replay на паузу");
+      m_Log.Wow("[Проигрыватель] Ставлю replay на паузу");
       _oMediaElement.pause();
     } else {
-      m_Log.Окак("[Проигрыватель] Снимаю replay с паузы");
+      m_Log.Wow("[Проигрыватель] Снимаю replay с паузы");
       _oReplay.CheckPlaybackPosition(
         CHECK_PLAYBACK_START
       );
@@ -5845,7 +5845,7 @@ const m_Player = (() => {
   function SetReplaySpeed(nSpeed) {
     Check(nSpeed > 0);
     Check(m_Controls.GetState() === STATE_REPEAT);
-    m_Log.Окак(`[Проигрыватель] Задана speed ${nSpeed}`);
+    m_Log.Wow(`[Проигрыватель] Задана speed ${nSpeed}`);
     _oMediaElement.playbackRate = nSpeed;
   }
   function StartReplay() {
@@ -5863,11 +5863,11 @@ const m_Player = (() => {
       GetBufferFill().nWatched <
       REPLAY_AVAILABLE_IF_WATCHED
     ) {
-      ShowState("Окак", "Повторять нечего");
+      ShowState("Wow", "Повторять нечего");
       m_Controls.ChangeState(STATE_STOP);
       return;
     }
-    ShowState("Окак", "Запуск повтора");
+    ShowState("Wow", "Запуск повтора");
     m_Events.SendEvent("player-paused", _oReplay.bPause);
     m_Scale.SetStartAndEnd(
       _oMediaElement.buffered.start(0),
@@ -5878,7 +5878,7 @@ const m_Player = (() => {
     SetReplaySpeed(m_Controls.getReplaySpeed());
   }
   function AddSourceBuffers(oSegment) {
-    m_Log.Окак(`[Проигрыватель] Добавляю буфер ${oSegment.pData.sCodecs}`);
+    m_Log.Wow(`[Проигрыватель] Добавляю буфер ${oSegment.pData.sCodecs}`);
     Check(oSegment.bDiscontinuity && oSegment.pData.sCodecs);
     try {
       _oMediaSourceBuffer = _oMediaSource.addSourceBuffer(
@@ -6022,7 +6022,7 @@ const m_Playlist = (() => {
     }
     stop() {
       if (this._oPromiseCancel) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Список] Останавливаю обновление списков ${+this._bNoAds}`
         );
         this._oPromiseCancel.Cancel();
@@ -6054,7 +6054,7 @@ const m_Playlist = (() => {
           }
         }
       }
-      m_Log.Вот(
+      m_Log.Here(
         `[Список] Для списка ${+this._bNoAds} выбран вариант трансляции ${oSelectedVariant.sIdentifier
         }/${oSelectedVariant.nBitrate
         }. Сохраненный ${sSavedId}/${nSavedBitrate}`
@@ -6064,12 +6064,12 @@ const m_Playlist = (() => {
     _update(oPromiseCancellation, nAfter) {
       Check(IsNumber(nAfter));
       if (nAfter >= MIN_LIST_UPDATE_INTERVAL || nAfter === -Infinity) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Список] Обновление списков ${+this
             ._bNoAds} начнется через ${m_Log.F0(nAfter)}мс`
         );
       } else {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Список] Обновление списков ${+this
             ._bNoAds} начнется через ${MIN_LIST_UPDATE_INTERVAL}мс вместо ${m_Log.F0(
               nAfter
@@ -6169,7 +6169,7 @@ const m_Playlist = (() => {
               this._listNotUpdated(oPromiseCancellation, pReason);
               m_Downloader.LoadNextSegment();
             } else if (pReason === PromiseCancellation.REASON) {
-              m_Log.Вот(
+              m_Log.Here(
                 `[Список] Отменено обновление списков ${+this._bNoAds}`
               );
             } else {
@@ -6188,7 +6188,7 @@ const m_Playlist = (() => {
         (this.oVariantList === null) == (this.oSegmentList === null)
       );
       if (oSegmentList.moSegments.length === 0) {
-        m_Log.Ой(`[Список] Список сегментов ${+this._bNoAds} пуст`);
+        m_Log.Oops(`[Список] Список сегментов ${+this._bNoAds} пуст`);
         return true;
       }
       if (this.oSegmentList === null) {
@@ -6205,7 +6205,7 @@ const m_Playlist = (() => {
         this.oSegmentList.nTargetDuration !==
         oSegmentList.nTargetDuration
       ) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Список] В списке ${+this._bNoAds} изменился target duration ${this.oSegmentList.nTargetDuration
           } ==> ${oSegmentList.nTargetDuration}`
         );
@@ -6228,7 +6228,7 @@ const m_Playlist = (() => {
             oSegmentList.moSegments[nNew].sAddress !==
             this.oSegmentList.moSegments[nOld].sAddress
           ) {
-            m_Log.Ой(
+            m_Log.Oops(
               `[Список] В списке ${+this._bNoAds} у сегмента ${oSegmentList.nSequenceNumber + nNew
               } изменился адрес ${LimitStringLength(
                 this.oSegmentList.moSegments[nOld].sAddress,
@@ -6250,7 +6250,7 @@ const m_Playlist = (() => {
         oSegmentList.moSegments.length;
       if (nDifference > 0) {
         if (this.oSelectedVariant === null && nDifference <= SESSION_CHANGE_THRESHOLD) {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Список] При переключении варианта в списке ${+this
               ._bNoAds} уменьшился порядковый номер ${this.oSegmentList.nSequenceNumber
             } + ${this.oSegmentList.moSegments.length} ==> ${oSegmentList.nSequenceNumber
@@ -6262,7 +6262,7 @@ const m_Playlist = (() => {
           oSegmentList.nSequenceNumber === 0 ||
           nDifference > SESSION_CHANGE_THRESHOLD
         ) {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Список] Меняю ИдСессии: в списке ${+this
               ._bNoAds} уменьшился порядковый номер ${this.oSegmentList.nSequenceNumber
             } + ${this.oSegmentList.moSegments.length} ==> ${oSegmentList.nSequenceNumber
@@ -6271,7 +6271,7 @@ const m_Playlist = (() => {
           oVariantList.nSessionId = _nSessionId++;
           return false;
         }
-        m_Log.Ой(
+        m_Log.Oops(
           `[Список] Получен протухший список ${+this
             ._bNoAds}: порядковый номер ${this.oSegmentList.nSequenceNumber
           } + ${this.oSegmentList.moSegments.length} ==> ${oSegmentList.nSequenceNumber
@@ -6283,7 +6283,7 @@ const m_Playlist = (() => {
         this.oSegmentList.nSequenceNumber >
         oSegmentList.nSequenceNumber
       ) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Список] В списке ${+this
             ._bNoAds} уменьшился порядковый номер ${this.oSegmentList.nSequenceNumber
           } ==> ${oSegmentList.nSequenceNumber}`
@@ -6297,12 +6297,12 @@ const m_Playlist = (() => {
       super(false);
     }
     _segmentListUpdated(bShortenedInterval) {
-      m_Log.Вот(
+      m_Log.Here(
         `[AdBlock] Main stream updated. Segments=${this.oSegmentList.moSegments.length} EndOfList=${this.oSegmentList.bEndOfList}`
       );
       if (this.oSegmentList.moSegments.length === 0) {
         // An empty segment list is what leaves the picture frozen.
-        m_Log.Ой("[AdBlock] Main stream is empty");
+        m_Log.Oops("[AdBlock] Main stream is empty");
       }
       const bListEndsWithAd = thisListEndsWithAd(
         this.oSegmentList
@@ -6334,7 +6334,7 @@ const m_Playlist = (() => {
         m_Controls.StopWatchingBroadcast();
         m_Notification.ShowAss();
       } else {
-        m_Log[sReason === "END_OF_LIST" ? "Окак" : "Ой"](
+        m_Log[sReason === "END_OF_LIST" ? "Wow" : "Oops"](
           `[Список] Трансляция ended. ${sReason}`
         );
         EndBroadcast();
@@ -6446,7 +6446,7 @@ const m_Playlist = (() => {
     _listNotUpdated(oPromiseCancellation, sReason) {
       // Code modified to implement debugging
       console.error(`CRITICAL FAILURE: Backup stream rejected! Reason: ${sReason}`);
-      m_Log.Ой(`[Список] Список 1 не обновлен. ${sReason}`);
+      m_Log.Oops(`[Список] Список 1 не обновлен. ${sReason}`);
       this.stop();
     }
   }
@@ -6565,14 +6565,14 @@ const m_Playlist = (() => {
             oNewSegment.nTime = nTime;
             nTime++;
             if (oNewSegment.nDuration < 0) {
-              m_Log.Ой(
+              m_Log.Oops(
                 `[Список] У сегмента ${nSequenceNumber + moSegments.length
                 } отрицательная длительность ${sTagValue}`
               );
               oNewSegment.nDuration = 0;
             }
             if (Math.round(oNewSegment.nDuration) > nTargetDuration) {
-              m_Log.Ой(
+              m_Log.Oops(
                 `[Список] Длительность сегмента ${nSequenceNumber + moSegments.length
                 } больше target duration на ${oNewSegment.nDuration - nTargetDuration
                 }с`
@@ -6688,7 +6688,7 @@ const m_Playlist = (() => {
                   // If the ad end time is in the past (plus 1s for jitter), KILL IT.
                   // Previous issue: 15s buffer allowed finished ads to block playback.
                   if (nAdEndTime < (nCurrentTime + 1000)) {
-                    m_Log.Окак(
+                    m_Log.Wow(
                       `[AdBlock] Skipping expired ad. Ends=${new Date(nAdEndTime).toISOString()} Now=${new Date(nCurrentTime).toISOString()}`
                     );
                     break; // EXIT this case immediately
@@ -6697,7 +6697,7 @@ const m_Playlist = (() => {
                   // RULE 2: FUTURE PROTECTION.
                   // If ad starts >60s in the future, ignore it to prevent pre-mature freezing.
                   if (nAdStartTime > (nCurrentTime + 60000)) {
-                    m_Log.Окак(
+                    m_Log.Wow(
                       `[AdBlock] Skipping future ad. Starts=${new Date(nAdStartTime).toISOString()}`
                     );
                     break; // EXIT this case immediately
@@ -6705,7 +6705,7 @@ const m_Playlist = (() => {
                 }
               }
             } catch (pException) {
-              m_Log.Ой(
+              m_Log.Oops(
                 `[AdBlock] Filter error: ${ExceptionToString(pException)}`
               );
             }
@@ -6715,7 +6715,7 @@ const m_Playlist = (() => {
                 case "twitch-stitched-ad":
                   // The raw attribute string of the ad tag, kept whole because the
                   // shape of these tags is what the ad-freeze work turns on.
-                  m_Log.Вот(`[AdBlock] Ad tag detected: ${sTagValue}`);
+                  m_Log.Here(`[AdBlock] Ad tag detected: ${sTagValue}`);
 
                   // Extract Ad Type (e.g., standard, midroll)
                   sAdType = amAttributes.get("X-TV-TWITCH-AD-ROLL-TYPE");
@@ -6771,7 +6771,7 @@ const m_Playlist = (() => {
             } catch (pException) {
               // Safety fallback: if parsing fails, reset ad type and log error.
               sAdType = "";
-              m_Log.Ой(`[Список] Ошибка разбора рекламы: ${sTagValue}`);
+              m_Log.Oops(`[Список] Ошибка разбора рекламы: ${sTagValue}`);
             }
             break;
           }
@@ -6791,7 +6791,7 @@ const m_Playlist = (() => {
               Check(!mapRenditionGroups.has(sGroup));
               mapRenditionGroups.set(sGroup, sName);
             } else {
-              m_Log.Ой(`[Список] Найден #EXT-X-MEDIA TYPE=${sType}`);
+              m_Log.Oops(`[Список] Найден #EXT-X-MEDIA TYPE=${sType}`);
             }
             break;
           }
@@ -6840,11 +6840,11 @@ const m_Playlist = (() => {
               Check(sAddress.startsWith("https://"));
               sViewTrackingUrl = sAddress;
             } catch (pException) {
-              m_Log.Ой(
+              m_Log.Oops(
                 `[Список] Не удалось разобрать адрес слежения за просмотром: ${pException}`
               );
             }
-            m_Log[Math.abs(nTimeDrift) > 5e3 ? "Ой" : "Окак"](
+            m_Log[Math.abs(nTimeDrift) > 5e3 ? "Oops" : "Wow"](
               `[Список] РассинхронизацияВремени=${nTimeDrift}мс ИдТрансляции=${sBroadcastId}`
             );
             break;
@@ -6859,7 +6859,7 @@ const m_Playlist = (() => {
             break;
 
           case "-X-START":
-            m_Log.Ой(`[Список] Найден #EXT-X-START=${sTagValue}`);
+            m_Log.Oops(`[Список] Найден #EXT-X-START=${sTagValue}`);
             break;
 
           case "M3U":
@@ -6891,7 +6891,7 @@ const m_Playlist = (() => {
           )} ${GetText("J0114")}`;
         }
       }
-      m_Log.Вот(
+      m_Log.Here(
         `[Список] Количество вариантов в списке: ${moVariants.length}`
       );
       return m_Twitch.sortVariantList({
@@ -6923,11 +6923,11 @@ const m_Playlist = (() => {
         moSegments,
         sInitSegmentUrl,
       };
-      m_Log.Вот(
+      m_Log.Here(
         `[Список] Разобран список сегментов TargetDuration=${nTargetDuration} ПорядковыйНомер=${nSequenceNumber} КонецСписка=${bEndOfList} КоличествоСегментов=${moSegments.length} РекламныхСегментов=${kAdSegments}`
       );
       if (sAdType) {
-        m_Log.Окак(
+        m_Log.Wow(
           `[Список] Найдена advert ТипРекламы=${sAdType} ТокенРекламы=${sAdToken.slice(
             -10
           )} Роликов=${kAdClips} НомерРолика=${nAdClipNumber} ПродолжительностьРолика=${nAdClipDuration} НомерКвартеля=${nQuartileNumber} ЗаканчиваетсяРекламой=${thisListEndsWithAd(
@@ -6990,7 +6990,7 @@ const m_Playlist = (() => {
   }
   function setAdState(bAdInProgress) {
     if (_bAdInProgress !== bAdInProgress) {
-      m_Log.Окак(`[AdBlock] Ad in progress: ${bAdInProgress}`);
+      m_Log.Wow(`[AdBlock] Ad in progress: ${bAdInProgress}`);
       _bAdInProgress = bAdInProgress;
       if (bAdInProgress) {
         _oListsWithoutAds.start();
@@ -7059,7 +7059,7 @@ const m_Playlist = (() => {
       }
     }
     if (_sAppendedBroadcastId !== oNewVariants.sBroadcastId) {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Список] Изменился ИдТрансляции ${_sAppendedBroadcastId} ==> ${oNewVariants.sBroadcastId}`
       );
       _nAppendedTime = -1;
@@ -7076,7 +7076,7 @@ const m_Playlist = (() => {
         );
       }
     } else if (_nAppendedSessionId !== oNewVariants.nSessionId) {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Список] Изменился ИдСессии ${_nAppendedSessionId} ==> ${oNewVariants.nSessionId}`
       );
       _bAppendDiscontinuity = true;
@@ -7095,7 +7095,7 @@ const m_Playlist = (() => {
       }
     } else {
       if (_sAppendedVariantId !== oSelectedVariant.sIdentifier) {
-        m_Log.Окак(
+        m_Log.Wow(
           `[Список] Изменился ИдВарианта ${_sAppendedVariantId} ==> ${oSelectedVariant.sIdentifier}`
         );
         _bAppendDiscontinuity = true;
@@ -7125,13 +7125,13 @@ const m_Playlist = (() => {
     function queueSegment(oSegment, nSequenceNumber) {
       startBroadcast();
       if (oSegment.bAd) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Список] Не добавляю рекламу ПорядковыйНомер=${nSequenceNumber}`
         );
         return;
       }
       if (oSegment.nDuration === 0) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Список] Не добавляю сегмент ПорядковыйНомер=${nSequenceNumber} Время=${oSegment.nTime} Длительность=0`
         );
         return;
@@ -7140,7 +7140,7 @@ const m_Playlist = (() => {
         _nAppendedSessionId === oNewVariants.nSessionId &&
         _nAppendedSequenceNumber + 1 < nSequenceNumber
       ) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Список] Пропущены сегменты с ${_nAppendedSequenceNumber + 1
           } по ${nSequenceNumber - 1}`
         );
@@ -7157,7 +7157,7 @@ const m_Playlist = (() => {
       // encode against the other's moov is what leaves a black picture behind.
       if (oNewSegments.sInitSegmentUrl !== _sAddedInitSegmentUrl) {
         if (_sAddedInitSegmentUrl !== "") {
-          m_Log.Окак(
+          m_Log.Wow(
             "[AdBlock] Initialisation segment changed, forcing a discontinuity"
           );
         }
@@ -7178,7 +7178,7 @@ const m_Playlist = (() => {
         oQueued.sCodecs = oSelectedVariant.sCodecs || "";
         oQueued.sResolution = oSelectedVariant.sResolution || "";
       }
-      m_Log[oQueued.bDiscontinuity ? "Окак" : "Вот"](
+      m_Log[oQueued.bDiscontinuity ? "Wow" : "Here"](
         `[Список] Добавлен сегмент ${oQueued.nNumber} ПорядковыйНомер=${nSequenceNumber} Время=${oSegment.nTime} Длительность=${oQueued.nDuration} Разрыв=${oQueued.bDiscontinuity}`
       );
       kSegmentsAdded++;
@@ -7219,7 +7219,7 @@ const m_Playlist = (() => {
     }
     if (kSegments !== 0) {
       nAvgSegmentDuration = nListDuration / kSegments;
-      m_Log.Вот(
+      m_Log.Here(
         `[Список] ДлительностьСегментов=${m_Log.F2(
           nMinSegmentDuration
         )}<${m_Log.F2(nAvgSegmentDuration)}<${m_Log.F2(
@@ -7232,7 +7232,7 @@ const m_Playlist = (() => {
         nMinSegmentDuration =
         nMaxSegmentDuration =
         Math.max(oSegmentList.nTargetDuration / 3, 1);
-      m_Log.Ой(
+      m_Log.Oops(
         `[Список] Предполагаемая длительность сегментов ${m_Log.F1(
           nAvgSegmentDuration
         )}`
@@ -7346,7 +7346,7 @@ const m_InitSegment = (() => {
 
     const oEntry = { data: null };
     _amCache.set(sUrl, oEntry);
-    m_Log.Окак(`[InitSegment] Downloading ${sUrl}`);
+    m_Log.Wow(`[InitSegment] Downloading ${sUrl}`);
     try {
       m_Downloader
         .Load(
@@ -7362,7 +7362,7 @@ const m_InitSegment = (() => {
         )
         .then((bufData) => {
           oEntry.data = new Uint8Array(bufData);
-          m_Log.Окак(
+          m_Log.Wow(
             `[InitSegment] Downloaded ${oEntry.data.length} bytes`
           );
           // Media segments were parked waiting for this; let them through.
@@ -7371,13 +7371,13 @@ const m_InitSegment = (() => {
         .catch((pReason) => {
           // Drop the entry so the next segment retries rather than stalling forever.
           _amCache.delete(sUrl);
-          m_Log.Ой(
+          m_Log.Oops(
             `[InitSegment] Download failed: ${ExceptionToString(pReason)}`
           );
         });
     } catch (pException) {
       _amCache.delete(sUrl);
-      m_Log.Ой(
+      m_Log.Oops(
         `[InitSegment] Could not start download: ${ExceptionToString(
           pException
         )}`
@@ -7413,14 +7413,14 @@ const m_Transcoder = (() => {
         _nLastLoaded !== -1 &&
         _nLastLoaded + 1 !== oSegment.nNumber
       ) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Преобразование] Не загружены сегменты между ${_nLastLoaded} и ${oSegment.nNumber}`
         );
         oSegment.bDiscontinuity = true;
       }
       _nLastLoaded = oSegment.nNumber;
       if (typeof oSegment.pData == "number" && _oWorkerThread === null) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Преобразование] Пропускаю сегмент ${oSegment.nNumber} Состояние=${oSegment.pData}`
         );
         oSegment.nProcessing = PROCESSING_CONVERTED;
@@ -7446,7 +7446,7 @@ const m_Transcoder = (() => {
           break;
         }
         m_Statistics.SourceSegmentReceived();
-        m_Log.Вот(
+        m_Log.Here(
           `[Transcoder] Segment ${oSegment.nNumber} is fMP4, no conversion needed`
         );
         oSegment.pData = BuildPassthroughData(oSegment, mbInitSegment);
@@ -7454,14 +7454,14 @@ const m_Transcoder = (() => {
         m_Statistics.ConvertedSegmentReceived(oSegment);
       } else {
         if (typeof oSegment.pData == "number") {
-          m_Log.Вот(
+          m_Log.Here(
             `[Преобразование] Отсылаю сегмент ${oSegment.nNumber} Состояние=${oSegment.pData}`
           );
           _oWorkerThread.postMessage(oSegment);
         } else {
           m_Debug.SaveTransportStream(oSegment);
           m_Statistics.SourceSegmentReceived();
-          m_Log.Вот(`[Преобразование] Отсылаю сегмент ${oSegment.nNumber}`);
+          m_Log.Here(`[Преобразование] Отсылаю сегмент ${oSegment.nNumber}`);
           ++_nWorkerJobs;
           _oWorkerThread.postMessage(oSegment, [oSegment.pData]);
         }
@@ -7520,7 +7520,7 @@ const m_Transcoder = (() => {
             mData[1].bDiscontinuity,
             mData[1].nNumber
           );
-          m_Log.Вот(
+          m_Log.Here(
             `[Преобразование] Получен сегмент ${oSegment.nNumber
             } ПреобразованЗа=${m_Log.F0(oSegment.pData.nConvertedIn)}мс`
           );
@@ -7546,9 +7546,9 @@ const m_Transcoder = (() => {
           );
           for (let idx = 0; idx < msSeverity.length; ++idx) {
             Check(
-              (msSeverity[idx] === "Вот" ||
-                msSeverity[idx] === "Окак" ||
-                msSeverity[idx] === "Ой") &&
+              (msSeverity[idx] === "Here" ||
+                msSeverity[idx] === "Wow" ||
+                msSeverity[idx] === "Oops") &&
               typeof msRecords[idx] == "string"
             );
             m_Log[msSeverity[idx]](msRecords[idx]);
@@ -7585,7 +7585,7 @@ const m_Transcoder = (() => {
     );
   }
   function CreateWorkerThread() {
-    m_Log.Вот("[Преобразование] Создаю рабочий поток");
+    m_Log.Here("[Преобразование] Создаю рабочий поток");
     _nWorkerJobs = 0;
     _oWorkerThread = new Worker("/worker.js");
     _oWorkerThread.addEventListener(
@@ -7601,7 +7601,7 @@ const m_Transcoder = (() => {
   function Stop() {
     _nLastLoaded = -1;
     if (_oWorkerThread) {
-      m_Log.Вот("[Преобразование] Убиваю рабочий поток");
+      m_Log.Here("[Преобразование] Убиваю рабочий поток");
       _oWorkerThread.terminate();
       _oWorkerThread = null;
       _nWorkerJobs = 0;
@@ -7703,7 +7703,7 @@ const m_Downloader = (() => {
     if (oPromiseCancellation && oPromiseCancellation.bCancelled) {
       return Promise.reject(PromiseCancellation.REASON);
     }
-    m_Log.Вот(
+    m_Log.Here(
       `[Загрузчик] ${sMethod} ${sLabel} не дольше ${m_Log.F0(nNoLongerThan)}мс`
     );
     m_Twitch.checkUrlAvailability(sAddress);
@@ -7744,7 +7744,7 @@ const m_Downloader = (() => {
       return false;
     }
     if (bRetry) {
-      m_Log.Ой(`[Загрузчик] Повторно загружаю ${oRequest._sName}`);
+      m_Log.Oops(`[Загрузчик] Повторно загружаю ${oRequest._sName}`);
     }
     oRequest._kAttemptsLeft--;
     oRequest.open(oRequest._sMethod, oRequest._sUrl);
@@ -7769,7 +7769,7 @@ const m_Downloader = (() => {
   }
   function GetPromiseCancelHandler(oRequest) {
     return () => {
-      m_Log.Вот(
+      m_Log.Here(
         `[Загрузчик] Отменяю загрузку ${oRequest._sName} readyState=${oRequest.readyState}`
       );
       oRequest.removeEventListener("abort", HandleError);
@@ -7793,7 +7793,7 @@ const m_Downloader = (() => {
   );
   const HandleError = AddExceptionHandler(
     ({ target: oRequest, type: sEventType }) => {
-      m_Log.Ой(
+      m_Log.Oops(
         `[Загрузчик] Не удалось загрузить ${oRequest._sName}. Event occurred: ${sEventType}` +
         ` readyState=${oRequest.readyState}` +
         (oRequest._bLog && typeof oRequest._pDataType == "number"
@@ -7824,7 +7824,7 @@ const m_Downloader = (() => {
         );
         oRequest._oPromiseCancel &&
           oRequest._oPromiseCancel.ReplaceHandler(null);
-        m_Log.Вот(
+        m_Log.Here(
           `[Загрузчик] Загрузил ${oRequest._sName} за ${nDownloadDuration}мс` +
           (oRequest._bLog && typeof oRequest._pDataType == "number"
             ? ` ОжиданиеОтвета=${oRequest._nResponseWait}мс`
@@ -7859,7 +7859,7 @@ const m_Downloader = (() => {
             try {
               oRequest._fResolve(JSON.parse(oRequest.response));
             } catch (pException) {
-              m_Log.Ой(
+              m_Log.Oops(
                 `[Загрузчик] Не удалось разобрать ${oRequest._sName}. ${pException}`
               );
               oRequest._fReject("Failed to parse JSON");
@@ -7876,7 +7876,7 @@ const m_Downloader = (() => {
             oRequest._fResolve(oRequest.response);
         }
       } else {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Загрузчик] Не удалось загрузить ${oRequest._sName}. ${RESPONSE_CODE + nCode
           } ${oRequest.statusText}` +
           (oRequest._bLog && typeof oRequest._pDataType == "number"
@@ -7971,7 +7971,7 @@ const m_Downloader = (() => {
         m_Settings.Get("nMaxBufferSize") +
         m_Settings.Get("nBufferStretch");
       if (nAllDownloadsDuration > nQueueOverflow) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Загрузчик] Длительность всех загрузок в очереди ${m_Log.F1(
             nAllDownloadsDuration
           )}с > ${m_Log.F1(nQueueOverflow)}с`
@@ -8020,7 +8020,7 @@ const m_Downloader = (() => {
             Check(!g_maQueue.includes(oSegment));
             LoadNextSegment();
           } else if (pReason === PromiseCancellation.REASON) {
-            m_Log.Вот(
+            m_Log.Here(
               `[Загрузчик] Отменена loading сегмента ${oSegment.nNumber}`
             );
             Check(!g_maQueue.includes(oSegment));
@@ -8061,7 +8061,7 @@ const m_Downloader = (() => {
     m_Statistics.SegmentsNotLoaded(kInQueue - g_maQueue.length);
   }
   const handleNetworkChange = AddExceptionHandler((oEvent) => {
-    m_Log.Ой(
+    m_Log.Oops(
       `[Загрузчик] Событие ${oEvent.type} navigator.onLine=${navigator.onLine
       } connection.type=${navigator.connection && navigator.connection.type}`
     );
@@ -8076,7 +8076,7 @@ const m_Downloader = (() => {
     window.addEventListener("offline", handleNetworkChange);
   }
   if (!navigator.onLine) {
-    m_Log.Ой("[Загрузчик] navigator.onLine=false");
+    m_Log.Oops("[Загрузчик] navigator.onLine=false");
   }
   return {
     Load,
@@ -8167,7 +8167,7 @@ const m_Twitch = (() => {
     const WAIT_FOR_TOKEN = 3e4;
     if (getGqlToken._oPromise === null) {
       getGqlToken._oPromise = new Promise((fResolve, fReject) => {
-        m_Log.Окак("[Twitch] Вставляю фрейм для перехвата токена GQL");
+        m_Log.Wow("[Twitch] Вставляю фрейм для перехвата токена GQL");
         const elFrame = document.createElement("iframe");
         elFrame.src = "https://www.twitch.tv/popout/";
         elFrame.id = "gqltoken";
@@ -8176,7 +8176,7 @@ const m_Twitch = (() => {
         document.body.appendChild(elFrame);
         const nTimer = setTimeout(
           AddExceptionHandler(() => {
-            m_Log.Ой("[Twitch] Истекло время получения токена GQL");
+            m_Log.Oops("[Twitch] Истекло время получения токена GQL");
             elFrame.remove();
             getGqlToken._oPromise = getGqlToken.fGqlTokenChanged =
               null;
@@ -8225,7 +8225,7 @@ const m_Twitch = (() => {
     let oPromise;
     if (bSendGqlToken) {
       if (_sGqlToken !== "" && _nGqlTokenExpiresAfter > Date.now()) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Twitch] Токен GQL протухнет через ${m_Log.F0(
             (_nGqlTokenExpiresAfter - Date.now()) / 1e3
           )}с`
@@ -8265,7 +8265,7 @@ const m_Twitch = (() => {
             ({ message }) => message === "failed integrity check"
           )
         ) {
-          m_Log.Ой("[Twitch] Серверу не понравился токен GQL");
+          m_Log.Oops("[Twitch] Серверу не понравился токен GQL");
           if (
             oRequestHeaders["Client-Integrity"] === _sGqlToken &&
             _sGqlToken !== ""
@@ -8290,18 +8290,18 @@ const m_Twitch = (() => {
           oResult.errors.some(({ message }) => message === "service timeout")
         ) {
           if (!bRetryRequest) {
-            m_Log.Ой("[Twitch] Сервер GQL занят");
+            m_Log.Oops("[Twitch] Сервер GQL занят");
             return oResult;
           }
           const retryAfter =
             RETRY_REQUEST_AFTER +
             (RETRY_REQUEST_AFTER / 2) * Math.random();
-          m_Log.Ой(
+          m_Log.Oops(
             `[Twitch] Сервер GQL занят. Запрос будет повторно отправлен через ${retryAfter.toFixed()}мс`
           );
           oPromise = Wait(oPromiseCancellation, retryAfter);
         } else {
-          m_Log.Ой("[Twitch] В ответе GQL есть неизвестные ошибки");
+          m_Log.Oops("[Twitch] В ответе GQL есть неизвестные ошибки");
           return oResult;
         }
         return oPromise
@@ -8325,7 +8325,7 @@ const m_Twitch = (() => {
                   ({ message }) => message === "failed integrity check"
                 )
               ) {
-                m_Log.Ой("[Twitch] Серверу не понравился токен GQL");
+                m_Log.Oops("[Twitch] Серверу не понравился токен GQL");
                 if (
                   oRequestHeaders["Client-Integrity"] === _sGqlToken &&
                   _sGqlToken !== ""
@@ -8334,7 +8334,7 @@ const m_Twitch = (() => {
                 }
                 throw "ACCESS_DENIED";
               }
-              m_Log.Ой(
+              m_Log.Oops(
                 oResult.errors.some(
                   ({ message }) => message === "service timeout"
                 )
@@ -8391,7 +8391,7 @@ const m_Twitch = (() => {
       })
       .catch((pReason) => {
         if (typeof pReason == "string") {
-          m_Log.Ой(`[Twitch] Не удалось не отслеживать channel. ${pReason}`);
+          m_Log.Oops(`[Twitch] Не удалось не отслеживать channel. ${pReason}`);
           m_Notification.ShowAss();
           m_Events.SendEvent("twitch-viewermetadatareceived", {
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
@@ -8444,7 +8444,7 @@ const m_Twitch = (() => {
       })
       .catch((pReason) => {
         if (typeof pReason == "string") {
-          m_Log.Ой(`[Twitch] Не удалось отслеживать channel. ${pReason}`);
+          m_Log.Oops(`[Twitch] Не удалось отслеживать channel. ${pReason}`);
           m_Notification.ShowAss();
           m_Events.SendEvent("twitch-viewermetadatareceived", {
             nSubscription: SUBSCRIPTION_UNAVAILABLE,
@@ -8529,7 +8529,7 @@ const m_Twitch = (() => {
       })
       .catch((pReason) => {
         if (typeof pReason == "string") {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Twitch] Не удалось отправить данные слежения за рекламой. ${pReason}`
           );
         } else {
@@ -8603,7 +8603,7 @@ const m_Twitch = (() => {
         GetAbsoluteVariantListUrl._nExpiresAfter -
         performance.now();
       if (nExpiresAfterMs > 0) {
-        m_Log.Вот(
+        m_Log.Here(
           `[Twitch] До протухания токена трансляции осталось ${m_Log.F0(
             nExpiresAfterMs / 1e3
           )}с`
@@ -8729,7 +8729,7 @@ const m_Twitch = (() => {
         );
         return o;
       } catch (_) { }
-      m_Log.Ой(
+      m_Log.Oops(
         `[Twitch] Не удалось разобрать печеньку авторизации: ${sCookie}`
       );
     }
@@ -8749,7 +8749,7 @@ const m_Twitch = (() => {
         );
         return [o.sToken, o.nExpiresAfter];
       } catch (_) {
-        m_Log.Ой(
+        m_Log.Oops(
           `[Twitch] Не удалось разобрать печеньку токена GQL: ${sCookie}`
         );
       }
@@ -8810,7 +8810,7 @@ const m_Twitch = (() => {
           parseCookie(1, oCookie);
         }
         if (_sDeviceId === "") {
-          m_Log.Ой("[Twitch] Не найден идентификатор устройства");
+          m_Log.Oops("[Twitch] Не найден идентификатор устройства");
           _sDeviceId = getUniqueDeviceIdentifier();
         }
         chrome.cookies.onChanged.addListener(
@@ -8904,7 +8904,7 @@ const m_Twitch = (() => {
       })
       .catch((pReason) => {
         if (typeof pReason == "string") {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Twitch] Не удалось получить метаданные канала. ${pReason}`
           );
           m_Events.SendEvent("twitch-channelmetadatareceived", {
@@ -8925,7 +8925,7 @@ const m_Twitch = (() => {
   }
   function UpdateBroadcastMetadata(oPromiseCancellation, nAfter) {
     Check(_sChannelId);
-    m_Log.Вот(
+    m_Log.Here(
       `[Twitch] Загрузка метаданных трансляции начнется через ${m_Log.F0(
         nAfter
       )}мс`
@@ -8969,7 +8969,7 @@ const m_Twitch = (() => {
         const oUser = chain(oResult.data, "user");
         const sChannelCode = chain(oUser, "login");
         if (sChannelCode !== _sChannelLogin && IsNonEmptyString(sChannelCode)) {
-          m_Log.Ой(`[Twitch] Новый код канала ${sChannelCode}`);
+          m_Log.Oops(`[Twitch] Новый код канала ${sChannelCode}`);
           location.replace(`?channel=${encodeURIComponent(sChannelCode)}`);
           return;
         }
@@ -8978,7 +8978,7 @@ const m_Twitch = (() => {
         };
         const sBroadcastId = chain(oUser, "stream", "id");
         if (_sBroadcastId === "" && IsNonEmptyString(sBroadcastId)) {
-          m_Log.Окак(`[Twitch] Идентификатор трансляции ${sBroadcastId}`);
+          m_Log.Wow(`[Twitch] Идентификатор трансляции ${sBroadcastId}`);
           _sBroadcastId = sBroadcastId;
           startViewTracking();
           const sRecordingId = chain(oUser, "stream", "archiveVideo", "id");
@@ -9035,7 +9035,7 @@ const m_Twitch = (() => {
       .catch(
         AddExceptionHandler((pReason) => {
           if (typeof pReason == "string") {
-            m_Log.Ой(
+            m_Log.Oops(
               `[Twitch] Не удалось загрузить метаданные трансляции. ${pReason}`
             );
             UpdateBroadcastMetadata(
@@ -9043,7 +9043,7 @@ const m_Twitch = (() => {
               BROADCAST_METADATA_UPDATE_INTERVAL / 2
             );
           } else if (pReason === PromiseCancellation.REASON) {
-            m_Log.Вот("[Twitch] Отменено обновление метаданных трансляции");
+            m_Log.Here("[Twitch] Отменено обновление метаданных трансляции");
           } else {
             throw pReason;
           }
@@ -9061,7 +9061,7 @@ const m_Twitch = (() => {
       ClearBroadcastData();
     }
     if (_oMetadataUpdateCancel) {
-      m_Log.Вот(
+      m_Log.Here(
         `[Twitch] Отменяю цепочку обновления метаданных трансляции ТрансляцияЗавершена=${bBroadcastEnded}`
       );
       _oMetadataUpdateCancel.Cancel();
@@ -9071,7 +9071,7 @@ const m_Twitch = (() => {
   }
   function startViewTracking() {
     if (_sViewerId !== "") {
-      m_Log.Вот("[Twitch] Начинаю слежение за просмотром");
+      m_Log.Here("[Twitch] Начинаю слежение за просмотром");
       Check(_nViewTrackingTimer === 0);
       _nViewTrackingTimer = setInterval(
         sendViewTrackingData,
@@ -9082,7 +9082,7 @@ const m_Twitch = (() => {
   }
   function stopViewTracking() {
     if (_nViewTrackingTimer !== 0) {
-      m_Log.Вот("[Twitch] Завершаю слежение за просмотром");
+      m_Log.Here("[Twitch] Завершаю слежение за просмотром");
       clearInterval(_nViewTrackingTimer);
       _nViewTrackingTimer = 0;
     }
@@ -9121,7 +9121,7 @@ const m_Twitch = (() => {
         )
         .catch((pReason) => {
           if (typeof pReason == "string") {
-            m_Log.Ой(
+            m_Log.Oops(
               `[Twitch] Не удалось отправить данные слежения за просмотром. ${pReason}`
             );
           } else {
@@ -9132,13 +9132,13 @@ const m_Twitch = (() => {
   );
   function GetRecordingUrlForCurrentPosition() {
     if (_sRecordingUrl === "") {
-      m_Log.Ой("[Twitch] Адрес записи не известен");
+      m_Log.Oops("[Twitch] Адрес записи не известен");
       return "";
     }
     const nPlaybackPosition =
       m_Player.GetBroadcastPlaybackPosition(false);
     if (nPlaybackPosition === -1) {
-      m_Log.Вот("[Twitch] Адрес записи создан без позиции воспроизведения");
+      m_Log.Here("[Twitch] Адрес записи создан без позиции воспроизведения");
       return _sRecordingUrl;
     }
     return `${_sRecordingUrl}?t=${Math.floor(nPlaybackPosition / 60 / 60)}h${Math.floor(
@@ -9149,12 +9149,12 @@ const m_Twitch = (() => {
     const nPlaybackPosition =
       m_Player.GetBroadcastPlaybackPosition(true);
     if (_sBroadcastId === "" || nPlaybackPosition <= 0) {
-      m_Log.Ой(
+      m_Log.Oops(
         `[Twitch] Недостаточно данных для создания клипа ИдТрансляции=${_sBroadcastId} Позиция=${nPlaybackPosition}`
       );
       m_Notification.ShowAss();
     } else {
-      m_Log.Окак(
+      m_Log.Wow(
         `[Twitch] Создаю клип ИдТрансляции=${_sBroadcastId} Позиция=${nPlaybackPosition} ИдЗрителя=${_sViewerId}`
       );
       m_Notification.Show("svg-cut", false);
@@ -9189,7 +9189,7 @@ const m_Twitch = (() => {
       ) {
         return false;
       }
-      m_Log.Вот("[Twitch] Получен запрос на вставку сторонних расширений");
+      m_Log.Here("[Twitch] Получен запрос на вставку сторонних расширений");
       chrome.management.getAll(
         AddExceptionHandler((moExtensions) => {
           if (chrome.runtime.lastError) {
@@ -9223,13 +9223,13 @@ const m_Twitch = (() => {
               }
             }
           }
-          m_Log.Вот(
+          m_Log.Here(
             `[Twitch] Посылаю ответ на вставку сторонних расширений: ${oMessage.sThirdPartyExtensions}`
           );
           try {
             fRespond(oMessage);
           } catch (pException) {
-            m_Log.Ой(`[Twitch] Ошибка при посылке ответа: ${pException}`);
+            m_Log.Oops(`[Twitch] Ошибка при посылке ответа: ${pException}`);
           }
         })
       );
@@ -9265,14 +9265,14 @@ const m_Twitch = (() => {
 function Terminate(bFast) {
   try {
     g_bWorkFinished = true;
-    m_Log.Окак("[Запускалка] Завершаю работу");
+    m_Log.Wow("[Запускалка] Завершаю работу");
     window.stop();
     if (!bFast) {
       m_Transcoder.Stop();
       m_Player.Stop();
       m_GarbageCollector.Burn();
     }
-    m_Log.Окак("[Запускалка] Работа ended");
+    m_Log.Wow("[Запускалка] Работа ended");
   } catch (_) { }
 }
 
@@ -9293,7 +9293,7 @@ AddExceptionHandler(() => {
     chrome.runtime.onMessage.addListener(
       AddExceptionHandler((oMessage, _, fRespond) => {
         if (oMessage.sQuery === "ThisChannelIsAlreadyOpen") {
-          m_Log.Ой(
+          m_Log.Oops(
             `[Запускалка] В другой вкладке открыт channel ${oMessage.sChannel}`
           );
           if (oMessage.sChannel === sChannel) {
@@ -9304,12 +9304,12 @@ AddExceptionHandler(() => {
     );
   }
   function HandlePageUnload(oEvent) {
-    m_Log.Окак(`[Запускалка] window.on${oEvent.type}`);
+    m_Log.Wow(`[Запускалка] window.on${oEvent.type}`);
     Terminate(true);
   }
   function Startup() {
     Check(!g_bWorkFinished);
-    m_Log.Вот(`[Запускалка] Начало работы ${performance.now().toFixed()}мс`);
+    m_Log.Here(`[Запускалка] Начало работы ${performance.now().toFixed()}мс`);
     window.addEventListener("unload", HandlePageUnload);
     m_Controls.Start();
     if (m_Player.Start()) {

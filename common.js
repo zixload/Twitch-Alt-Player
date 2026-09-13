@@ -171,85 +171,94 @@ function GetOurPlayerAddress(sChannelCode) {
 	return chrome.runtime.getURL('player.html') + sParameters;
 }
 
+/*
+	The in-memory log that ends up in a bug report.
+
+	Nothing here is written to the console. Records are kept in a fixed-size ring so a long
+	session cannot grow memory without bound: once the ring is full, each new record overwrites
+	the oldest one. When the user sends a report, the ring is unrolled into chronological order.
+
+	Every record is one line — a severity mark, the time since the page loaded in seconds, then the
+	text — and is cut at a fixed length so a single runaway value cannot fill the report on its own.
+
+	The three severities are part of the public interface *by name*: some callers pick one at run
+	time, m_Log[bFailed ? 'Oops' : 'Here'](...). Renaming a severity therefore means renaming every
+	string that names it, not only the method.
+
+	Content scripts run inside twitch.tv and have no report to feed. There the log is inert: every
+	call is accepted and discarded, so shared code can log unconditionally.
+*/
 const m_Log = (() => {
-	const MAX_RECORD_LENGTH = 1500;
-	let _msLog = null;
-	let _nLastRecord = -1;
-	function Add(sImportance, sRecord) {
-		if (_msLog) {
-			Check(typeof sImportance == 'string' && typeof sRecord == 'string');
-			sRecord = LimitStringLength(`${sImportance} ${(performance.now() / 1e3).toFixed(3)} ${sRecord}`, MAX_RECORD_LENGTH);
-			if (++_nLastRecord === _msLog.length) {
-				_nLastRecord = 0;
-			}
-			_msLog[_nLastRecord] = sRecord;
+	const CAPACITY = 1500;
+	const MAX_LINE_LENGTH = 1500;
+	const MARK = { Here: ' ', Wow: '~', Oops: '@' };
+
+	const ring = THIS_IS_CONTENT_SCRIPT ? null : [];
+	let next = 0;
+
+	function write(sMark, sText) {
+		if (ring === null) {
+			return;
 		}
+		Check(typeof sText == 'string');
+		const nSeconds = (performance.now() / 1e3).toFixed(3);
+		const sLine = LimitStringLength(`${sMark} ${nSeconds} ${sText}`, MAX_LINE_LENGTH);
+		if (ring.length < CAPACITY) {
+			ring.push(sLine);
+		} else {
+			ring[next] = sLine;
+		}
+		next = (next + 1) % CAPACITY;
 	}
+
+	// One argument, always: a second one would be silently dropped, and the line would lie.
+	const severity = (sMark) => function (sText) {
+		Check(arguments.length === 1);
+		write(sMark, sText);
+	};
+
+	// Oldest first. A copy, so nothing the report does can reach back into the ring.
 	function GetDataForReport() {
-		if (!_msLog) {
+		if (ring === null) {
 			return null;
 		}
-		const nNextRecord = _nLastRecord + 1;
-		if (nNextRecord === _msLog.length) {
-			return _msLog;
+		if (ring.length < CAPACITY) {
+			return ring.slice();
 		}
-		if (_msLog[nNextRecord] === void 0) {
-			return _msLog.slice(0, nNextRecord);
-		}
-		return _msLog.slice(nNextRecord).concat(_msLog.slice(0, nNextRecord));
+		return ring.slice(next).concat(ring.slice(0, next));
 	}
-	function Вот(sRecord) {
-	// function Here(sRecord) {
-		Check(arguments.length === 1);
-		Add(' ', sRecord);
-	}
-	function Окак(sRecord) {
-	// function Wow(sRecord) {
-		Check(arguments.length === 1);
-		Add('~', sRecord);
-	}
-	function Ой(sRecord) {
-	// function Oops(sRecord) {
-		Check(arguments.length === 1);
-		Add('@', sRecord);
-	}
-	function O(pObject) {
-		switch (Type(pObject)) {
-		  case 'object':
-			return JSON.stringify(pObject);
 
-		  case 'function':
-			return `[function ${pObject.name}]`;
-
-		  case 'symbol':
-			return '[symbol]';
-
-		  default:
-			return String(pObject);
+	// Renders any value on one log line.
+	function O(pValue) {
+		switch (Type(pValue)) {
+			case 'object':
+				return JSON.stringify(pValue);
+			case 'function':
+				return `[function ${pValue.name}]`;
+			case 'symbol':
+				return '[symbol]';
+			default:
+				return String(pValue);
 		}
 	}
-	function F(nPrecision) {
-		return nValue => typeof nValue == 'number' ? nValue.toFixed(nPrecision) : 'NaN';
-	}
-	if (!THIS_IS_CONTENT_SCRIPT) {
-		_msLog = new Array(1500);
-		Вот(`[Журнал] Журнал запущен ${performance.now().toFixed()}мс`);
-		// Here(`[Log] Log started ${performance.now().toFixed()}ms`);
-	}
-	return {
-		Вот,
-		// Here,
-		Окак,
-		// Wow,
-		Ой,
-		// Oops,
+
+	// A number with a fixed count of decimals, or NaN for anything that is not a number.
+	const fixed = (nDecimals) => (pValue) => typeof pValue == 'number' ? pValue.toFixed(nDecimals) : 'NaN';
+
+	const log = {
+		Here: severity(MARK.Here),
+		Wow: severity(MARK.Wow),
+		Oops: severity(MARK.Oops),
 		O,
-		F0: F(0),
-		F1: F(1),
-		F2: F(2),
-		F3: F(3),
-		GetDataForReport
+		F0: fixed(0),
+		F1: fixed(1),
+		F2: fixed(2),
+		F3: fixed(3),
+		GetDataForReport,
 	};
+
+	log.Here(`[Log] Started after ${performance.now().toFixed()} ms`);
+	return log;
 })();
 
 const m_i18n = (() => {
@@ -323,7 +332,7 @@ const m_i18n = (() => {
 		return elInsertTo;
 	}
 	function TranslateDocument(oDocument) {
-		m_Log.Вот('[i18n] Перевод документа');
+		m_Log.Here('[i18n] Перевод документа');
 		// m_Log.Here('[i18n] Translating document');
 		for (let elTranslate, celTranslate = oDocument.querySelectorAll('*[data-i18n]'), i = 0; elTranslate = celTranslate[i]; ++i) {
 			const sNames = elTranslate.getAttribute('data-i18n');
@@ -652,12 +661,12 @@ const m_Settings = (() => {
 			delete oRestoredSettings[sOld];
 		}
 		if (nCarried) {
-			m_Log.Вот(`[Настройки] ${nCarried} reglage(s) repris sous leur nouveau nom`);
+			m_Log.Here(`[Настройки] ${nCarried} reglage(s) repris sous leur nouveau nom`);
 		}
 		return oRestoredSettings;
 	}
 	function Restore() {
-		m_Log.Вот('[Настройки] Восстанавливаю settings');
+		m_Log.Here('[Настройки] Восстанавливаю settings');
 		// m_Log.Here('[Settings] Restoring settings');
 		return new Promise((fResolve, fReject) => {
 			chrome.storage.local.get(null, oRestoredSettings => {
@@ -669,7 +678,7 @@ const m_Settings = (() => {
 						console.error('storage.local.get', chrome.runtime.lastError.message);
 						m_Debug.FinishWorkAndShowMessage('J0221');
 					}
-					m_Log.Вот(`[Настройки] Настройки прочитаны из хранилища: ${m_Log.O(oRestoredSettings)}`);
+					m_Log.Here(`[Настройки] Настройки прочитаны из хранилища: ${m_Log.O(oRestoredSettings)}`);
 					// m_Log.Here(`[Settings] Settings read from storage: ${m_Log.O(oRestoredSettings)}`);
 					FinishRestoring(MigrateSettingNames(oRestoredSettings));
 					fResolve();
@@ -734,7 +743,7 @@ const m_Settings = (() => {
 		Check(IsObject(oSave));
 		if (Object.keys(oSave).length !== 0 || bDeleteRest) {
 			if (_nDelayedSaveTimer === 0) {
-				m_Log.Вот(`[Настройки] Откладываю сохранение настроек на ${DELAY_SAVE_FOR}мс`);
+				m_Log.Here(`[Настройки] Откладываю сохранение настроек на ${DELAY_SAVE_FOR}мс`);
 				// m_Log.Here(`[Settings] Delaying settings save for ${DELAY_SAVE_FOR}ms`);
 				_oDelayedSave = oSave;
 				_bDelayedDelete = bDeleteRest;
@@ -748,7 +757,7 @@ const m_Settings = (() => {
 		}
 	}
 	function FinishSaving() {
-		m_Log.Вот('[Настройки] Завершаю отложенное сохранение');
+		m_Log.Here('[Настройки] Завершаю отложенное сохранение');
 		// m_Log.Here('[Settings] Finishing delayed save');
 		Check(_nDelayedSaveTimer !== 0);
 		_nDelayedSaveTimer = 0;
@@ -759,11 +768,11 @@ const m_Settings = (() => {
 	function Save(oSave, bDeleteRest) {
 		if (bDeleteRest) {
 			chrome.storage.local.clear(CheckSaveResult);
-			m_Log.Вот('[Настройки] Все settings удалены из хранилища');
+			m_Log.Here('[Настройки] Все settings удалены из хранилища');
 			// m_Log.Here('[Settings] All settings deleted from storage');
 		}
 		chrome.storage.local.set(oSave, CheckSaveResult);
-		m_Log.Вот(`[Настройки] Настройки записаны в хранилище: ${m_Log.O(oSave)}`);
+		m_Log.Here(`[Настройки] Настройки записаны в хранилище: ${m_Log.O(oSave)}`);
 		// m_Log.Here(`[Settings] Settings written to storage: ${m_Log.O(oSave)}`);
 	}
 	function CheckSaveResult() {
@@ -773,7 +782,7 @@ const m_Settings = (() => {
 		}
 	}
 	function Reset() {
-		m_Log.Окак('[Настройки] Сбрасываю settings');
+		m_Log.Wow('[Настройки] Сбрасываю settings');
 		// m_Log.Wow('[Settings] Resetting settings');
 		Check(_oSettings.nSettingsVersion.pCurrent);
 		const oSave = {};
@@ -784,7 +793,7 @@ const m_Settings = (() => {
 		window.location.reload(true);
 	}
 	function Export() {
-		m_Log.Окак('[Настройки] Экспортирую settings');
+		m_Log.Wow('[Настройки] Экспортирую settings');
 		// m_Log.Wow('[Settings] Exporting settings');
 		Check(_oSettings.nSettingsVersion.pCurrent);
 		const oExport = {
@@ -795,17 +804,17 @@ const m_Settings = (() => {
 				oExport[sName] = _oSettings[sName].pCurrent;
 			}
 		}
-		m_Log.Вот(`[Настройки] Отобраны settings для экспорта: ${m_Log.O(oExport)}`);
+		m_Log.Here(`[Настройки] Отобраны settings для экспорта: ${m_Log.O(oExport)}`);
 		// m_Log.Here(`[Settings] Settings selected for export: ${m_Log.O(oExport)}`);
 		WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', GetText('J0133'));
 		// WriteTextToLocalFile(JSON.stringify(oExport), 'application/json', Text('J0133'));
 	}
 	function Import(oFromFile) {
-		m_Log.Окак(`[Настройки] Импортирую settings из файла ${oFromFile.name}`);
+		m_Log.Wow(`[Настройки] Импортирую settings из файла ${oFromFile.name}`);
 		// m_Log.Wow(`[Settings] Importing settings from file ${oFromFile.name}`);
 		Check(_oSettings.nSettingsVersion.pCurrent);
 		if (oFromFile.size === 0 || oFromFile.size > 1e4) {
-			m_Log.Ой(`[Настройки] Размер файла: ${oFromFile.size}`);
+			m_Log.Oops(`[Настройки] Размер файла: ${oFromFile.size}`);
 			// m_Log.Oops(`[Settings] File size: ${oFromFile.size}`);
 			m_Notification.ShowAss();
 			return;
@@ -813,12 +822,12 @@ const m_Settings = (() => {
 		const oReader = new FileReader();
 		oReader.addEventListener('loadend', AddExceptionHandler(() => {
 			if (!IsNonEmptyString(oReader.result)) {
-				m_Log.Ой(`[Настройки] Результат чтения файла: ${oReader.result}`);
+				m_Log.Oops(`[Настройки] Результат чтения файла: ${oReader.result}`);
 				// m_Log.Oops(`[Settings] File read result: ${oReader.result}`);
 				m_Notification.ShowAss();
 				return;
 			}
-			m_Log.Вот(`[Настройки] Настройки прочитаны из файла: ${oReader.result}`);
+			m_Log.Here(`[Настройки] Настройки прочитаны из файла: ${oReader.result}`);
 			// m_Log.Here(`[Settings] Settings read from file: ${oReader.result}`);
 			let oSave;
 			try {
@@ -840,7 +849,7 @@ const m_Settings = (() => {
 					}
 				}
 			} catch (pException) {
-				m_Log.Ой(`[Настройки] Поймано исключение во время разбора настроек: ${pException}`);
+				m_Log.Oops(`[Настройки] Поймано исключение во время разбора настроек: ${pException}`);
 				// m_Log.Oops(`[Settings] Exception caught while parsing settings: ${pException}`);
 				m_Notification.ShowAss();
 				return;

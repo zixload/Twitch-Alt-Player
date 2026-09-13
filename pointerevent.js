@@ -109,7 +109,7 @@
 		configurable: true,
 		value: PointerEvent
 	});
-	м_Журнал.Ой('[PointerEvent] Использую события мыши');
+	м_Журнал.Oops('[PointerEvent] Использую события мыши');
 	window.addEventListener('mousedown', ОбработатьMouseDown, true);
 	window.addEventListener('mousemove', ОбработатьMouseMove, true);
 	window.addEventListener('mouseup', ОбработатьMouseUp, true);

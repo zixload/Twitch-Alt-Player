@@ -1,0 +1,6 @@
+{
+  "// note": "Les trois gravites du journal, derniers noms russes de l'interface publique. Elles sont choisies parfois dynamiquement -- m_Log[cond ? 'Oops' : 'Here'](...) -- donc le nom compte autant comme propriete que comme chaine.",
+  "Вот": "Here",
+  "Окак": "Wow",
+  "Ой": "Oops"
+}

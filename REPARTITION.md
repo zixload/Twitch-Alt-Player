@@ -134,6 +134,10 @@ branche publique.
 
 ### Agent A — le cœur média
 
+A possède aussi `tests/` : un test unitaire par module réécrit, lancé sans navigateur. Le harnais
+lit trente secondes de flux et ne franchit jamais les cas limites — le tour d'un anneau de 1500
+entrées, par exemple. Ces tests-là les franchissent.
+
 `m_Log` · `m_Events` · `m_Settings` · `m_GarbageCollector`, puis le nœud
 `m_Controls` + `m_Player` + `m_Playlist` + `m_Twitch`, puis `m_Downloader`,
 `m_Transcoder` + `m_InitSegment`, et enfin `worker.js`.

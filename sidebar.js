@@ -88,7 +88,7 @@ const m_Sidebar = (() => {
 
 	function log(sMessage) {
 		try {
-			m_Log.Вот('[Sidebar] ' + sMessage);
+			m_Log.Here('[Sidebar] ' + sMessage);
 		} catch (_) {
 			console.log('[Sidebar] ' + sMessage);
 		}
