@@ -5,11 +5,12 @@
 	m_Events is the switchboard: every module announces what it did through it, and every other
 	module hears about it there. `eventcheck.js` already proves that each event name has a sender
 	and a listener. Nothing proves what the dispatcher itself does -- and that is where the
-	surprises live: two shapes of handler, a shared event object, and what happens when a handler
+	surprises live: the order handlers run in, and what happens when a handler
 	adds or removes a handler while the dispatch is running.
 
-	This suite is written BEFORE the module is rewritten, on purpose. It is the description that
-	the rewrite has to satisfy: read it as the specification, not as a report on the old code.
+	This suite was written BEFORE the module was rewritten, on purpose: it was the description the
+	rewrite had to satisfy. One part of that description was changed deliberately by the rewrite --
+	the listener object with handleEvent, which nothing used -- and section 3 says so.
 
 	THE RE-ENTRANCY CASES PIN CURRENT BEHAVIOUR, THEY DO NOT BLESS IT. A handler that adds another
 	handler for the same event has the new one run in the same dispatch, because the loop walks the
@@ -141,33 +142,29 @@ cas(() => {
 	ok(asVus.join('') === 'deux', 'un envoi ne reveille que son propre evenement');
 });
 
-titre('3. Un objet en guise d ecouteur');
+titre('3. Seules les fonctions sont des ecouteurs');
+/*
+	L'ancien repartiteur acceptait aussi un objet portant handleEvent, a la maniere du DOM, et lui
+	passait un objet { type, data } partage. Aucune des inscriptions de l'extension ne s'en servait
+	-- verifie sur l'arbre syntaxique, chaque ecouteur resolu jusqu'a sa declaration. La reecriture
+	retire cette seconde convention ; ces cas-ci disaient qu'elle marchait, ils disent maintenant
+	qu'elle est refusee.
+*/
 cas(() => {
 	const { E } = charger();
-	const aoRecu = [];
-	E.AddHandler('essai', { handleEvent: oEvent => aoRecu.push(oEvent) });
-	E.SendEvent('essai', 'charge');
-	ok(aoRecu.length === 1, 'handleEvent est appele');
-	ok(aoRecu[0].type === 'essai' && aoRecu[0].data === 'charge',
-		'il recoit un seul objet, { type, data }');
-});
-cas(() => {
-	const { E } = charger();
-	const aoRecu = [];
-	const faire = () => ({ handleEvent: oEvent => aoRecu.push(oEvent) });
-	E.AddHandler('essai', faire());
-	E.AddHandler('essai', faire());
-	E.SendEvent('essai', 1);
-	ok(aoRecu.length === 2, 'les deux objets sont servis');
-	ok(aoRecu[0] === aoRecu[1],
-		'et partagent le MEME objet d evenement : le modifier depuis un ecouteur atteint les suivants');
+	let nAppels = 0;
+	const oEcouteur = { handleEvent: () => { nAppels++; } };
+	ok(leve(() => E.AddHandler('essai', oEcouteur)), 'un objet porteur de handleEvent est refuse a l inscription');
+	ok(leve(() => E.RemoveHandler('essai', oEcouteur)), 'et au retrait');
+	E.SendEvent('essai');
+	ok(nAppels === 0, 'refuse veut dire jamais appele, pas inscrit en silence');
 });
 cas(() => {
 	const { E } = charger();
 	let nArguments = -1;
-	E.AddHandler('essai', { handleEvent: function () { nArguments = arguments.length; } });
+	E.AddHandler('essai', function () { nArguments = arguments.length; });
 	E.SendEvent('essai', 1);
-	ok(nArguments === 1, 'un objet ne recoit pas la paire (donnee, nom) reservee aux fonctions');
+	ok(nArguments === 2, 'une fonction recoit exactement deux arguments : la donnee, puis le nom');
 });
 
 titre('4. Retrait');
