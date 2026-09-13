@@ -256,11 +256,18 @@ python tools/harness/verify.py --chaines <chaînes en direct>
 python tools/harness/migrationcheck.py chrome <chaîne>
 ```
 
-`verify.py` enchaîne douze étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
+`verify.py` enchaîne treize étapes et s'arrête à la première qui échoue : syntaxe, contrôle croisé
 comparé nom par nom à une référence, auto-test du contrôle, appariement des évènements internes,
-son auto-test, ordre de construction, auto-test de l'extraction, chaîne réellement en direct,
-console, lecture, plein écran, contrôles de réglages. Les sept premières tournent sans navigateur
-en vingt-cinq secondes : `--statique`.
+son auto-test, ordre de construction, auto-test de l'extraction, tests unitaires, chaîne réellement
+en direct, console, lecture, plein écran, contrôles de réglages. Les huit premières tournent sans
+navigateur en vingt-cinq secondes : `--statique`.
+
+Pour un commit de **réécriture**, en plus : la sonde du module dans le vrai lecteur,
+`py -3.14 tools/harness/modulecheck.py <module>`. Elle s'écrit depuis la description, avant la
+réécriture, et se lance trois fois — sur le module tel qu'extrait, qui est la référence de
+comportement ; sur une version délibérément cassée, pour prouver qu'elle sait échouer ; sur le
+module réécrit, dont les verdicts doivent être ceux du premier passage. Voir
+`tools/harness/README.md`.
 
 Pour un commit d'extraction, en plus : `node tools/extract/extractcheck.js` avant de commiter. Il
 échoue si un fichier chargé a changé ailleurs que par le déplacement — un commit d'extraction se
@@ -375,15 +382,19 @@ Ensuite, et c'est le résultat de la section 4 : **`m_Twitch`, puis `m_Playlist`
 `m_Controls` + `m_Player` ensemble**. Les deux premiers ne tiennent au reste du nœud que par un
 membre chacun, appelé à un seul endroit ; le troisième est le seul vrai couple.
 
-### Trois points à traiter côté B
+### Trois points à traiter côté B — les trois sont faits
 
-- **Quatre outils auxiliaires sont cassés** : `shot.py`, `reporttest.py`, `compare.py` et
-  `followcheck.py` désignent encore des noms cyrilliques que la phase 1 a traduits. Ils sont hors
-  des douze étapes de `verify.py`, donc rien ne les signale.
-- **Les tests unitaires ne sont dans aucune chaîne.** `tests/log.test.js`, `tests/settings.test.js`,
-  `tests/settings-selftest.js` et `tests/events.test.js` tournent sans navigateur en quelques
-  secondes. Leur place est dans la partie `--statique` de `verify.py`, qui est à B.
-- **`eventcheck.js` signale quatre défauts** dans l'arbre de travail — `window-opened-svg-success`,
-  `-fail`, `-fullscreen-${…}`, `-cut` — envoyés sans personne pour les écouter. Ils viennent du
-  découpage de `m_Window` en cours, pas de `common.js` : sur un arbre fait du dernier commit plus
-  le seul `common.js` de A, le contrôle rend zéro défaut.
+- **Quatre outils auxiliaires étaient cassés** : `shot.py`, `reporttest.py`, `compare.py` et
+  `followcheck.py` désignaient encore des noms traduits en phase 1. *Fait (`43f41f3`), plus
+  `tipcheck.py`, cassé de la même façon sans figurer dans la liste.* La moitié de ces noms se
+  cachaient en échappements `\uXXXX`, invisibles à une recherche littérale du cyrillique. Les cinq
+  outils ont été lancés sur une chaîne en direct pour le prouver ; trois défauts sans rapport avec
+  les noms sont sortis à cette occasion, dont `compare.py` qui ne mesurait rien sur Vivaldi.
+- **Les tests unitaires n'étaient dans aucune chaîne.** *Fait (`7f90a8c`) : étape 8 de `verify.py`,
+  deux secondes.* La règle de nommage décide de ce qui tourne : `tests/*.test.js` et
+  `tests/*-selftest.js`. Un fichier qui rend 0 sans rien écrire est compté comme un échec.
+- **`eventcheck.js` signalait quatre défauts** `window-opened-svg-*`. *Ce n'était pas le découpage
+  de `m_Window` : c'était un défaut de l'outil.* Il suivait un paramètre jusqu'aux appels de sa
+  fonction en se fiant au seul nom de l'appelé, et `m_Window.Show` et `m_Notification.Show` sont
+  homonymes. Corrigé en `6d0a372`, avec un cas de non-régression qui plante les deux côtés du
+  piège.
