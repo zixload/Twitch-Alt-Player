@@ -748,6 +748,92 @@ await cas(async () => {
 	ok(oSansDebit.moVariants[1].sIdentifier === 'x', 'une variante sans debit lu passe en dernier');
 });
 
+titre('7 bis. Coffre de points de chaine');
+/*
+	Regarder rapporte des points, et un coffre de bonus apparait regulierement. Sur twitch.tv on clique
+	dessus ; ici, le lecteur le reclame lui-meme, a chaque minute regardee, quel que soit l'etat du chat.
+*/
+const reponsePoints = (sClaimId) => ({
+	data: { user: { channel: { self: { communityPoints: { balance: 100, availableClaim: sClaimId ? { id: sClaimId } : null } } } } },
+});
+const reponseReclamation = (sErreur = null) => ({
+	data: { claimCommunityPoints: { claim: sErreur ? null : { id: 'C1' }, currentPoints: 150, error: sErreur ? { code: sErreur } : null } },
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieSpectateur(), cookieAppareil(), cookieJetonGql('JETON') ] });
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	t.sur('channel points', () => reponsePoints('C1'));
+	t.sur('claim channel points', () => reponseReclamation());
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(0);
+	const oLecture = t.requetes('channel points')[0];
+	ok(oLecture && oLecture.oVariables.login === CHAINE && oLecture.oHeaders.Authorization === 'OAuth tok',
+		'des que la diffusion est connue, le coffre de cette chaine est demande, au nom du spectateur');
+	const oReclamation = t.requetes('claim channel points')[0];
+	ok(oReclamation && oReclamation.oVariables.input.channelID === ID_CHAINE && oReclamation.oVariables.input.claimID === 'C1',
+		'un coffre disponible est reclame, avec son identifiant');
+	ok(oReclamation && oReclamation.oHeaders['Client-Integrity'] === 'JETON', 'avec le jeton d integrite, que Twitch exige');
+	ok(t.apExceptions.length === 0 && t.asJournal.length === 0, 'sans exception ni plainte');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieSpectateur(), cookieAppareil(), cookieJetonGql('JETON') ] });
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	t.sur('channel points', (o, n) => reponsePoints(n === 2 ? 'C2' : null));
+	t.sur('claim channel points', () => reponseReclamation());
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(0);
+	ok(t.requetes('channel points').length === 1 && t.requetes('claim channel points').length === 0, 'pas de coffre : rien a reclamer');
+	await t.avancer(60000);
+	ok(t.requetes('channel points').length === 2 && t.requetes('claim channel points').length === 1
+		&& t.requetes('claim channel points')[0].oVariables.input.claimID === 'C2', 'la minute suivante on regarde de nouveau, et celui-la est pris');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieAppareil() ] });
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(120000);
+	ok(t.requetes('channel points').length === 0, 'sans spectateur connecte, aucun coffre a chercher');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieSpectateur(ID_CHAINE, CHAINE), cookieAppareil() ] });
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(120000);
+	ok(t.requetes('channel points').length === 0, 'sur sa propre chaine, il n y a pas de coffre');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieSpectateur(), cookieAppareil(), cookieJetonGql('JETON') ] });
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	t.sur('channel points', () => reponsePoints('C1'));
+	t.sur('claim channel points', () => reponseReclamation('ALREADY_CLAIMED'));
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(0);
+	ok(t.asJournal.some((s) => s.includes('ALREADY_CLAIMED')), 'un refus de Twitch est note dans le journal');
+	ok(t.apExceptions.length === 0 && t.kAss === 0, 'sans exception, et sans deranger le spectateur');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieSpectateur(), cookieAppareil(), cookieJetonGql('JETON') ] });
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	let fTenir = null;
+	t.sur('channel points', () => new Promise((f) => { fTenir = f; }));
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(0);
+	await t.avancer(60000);
+	ok(t.requetes('channel points').length === 1, 'une demande encore en route : la minute suivante n en lance pas une seconde');
+	fTenir(reponsePoints(null));
+	await t.avancer(60000);
+	ok(t.requetes('channel points').length === 2, 'une fois revenue, la verification reprend');
+	t.T.FinishCollectingBroadcastMetadata(false);
+	await t.avancer(180000);
+	ok(t.requetes('channel points').length === 2, 'et elle s arrete avec le suivi de visionnage');
+});
+
 titre('8. Enregistrement et clips');
 await cas(async () => {
 	const t = charger();

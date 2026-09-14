@@ -944,9 +944,80 @@ const m_Twitch = (() => {
     }
     m_Log.Here("[Twitch] Starting view tracking");
     Check(_nViewTrackingTimer === 0);
-    _nViewTrackingTimer = setInterval(sendViewTrackingData, VIEW_TRACKING_INTERVAL);
+    _nViewTrackingTimer = setInterval(() => {
+      sendViewTrackingData();
+      claimBonusChest();
+    }, VIEW_TRACKING_INTERVAL);
     sendViewTrackingData();
+    claimBonusChest();
   }
+
+  // --- Channel points ---
+
+  /*
+    Watching earns channel points, and every so often a bonus chest appears. On twitch.tv it sits in
+    the chat and waits for a click (autoclaim.js clicks it there). In this player the chat may be
+    closed, or the embedded kind that has no chest at all, so the chest is claimed through GraphQL
+    instead: once a minute, alongside the minute-watched report, for as long as a logged-in viewer
+    watches someone else's live broadcast. A refusal is logged and never shown: the viewer did not
+    ask for anything.
+  */
+  let _bClaimCheckInProgress = false;
+
+  const claimBonusChest = AddExceptionHandler(() => {
+    if (_bClaimCheckInProgress || _sViewerId === "" || _sViewerId === _sChannelId) {
+      return;
+    }
+    _bClaimCheckInProgress = true;
+    sendGqlRequest(null, `query($login: String!) {
+        user(login: $login) {
+          channel {
+            self {
+              communityPoints {
+                availableClaim {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }`, { login: _sChannelLogin }, true, false, false, "channel points")
+      .then((oResult) => {
+        const sClaimId = chain(oResult, "data", "user", "channel", "self", "communityPoints", "availableClaim", "id");
+        if (!IsNonEmptyString(sClaimId)) {
+          return;
+        }
+        m_Log.Wow(`[Twitch] Bonus chest available ClaimId=${sClaimId}`);
+        return sendGqlRequest(null, `mutation($input: ClaimCommunityPointsInput!) {
+            claimCommunityPoints(input: $input) {
+              claim {
+                id
+              }
+              currentPoints
+              error {
+                code
+              }
+            }
+          }`, { input: { channelID: _sChannelId, claimID: sClaimId } }, true, true, true, "claim channel points")
+          .then((oClaim) => {
+            const sError = chain(oClaim, "data", "claimCommunityPoints", "error", "code");
+            if (oClaim.errors || sError || !chain(oClaim, "data", "claimCommunityPoints", "claim")) {
+              throw `Server refused the claim ${sError || JSON.stringify(oClaim.errors || null)}`;
+            }
+            m_Log.Wow(`[Twitch] Bonus chest claimed CurrentPoints=${chain(oClaim, "data", "claimCommunityPoints", "currentPoints")}`);
+          });
+      })
+      .catch((pReason) => {
+        if (typeof pReason == "string") {
+          m_Log.Oops(`[Twitch] Could not claim the bonus chest. ${pReason}`);
+        } else {
+          m_Debug.CaughtException(pReason);
+        }
+      })
+      .finally(() => {
+        _bClaimCheckInProgress = false;
+      });
+  });
 
   function stopViewTracking() {
     if (_nViewTrackingTimer !== 0) {
