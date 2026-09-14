@@ -1,392 +1,156 @@
-# CLAUDE.md — Twitch Alternate Player
+# Twitch Alternate Player — working notes
 
-This file provides persistent instructions for Claude Code agents working in this repository.
-Read it fully before making any changes.
-
----
-
-## Project Ownership & Context
-
-**The current maintainer is not a Russian speaker and does not understand Russian.**
-
-This project was originally developed by a Russian-speaking developer (Alexander Choporov / CoolCmd)
-and the entire codebase — variable names, function names, constants, CSS classes, HTML IDs,
-comments, and some UI strings — is written in Russian (Cyrillic). The current maintainer has taken
-over the project and is actively working to translate **all** source code from Russian to English.
-
-Every agent working in this repo must operate with this context in mind:
-- Do not introduce new Cyrillic identifiers or strings under any circumstances.
-- All new code must use English identifiers and English comments.
-- When modifying existing code, translate any Cyrillic identifiers in the surrounding scope as part
-  of the change (opportunistic translation).
-- Use `Documentation/legacy_code_translation_reference.md` as the authoritative glossary.
-- Use `.agent/rules/js-doc-master-template.md` for JSDoc standards when documenting translated code.
+Read this before changing anything. `REPARTITION.md` (in French) holds the history and the measurements
+behind the current layout; this file holds what is true now and how to work.
 
 ---
 
-## Project Overview
+## Rules that are not up for discussion
 
-**Alternate Player for Twitch.tv** is a Chrome browser extension (Manifest V3) that replaces
-Twitch's native video player with a custom implementation featuring:
-- Server-side ad bypass (omits `play_session_id` to skip SSAI ad injection)
-- Real-time stream diagnostics overlay (the "S" key statistics panel)
-- WebAssembly-accelerated TS→MP4 transcoding via a Web Worker
-- BetterTTV / FrankerFaceZ emote integration (generic CDN fallback)
-- Auto-claim channel points, GraphQL token interception, duplicate-tab prevention
-
-**GitHub:** https://github.com/SevWren/twitch_alternate_player
-**Manifest version:** 3 | **Min Chrome:** 92 | **Extension version:** 2025.5.28
+- **Never modify `C:\Users\ingam\OneDrive\Documents\twitch_alternate_player-v2`.** It is the folder
+  Chrome has loaded and that Luca uses day to day. It stays on `master @ 6c6fc18`. All work happens
+  in the worktree `twitch-alt-v2-nettoyage`, branch `nettoyage`.
+- **Never merge `nettoyage` into `master`, and never push it, without Luca's explicit go-ahead.**
+  The branch has never been published; the `public` branch is a separate worktree.
+- **No tool attribution of any kind.** No `Co-Authored-By` trailer, and no mention of any assistant
+  or automated tool in commit messages, pull request descriptions or versioned files. Commits carry
+  Luca's git identity only.
+- **Never `taskkill /IM chrome.exe`** — it kills Luca's own browsers. Kill test browsers by PID with `/T`.
+- **Never use bare `git stash` / `git stash pop`** — the stash stack is shared by every worktree.
+- Commit messages are in French, in the style of the existing history.
 
 ---
 
-## Architecture Overview
+## What the project is
 
-### File Roles
+**Alternate Player for Twitch.tv** — a Chrome extension (Manifest V3, `minimum_chrome_version` 92)
+that replaces Twitch's player with its own: HLS fetching, server-side ad bypass through a second
+playlist requested without ads, MPEG-TS → fMP4 remuxing in a Web Worker, a diagnostics panel (`S`),
+replay of the buffered stream, chat panel, follow/notify buttons.
 
-| File | Layer | Role |
+Forked from Alexander Choporov's original (BSD licence — keep his copyright line in `LICENSE`).
+Phase 1 translated every identifier from Russian to English. Phase 2 extracted every module into
+its own file and rewrote it; it is complete as of 2026-09-14.
+
+---
+
+## Layout
+
+There is no build step. Files load exactly as `manifest.json` and `player.html` list them.
+
+| Path | Role |
+|---|---|
+| `manifest.json` | Permissions, content scripts, web-accessible resources |
+| `background.js` | Service worker: detects third-party extensions, prevents duplicate player tabs |
+| `content.js`, `gqltoken.js`, `autoclaim.js` | Content scripts on twitch.tv: redirect button, GraphQL integrity token, channel points |
+| `content_injection.js`, `gql_injection.js` | Run in the Twitch page context (token capture) |
+| `player.html` | The player page; its `<script defer>` list is the load order |
+| `common.js` | Shared helpers and constants, `m_Log`, `m_Settings`, the settings key migration (the only intentional Cyrillic) |
+| `player.js` | Shared constants, `Segment`, the segment queue `g_maQueue`, `NumberInput`, `Terminate` — no module lives here any more |
+| `modules/*.js` | One IIFE module per file (`const m_Name = (() => { … })()`) |
+| `worker.js` | MPEG-TS demux → fMP4 mux, off the main thread |
+| `wasm.wasm`, `asmjs.js` | Start-code search for the worker (WebAssembly, asm.js fallback). **`wasm.wasm` is binary — never edit it** |
+| `sidebar.js`, `channelbar.js` | Followed/live channels and the channel bar; `sidebar.js` reads the auth cookie itself and never calls into `m_Twitch`, so a failure there cannot take the player down |
+| `player.css`, `glass.css`, `sidebar.css` | `glass.css` changes colour, radius, blur and type only — never geometry the scripts measure |
+| `_locales/{en,ru}/messages.json` | UI strings |
+| `tests/` | Headless unit tests (`*.test.js`) and mutation self-tests (`*-selftest.js`) |
+| `tools/` | Verification tooling — see below |
+| `player-english-translating-test.js`, `Documentation/Translation/` | **Not loaded.** Old reference copies |
+
+### The media path
+
+```
+m_Playlist ── variant list, segment list (two loops during an ad break) ──► g_maQueue
+m_Downloader ── downloads queued segments, N at a time ──────────────────► g_maQueue
+m_Transcoder ── MPEG-TS → worker.js ; fMP4 passes through with m_InitSegment
+m_Player ── appends to MediaSource, decides when to play, seek, replay
+m_Controls ── keyboard, clicks, broadcast state (data-state on <body>)
+```
+
+Modules talk through direct calls and through `m_Events` (`SendEvent` / `AddHandler`). Event names
+are plain strings: `tools/rename/eventcheck.js` pairs every sender with a listener.
+
+---
+
+## Verifying a change
+
+**`py -3.14 tools/harness/verify.py`** runs everything and stops at the first failure:
+
+| # | Step | What it proves |
 |---|---|---|
-| `manifest.json` | Config | Extension entry point — permissions, content scripts, web-accessible resources |
-| `background.js` | Service Worker | Inter-tab messaging: detects third-party extensions, prevents duplicate player tabs |
-| `content.js` | Content Script | Detects Twitch channel URLs, redirects to `player.html` |
-| `gqltoken.js` | Content Script | Intercepts Twitch GraphQL integrity token at `document_start` |
-| `autoclaim.js` | Content Script | Auto-claims channel bonus points |
-| `content_injection.js` | Page Context | Injected into page context for GQL token capture (MV3 workaround) |
-| `gql_injection.js` | Page Context | Additional GQL interception (web-accessible resource) |
-| `player.html` | Player UI | Full alternate player — video element, controls, settings tabs, stats overlay |
-| `player.js` | Player Logic | ~8,000-line main module: HLS fetching, MSE pipeline, stats, settings, chat |
-| `player.css` | Styles | Player UI styling |
-| `sidebar.js` | Player UI | Left navigation sidebar — followed / live channels fetched from GraphQL. Self-contained: reads the auth cookie itself and never calls into `м_Twitch`, so a failure here cannot take the player down |
-| `sidebar.css` | Styles | Sidebar styling, plus the `body` flex rule that seats the sidebar beside `#проигрывательичат` |
-| `glass.css` | Styles | Glass skin, loaded after `player.css` — colour, radius, blur and typography only, never geometry the scripts measure |
-| `player-english-translating-test.js` | Reference | **Not loaded.** Drifted copy of `player.js` kept for translation work |
-| `Documentation/Translation/player.js.copy-english-translating.js` | Reference | **Not loaded.** Static copy, older still |
-| `Documentation/archive/` | History | Reports from earlier sessions, with verified statuses in its `INDEX.md` |
-| `common.js` | Shared Util | Shared helpers: i18n wrapper, storage, DOM utilities |
-| `worker.js` | Web Worker | MPEG-TS demuxer → MP4 muxer, runs off main thread |
-| `wasm.wasm` | Binary | Compiled WebAssembly runtime for segment transcoding |
-| `asmjs.js` | Fallback | asm.js fallback when WASM unavailable |
-| `rules.json` | Net Rules | `declarativeNetRequest` rules — strips ad-related request/response headers |
-| `_locales/en/messages.json` | i18n | English UI strings |
-| `_locales/ru/messages.json` | i18n | Russian UI strings |
-| `pointerevent.js` | Util | Pointer event / drag utilities |
-| `report.html` / `report.css` | UI | Extension report/feedback page |
+| 1 | syntax | every loaded script parses; JSON files parse |
+| 2–3 | cross-check + self-test | every DOM id, class and message key referenced exists (compared to an accepted reference) |
+| 4–5 | events + self-test | every `SendEvent` has an `AddHandler` and vice versa, no blind spots |
+| 6 | construction order | nothing is used during load before it is defined; no module calls another one while being built, except `m_Log` / `m_Events` |
+| 7 | extraction self-test | the extraction tool still refuses what it must |
+| 8 | unit tests | `tests/*.test.js`, `tests/*-selftest.js` (a silent file counts as a failure) |
+| 9 | worker bytes | `worker.js` in the tree against the last commit, on captured real segments, byte for byte, WebAssembly and asm.js |
+| 10 | live channel | a channel that is really live (pass candidates with `--chaines a,b,c`) |
+| 11–13 | console, playback, fullscreen | zero errors, frames decoded, layout |
+| 14 | settings | every settings control responds (compared to an accepted reference) |
 
-### Message-Passing Flow
+`--statique` runs steps 1–9 without a browser. Known defect kept in the settings reference:
+the audio-device access button needs a human click on a browser permission prompt.
 
-```
-Twitch page
-  └── content.js          (detects channel, redirects)
-  └── gqltoken.js         (captures GQL integrity token)
-  └── content_injection.js (page-context token relay)
-        |
-        v
-  background.js           (service worker: tab dedup, ext detection)
-        |
-        v
-  player.html + player.js (HLS fetch → MediaSource)
-        |
-        v
-  worker.js               (TS demux → MP4 mux via WASM)
-```
+**Changing a module** — `py -3.14 tools/harness/modulecheck.py <module> --chaine <channel> --cache`
+runs `tools/harness/probes/<module>.js` in the real player and prints verdicts. Every module has a
+probe, or a headless unit test in `tests/` (`m_Log`, `m_Settings`, `m_Events`, `m_GarbageCollector`,
+`m_Twitch`) — except `modules/startup.js`, the launcher, which every playback step exercises. The
+discipline used throughout phase 2:
+1. write or extend the probe from what the module must do, before touching it;
+2. run it on the current module — that is the reference;
+3. break the module on purpose and check the probe notices;
+4. change the module and require identical verdicts, line for line.
+Probe details must not vary between runs (no timestamps, no measured sizes).
+
+**Changing `worker.js`** — capture segments once with
+`py -3.14 tools/worker/tscapture.py --chaine <live channel>` (they stay out of git), then
+`node tools/worker/workercheck.js --fixtures tools/worker/fixtures/<channel>` compares every byte the
+worker sends back. A one-byte mistake in an MP4 box corrupts the picture and raises nothing.
+
+**Moving code between files** — `node tools/extract/extract.js <m_Module>` extracts one module into
+`modules/`, updates `player.html`, refuses a dirty tree, and verifies the move is pure;
+`node tools/extract/extractcheck.js --base HEAD~1 --head HEAD` re-checks a committed move.
+
+**Long playback** — `py -3.14 tools/harness/admeasure.py <channel> <minutes>` measures frames,
+drops, freezes, buffer and CPU over time. It flags a busy machine; compare only runs on the same
+variant (Twitch's own frame rate differs between qualities).
 
 ---
 
-## Development Commands
+## Gotchas
 
-There is **no build system**. This is a raw browser extension — edit files directly.
-
-| Task | How |
-|---|---|
-| Load extension | Chrome → `chrome://extensions` → "Load unpacked" → select repo root |
-| Reload after JS/HTML/CSS change | Click the reload icon on `chrome://extensions` |
-| Reload after `manifest.json` change | Remove and re-add the extension |
-| Reload background worker | Click "Service worker" link on the extension card |
-| Debug player | Open `player.html` tab → DevTools → Console / Sources |
-| Debug background | Click "Service worker" → DevTools |
-| Capture logs | Run `node tools/chrome-tools/fetch_logs.js` (requires Chrome remote debugging on port 9222) |
-| Git diff bundle (Windows) | Run `tools/git_changes_tool/gather_comparison_info.ps1` |
-
----
-
-## Code Style & Conventions
-
-### Language & Identifiers
-- The codebase uses **Russian (Cyrillic) identifiers** throughout — variable names, function names,
-  constants, and CSS class/ID names. This is intentional legacy style.
-- **Active translation effort is in progress** to rename all identifiers to English.
-  See `Documentation/legacy_code_translation_reference.md` for the full glossary.
-- See `.agent/rules/js-doc-master-template.md` for the mandatory JSDoc format when translating:
-  every function must document both its English alias and its original Russian name.
-- New code should use **English identifiers only**.
-
-### Hungarian-notation prefixes (Russian style)
-| Prefix | Meaning |
-|---|---|
-| `г_` / `g_` | Global variable |
-| `м_` / `m_` | Module-level variable |
-| `о` / `o` | Object |
-| `с` / `s` | String |
-| `ч` / `n` | Number (integer) |
-| `л` / `b` | Boolean |
-| `ф` / `f` | Float |
-| `цел` / `fn` | Function |
-
-### Formatting
-- No bundler, no TypeScript, no ES modules — plain ES2020 JavaScript
-- IIFE singleton pattern per module: `const м_НазваниеМодуля = (function() { ... })()`
-- Semicolons required; 2-space indentation
-- Use `chrome.*` APIs — **not** `browser.*` (WebExtensions polyfill is not included)
-- Avoid `eval()` — blocked by MV3 Content Security Policy
+1. **No bundler, no ES modules, no `eval`/`new Function`** (MV3 CSP). Plain classic scripts sharing
+   one global scope per page, loaded with `defer`.
+2. **Microtasks scheduled during load run before the next deferred script.** Anything a
+   `then`/`queueMicrotask` callback touches at load time must already be defined.
+3. **Finished media buffers are detached, not dropped** — `m_GarbageCollector` posts them to a closed
+   `MessagePort`. Letting them fall to the garbage collector makes memory saw-tooth on long sessions.
+4. **Two container paths.** MPEG-TS goes through `worker.js`; fMP4 (CMAF) skips it and uses the
+   `#EXT-X-MAP` initialisation segment (`m_InitSegment`) and the playlist's `CODECS`. `#EXT-X-MAP`
+   is not encryption — only `#EXT-X-KEY` with a method other than `NONE` is (`J0219`).
+5. **Twitch serves its variant list in a rotating order.** `m_Twitch.sortVariantList` sorts it by
+   bitrate; quality selection and the quality menu both depend on that order.
+6. **Inside the playlist parser, a failing `Check` is swallowed** — only `reject()` makes a list
+   unusable. An unsupported tag is silently ignored.
+7. **A changed initialisation segment must force a discontinuity**, even when nothing else changes —
+   the two ad-bypass streams each have their own, and mixing them leaves a black picture.
+8. **Hidden characters are part of the output.** Some separators are U+2002 (en space), not a
+   space; write them as `\u2002` so a copy cannot silently replace them.
+9. **`worker.js` has no DOM and no `chrome.*`.** It talks to the page only through the message kinds
+   `m_Transcoder` reads (segment, log records, crash report, stop message, buffer to discard).
+10. **UI text goes through `_locales/*/messages.json`** and `data-i18n` attributes, never hard-coded.
 
 ---
 
-## i18n System
+## Open points waiting for Luca
 
-All user-facing strings are externalized. **Never hardcode UI text.**
-
-- **Locale files:** `_locales/en/messages.json` and `_locales/ru/messages.json`
-- **HTML usage:** `<element data-i18n=F0539>` — sets innerHTML to message F0539
-- **HTML with tooltip:** `<element data-i18n=F0539^A0503>` — innerHTML + title attribute
-- **JS usage:** `м_i18n.GetMessage('F0539')` or the shorthand `Текст('F0539')`
-- **Key prefixes:** `F` = UI labels/buttons, `A` = tooltips/descriptions, `J` = short values/codes, `M` = metadata
-
-### Statistics Overlay Message Keys (F0539–F0573)
-
-| Key | English | Russian |
-|---|---|---|
-| F0539 | Resolution | Разрешение |
-| F0540 | Video | Видео |
-| F0541 | Audio | Звук |
-| F0542 | Server | Сервер |
-| F0543 | Queue, s | Очередь, с |
-| F0544 | Playlist, s | Список сегментов, с |
-| F0545 | Polling interval, s | Интервал опроса, с |
-| F0546 | Added segments | Добавлено сегментов |
-| F0547 | Added seconds | Добавлено секунд |
-| F0548 | Stream bit rate, Mbit/s | Битрейт трансляции, Мбит/с |
-| F0549 | Download rate, Mbit/s | Скорость загрузки, Мбит/с |
-| F0550 | Time to first byte, s | Ожидание ответа, с |
-| F0551 | Remux, ms | Преобразовано за, мс |
-| F0552 | Stream delay, s | Задержка трансляции, с |
-| F0554 | Watching duration | Продолжит-ть просмотра |
-| F0555 | Total downloaded, MB | Всего скачано, МБайт |
-| F0556 | Dropped frames | Пропущено кадров |
-| F0557 | Incomplete segments | Проблемных сегментов |
-| F0558 | Download errors | Ошибок скачивания |
-| F0559 | Buffer overflows | Переполнений буфера |
-| F0560 | Buffer underruns | Исчерпаний буфера |
-| F0573 | Buffer fullness, s | Заполненность буфера, с |
-
----
-
-## Active Task: Russian → English UI Text Replacement
-
-The statistics overlay (opened with the **S** key) still shows Russian. Two parts, with
-different states — both re-verified against the code on 2026-09-08:
-
-- **Element IDs: done.** All 58 IDs that `player.js` looks up resolve in `player.html` or
-  `report.html`, the 17 statistics-overlay IDs included. The crash the archived reports
-  investigated is fixed.
-- **Tooltips: done** (2026-09-08), after a false start recorded in
-  `Documentation/archive/HANDOFF.md`. That session marked them complete while 11 of the
-  22 active `title=` attributes still held Russian: the tooltips are multi-line, and the
-  comment meant to hide the Russian closed on its first line, so the attribute ended on
-  the Russian text and the English spilled into the page as loose text — five of them
-  showing a literal `-->` to the reader. Verified in the live DOM: 75 tooltips, none
-  carrying Cyrillic or a stray marker.
-
-Also outstanding: identifiers were never actually renamed. Measured on 2026-09-08, `player.js`
-is 9419 lines, of which 5448 contain Cyrillic, across 1722 distinct Cyrillic identifiers. The
-commented English echo the earlier "translation" added covers only 157 lines, so the file is not
-bloated by it — the debt is the identifiers themselves, not the size. See **Translation Plan** below.
-
----
-
-## Key Constraints & Gotchas
-
-1. **No build step** — do not introduce npm, webpack, or any bundler. The extension loads files
-   directly as listed in `manifest.json`.
-2. **MV3 CSP** — `eval()` and `new Function(string)` are blocked. Do not add them.
-3. **Service worker lifecycle** — `background.js` is a service worker; it has no persistent DOM
-   and can be terminated at any time. Do not store state in module globals there.
-4. **Web Worker scope** — `worker.js` has no access to `chrome.*` APIs or the DOM.
-5. **wasm.wasm is a binary** — never open or edit it as text. Never delete it.
-6. **Finished media buffers are detached, not dropped** — `m_GarbageCollector`
-   (`modules/garbage-collector.js`) posts each one to a closed `MessagePort` with a transfer list,
-   which frees it at the call. Do not replace that with letting buffers fall to the garbage
-   collector: on long sessions memory saw-tooths, and nothing throws to say so.
-   `tests/garbage-collector.test.js` asserts the detach.
-7. **gql_injection.js page context** — this script runs in the Twitch page context (not extension
-   context) to intercept the GQL token. Changes here affect token capture for follows/bonus claims.
-8. **Two container paths** — Twitch serves MPEG-TS on most channels and fMP4 (CMAF) on a
-   growing minority. TS segments go through `worker.js` to be demuxed and remuxed into fMP4;
-   fMP4 segments skip the worker entirely and are appended to the SourceBuffer as they are,
-   using the `#EXT-X-MAP` initialisation segment (see `m_InitSegment`) and the `CODECS`
-   attribute from the master playlist. `#EXT-X-MAP` is **not** encryption — only `#EXT-X-KEY`
-   with a `METHOD` other than `NONE` is, and that is what raises `J0219`. On the fMP4 path
-   the statistics overlay cannot show the values the TS demuxer derives (compression
-   parameters, per-segment frame rate, remux time); it reports the playlist's own values
-   instead. Restoring the rest means parsing the mp4 boxes.
-9. **Russian event-message names** — `background.js` listens for Cyrillic message names
-   (e.g., `ВставитьСторонниеРасширения`, `ЭтотКаналУжеОткрыт`). These must match exactly between
-   sender and listener. When translating, update **both** sides simultaneously.
-9. **Zombie Ads bug (open)** — expired `#EXT-X-DATERANGE` ad metadata is not filtered; this
-   causes black-screen flashes. The fix requires `START-DATE` timestamp validation in the HLS
-   parser inside `player.js`.
-10. **BTTV/FFZ IDs are hardcoded** — extension IDs for BetterTTV and FrankerFaceZ are hardcoded
-    in `background.js`. Only generic CDN versions load; authenticated features are unavailable.
-11. **i18n strings only** — all UI text must go through `_locales/*/messages.json` and
-    `data-i18n` attributes. Do not hardcode display strings in HTML or JS.
-12. **UTF-8 required** — all source files must be saved as UTF-8 (no BOM) to preserve Cyrillic
-    characters correctly.
-
----
-
-## Translation Plan: Russian UI Text → English
-
-### Root Cause
-The stats overlay and other UI panels display Russian because:
-1. `chrome.i18n.getMessage()` returns strings from whichever `_locales/{lang}/messages.json`
-   matches the browser's locale. Russian-locale Chrome → Russian strings displayed.
-2. Some labels inside `player.js` and `player.html` may also be **hardcoded in Russian** outside
-   of the i18n system (CSS class names, HTML IDs, data attributes written in Cyrillic).
-
-### What Needs to Change
-
-#### Phase 1 — Audit (Read Only)
-- [ ] Grep all `.js`, `.html`, `.css` files for Cyrillic characters outside of comments
-- [ ] Identify every hardcoded Russian string that is **displayed to the user** (not just identifiers)
-- [ ] Cross-reference each found string against `_locales/en/messages.json` to confirm an English
-      key exists
-- [ ] List any strings missing from the English locale
-
-#### Phase 2 — Fix Missing English Locale Entries
-- [ ] For every Russian string found without an English equivalent in `_locales/en/messages.json`,
-      add the English translation using the existing key naming convention (F/A/J prefix)
-- [ ] Mirror every new key in `_locales/ru/messages.json` as well (keep locales in sync)
-
-#### Phase 3 — Replace Hardcoded Russian Display Strings in HTML/JS
-- [ ] In `player.html`: replace any hardcoded Russian text content with `data-i18n=KEY` attributes
-- [ ] In `player.js`: replace any hardcoded Russian strings assigned to `.textContent`,
-      `.innerHTML`, or `.innerText` with `м_i18n.GetMessage('KEY')`
-- [ ] In `player.js`: replace any hardcoded Russian strings used in `alert()`, `console.log()`,
-      or user-visible error messages
-
-#### Phase 4 — CSS Class & ID Names (Cosmetic, Non-Breaking)
-- [ ] CSS class names and HTML IDs in Russian (e.g., `class=статистика-кнопка`, `id=статистика`)
-      are not user-visible but contribute to confusion
-- [ ] Rename cautiously — every reference in HTML, JS, and CSS must be updated atomically
-- [ ] Use `grep -r` / Grep tool to find all usages before renaming any class or ID
-
-#### Phase 5 — Code Identifier Translation (Long-Running)
-- [ ] Follow `Documentation/legacy_code_translation_reference.md` for the glossary
-- [ ] Follow `.agent/rules/js-doc-master-template.md` for JSDoc standards during translation
-- [ ] Translate module by module in this priority order:
-      1. `common.js` (shared utilities — highest leverage)
-      2. `content.js` (entry point — simpler)
-      3. `background.js` (service worker — small file)
-      4. `player.js` (largest — do in logical sections)
-      5. `worker.js` (self-contained — translate last)
-
-### Verification After Each Phase
-```
-# Confirm no user-visible Cyrillic remains in HTML
-grep -rn "[А-Яа-яЁё]" player.html
-
-# Confirm English locale has all keys referenced in HTML
-# (manual cross-reference)
-
-# Reload extension in Chrome and set browser language to English
-# Open a Twitch stream, press S — confirm all stats labels are in English
-```
-
----
-
-## Available Claude Skills
-
-All skills live in `CLAUDE/skills/`. Invoke them by name when the task matches.
-
-### Engineering
-| Skill | Use When |
-|---|---|
-| `diagnose` | Tracking down a hard bug — structured reproduce → hypothesize → instrument → fix loop |
-| `triage` | Managing GitHub issues — applying state labels (needs-triage, ready-for-agent, etc.) |
-| `tdd` | Writing new features test-first (red → green → refactor) |
-| `to-issues` | Breaking a spec or PRD into vertical-slice GitHub issues |
-| `to-prd` | Synthesizing a conversation into a formal PRD document |
-| `zoom-out` | Getting a higher-level architectural view of a module |
-| `improve-codebase-architecture` | Finding shallow modules, tight coupling, refactor opportunities |
-| `grill-with-docs` | Stress-testing a design decision against domain docs and ADRs |
-| `prototype` | Throwaway spike to validate a design before committing |
-
-### Productivity
-| Skill | Use When |
-|---|---|
-| `caveman` | Ultra-compressed communication (75% token reduction for long sessions) |
-| `grill-me` | Interviewing Claude about a plan before implementing |
-| `handoff` | Generating a compact session summary for the next agent |
-| `write-a-skill` | Creating a new reusable Claude skill |
-
-### Misc
-| Skill | Use When |
-|---|---|
-| `setup-pre-commit` | Configuring Husky + lint-staged + Prettier commit hooks |
-| `scaffold-exercises` | Building course/training exercise directory structures |
-
-### Documentation
-| Skill | Use When |
-|---|---|
-| `repo-doc-audit` | Full 18-section audit of repo documentation quality |
-
----
-
-## Git Workflow
-
-```
-main          — stable, production-ready
-feature/*     — new features
-fix/*         — bug fixes
-translate/*   — Russian→English translation PRs (keep separate from logic changes)
-```
-
-**Commit message format:**
-```
-type(scope): short description
-
-feat(player): add English fallback for hardcoded stats labels
-fix(i18n): add missing buffer-fullness key to en locale
-translate(common): rename module-level variables to English
-docs: add CLAUDE.md with architecture and translation plan
-```
-
-**Always push after committing:**
-```bash
-git push origin <branch>
-```
-
-**Token for HTTPS push:**
-Configure the remote URL with your personal access token (stored securely, not in this file).
-
----
-
-## Important Notes for AI Agents
-
-- **Read before editing.** `player.js` is ~8,000 lines. Always read the relevant section first.
-- **Stay within module boundaries.** Each IIFE module has a clear responsibility. Do not
-  move logic between modules without understanding the message-passing contracts.
-- **`player.js` is the only player source the extension loads.** `manifest.json` and
-  `player.html` reference it and nothing else. Two reference copies exist and have drifted
-  from it — `player-english-translating-test.js` and
-  `Documentation/Translation/player.js.copy-english-translating.js`. Both carry a header
-  banner saying so. Editing either changes nothing at runtime.
-- **Do not delete `player-english-translating-test.js`** — it is the active translation
-  reference/test file.
-- **Do not edit `wasm.wasm` as text.** It is a compiled binary.
-- **Do not introduce npm or Node.js dependencies.** The extension runs natively in the browser.
-- **Do not use ES modules (`import`/`export`).** MV3 content scripts do not support them.
-- **Check `.agent/rules/`** before adding JSDoc comments — there are mandatory formatting rules.
-- **Translation commits must be atomic per file.** Do not mix translation of identifiers with
-  logic changes in the same commit.
-- **Cyrillic event names must be renamed in pairs.** When renaming a `chrome.runtime.sendMessage`
-  call, find and rename the matching `chrome.runtime.onMessage` listener simultaneously.
-- **Run the extension after every non-trivial change** — there are no automated tests.
+- **Comment language.** Identifiers are English everywhere. Comments are not consistent: `m_Twitch`
+  and the first rewritten peripheral modules are commented in English, most media modules and
+  `worker.js` in French. Pick one and harmonise.
+- **The ad-free fallback stream** (`ListUpdatesWithoutAds` in `modules/playlist.js`) still has the
+  shape of an investigation: it clears the ad flag on every segment it receives, and writes a
+  `console.error` when it fails.
+- **`LoadSegment` in `modules/downloader.js`** tests `pReason.sReason` for 404/410 on a plain string,
+  so that branch never runs. Kept as it behaves; fixing it changes what happens to a vanished segment.
+- **`QuartileNumber`** in the ad log line has never been filled and prints `undefined`.

@@ -162,15 +162,25 @@ l'équilibrer. Mais il n'est plus vrai qu'aucun des quatre ne s'extrait sans les
 **Un seul agent.** Tout le dépôt : les modules, l'outillage, le harnais, `tests/`, la branche
 publique. Ce qui suit reste vrai sur le *contenu* du travail, et n'a plus de propriétaire.
 
-### Ce qui reste à faire, dans l'ordre où ça se tient
+### Où en est la phase — terminée le 14 septembre 2026
 
-La périphérie d'abord — elle est presque finie —, puis le cœur média, `worker.js` en dernier :
-c'est le démultiplexage MPEG-TS et le multiplexage fMP4, le morceau où une erreur d'un octet
-corrompt l'image sans rien lever.
+Tous les modules sont sortis de `player.js` et réécrits : la périphérie, puis le cœur média dans
+l'ordre mesuré en section 4 (`m_Twitch`, `m_Playlist`, `m_Controls` + `m_Player`), puis
+`worker.js`. `player.js` ne garde que les constantes partagées, la file de segments, `Segment`,
+`NumberInput` et `Terminate`.
 
-Pour le nœud, l'ordre mesuré en section 4 tient toujours : `m_Twitch`, puis `m_Playlist`, puis
-`m_Controls` + `m_Player` ensemble. Les deux premiers ne tiennent au reste que par un membre
-chacun ; le troisième est le seul vrai couple.
+Chaque réécriture a été comparée à l'extrait d'origine : verdicts identiques ligne à ligne sur
+sa sonde, mutations volontaires signalées, harnais complet au vert. Pour `worker.js`, la sonde
+est une comparaison octet par octet sur des segments réels (`tools/worker/`), désormais dans
+`verify.py --statique`.
+
+Trois défauts trouvés en route, corrigés chacun dans son propre commit après la réécriture :
+un segment fMP4 qui attendait ressortait en discontinuité (`m_Transcoder`) ; Twitch sert ses
+variantes dans un ordre tournant, et rien ne les triait — qualité par défaut tirée au sort, menu
+dans le désordre (`m_Twitch.sortVariantList`) ; un auto-test d'évènements renommait un seul des
+deux côtés depuis que l'émetteur et l'écouteur vivent dans deux fichiers.
+
+Ce qui attend une décision de Luca est listé à la fin de `CLAUDE.md`.
 
 ### Ce que le travail à deux a laissé, et qui sert encore
 
