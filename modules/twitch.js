@@ -582,9 +582,25 @@ const m_Twitch = (() => {
     Despite its name, sorts nothing: it notes the view-tracking address a variant list may carry
     and hands the list back. The name goes when m_Playlist, its only caller, is rewritten.
   */
+  /*
+    Twitch ne sert plus ses variantes dans un ordre fixe : d'une requete a l'autre la meme liste
+    arrive tournee, tantot la source en tete, tantot le 360p. Or tout ce qui suit suppose un debit
+    decroissant -- le choix par defaut prend « la premiere sous le debit garde », le repli sur un
+    nom connu prend la premiere, et le menu de qualite s'affiche dans cet ordre. Sans ce tri, un
+    nouveau spectateur recevait une qualite tiree au sort, et le menu changeait d'ordre a chaque
+    ouverture.
+
+    Le tri est stable : a debit egal, l'ordre du serveur est garde. Une variante sans debit lu
+    passe en dernier plutot que de rendre la comparaison incoherente.
+  */
   function sortVariantList(oVariantList) {
     if (oVariantList.sViewTrackingUrl) {
       _sViewTrackingUrl = oVariantList.sViewTrackingUrl;
+    }
+    if (Array.isArray(oVariantList.moVariants)) {
+      oVariantList.moVariants.sort(
+        (oA, oB) => (oB.nBitrate || 0) - (oA.nBitrate || 0)
+      );
     }
     return oVariantList;
   }

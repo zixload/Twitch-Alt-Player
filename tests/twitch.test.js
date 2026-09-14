@@ -726,6 +726,27 @@ await cas(async () => {
 	const oListe = { a: 1 };
 	ok(t.T.sortVariantList(oListe) === oListe, 'et la liste est rendue telle quelle');
 });
+await cas(async () => {
+	// Twitch sert la meme liste tournee d'une requete a l'autre : l'ordre recu ne dit rien.
+	const t = charger();
+	await preparer(t);
+	const variante = (sIdentifier, nBitrate) => ({ sIdentifier, nBitrate });
+	const oTournee = { moVariants: [
+		variante('360p30', 630000), variante('160p30', 230000), variante('audio_only', 160000),
+		variante('chunked', 6835974), variante('720p60', 3422999), variante('480p30', 1427999),
+	] };
+	const aTableau = oTournee.moVariants;
+	const oRendue = t.T.sortVariantList(oTournee);
+	ok(oRendue === oTournee && oRendue.moVariants === aTableau, 'le tri se fait sur place, dans la meme liste');
+	ok(oRendue.moVariants.map((o) => o.sIdentifier).join(' ') === 'chunked 720p60 480p30 360p30 160p30 audio_only',
+		'une liste recue tournee ressort par debit decroissant, la source en tete et le son seul en dernier');
+	const oEgaux = { moVariants: [variante('a', 1000), variante('b', 2000), variante('c', 1000)] };
+	t.T.sortVariantList(oEgaux);
+	ok(oEgaux.moVariants.map((o) => o.sIdentifier).join('') === 'bac', 'a debit egal, l ordre du serveur est garde');
+	const oSansDebit = { moVariants: [variante('x', undefined), variante('y', 500)] };
+	t.T.sortVariantList(oSansDebit);
+	ok(oSansDebit.moVariants[1].sIdentifier === 'x', 'une variante sans debit lu passe en dernier');
+});
 
 titre('8. Enregistrement et clips');
 await cas(async () => {

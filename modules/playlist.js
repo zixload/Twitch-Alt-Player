@@ -115,7 +115,8 @@ const m_Playlist = (() => {
       if (!oSelectedVariant) {
         if (sSavedId === "chunked" || sSavedId === "audio_only") {
           // Deux noms que Twitch garde stables : la source, et le son seul. Le premier de la
-          // liste est la meilleure qualite.
+          // liste est la meilleure qualite -- parce que m_Twitch.sortVariantList l'a triee par
+          // debit decroissant, pas parce que le serveur l'envoie ainsi : il ne le fait plus.
           oSelectedVariant = moVariants[0];
         } else {
           oSelectedVariant = moVariants.find(
