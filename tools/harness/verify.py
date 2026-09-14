@@ -23,11 +23,14 @@ de message.
                       au-dessus d'un faux navigateur, pousse dans les cas limites que trente
                       secondes de flux ne franchissent jamais -- le tour d'un anneau, une file
                       d'ecriture fusionnee dans un effacement. Un fichier muet est un echec.
-  9. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
- 10. console          errors.py : zero exception, zero console.error.
- 11. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
- 12. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
- 13. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
+  9. fil conversion   tools/worker/workercheck.js : worker.js de l'arbre contre celui du dernier
+                      commit, sur des segments reels captures, octet par octet, en WebAssembly et
+                      en asm.js. Sans segment capture (tscapture.py), l'etape le dit et passe.
+ 10. chaine           une chaine reellement en direct, sans quoi rien de ce qui suit ne prouve.
+ 11. console          errors.py : zero exception, zero console.error.
+ 12. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
+ 13. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
+ 14. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
 
 **Des references, pas des seuils.** Le controle croise et les reglages portent aujourd'hui des
 defauts connus. Exiger zero ferait echouer chaque lot jusqu'a leur correction, et un outil qui
@@ -274,6 +277,24 @@ def etape_tests():
     return u'%d fichiers\n    %s' % (len(fichiers), u'\n    '.join(resumes))
 
 
+def etape_fil_conversion():
+    """worker.js : une erreur d'un octet y corrompt l'image sans rien lever. On compare donc les octets."""
+    dossier = os.path.join(ROOT, 'tools', 'worker', 'fixtures')
+    captures = sorted(os.path.join(dossier, d) for d in os.listdir(dossier)
+                      if os.path.isfile(os.path.join(dossier, d, 'sequence.json'))) if os.path.isdir(dossier) else []
+    if not captures:
+        return (u'SAUTE : aucun segment capture. Les capturer avant de toucher a worker.js : '
+                u'py -3.14 tools/worker/tscapture.py --chaine <chaine en direct>')
+    resumes = []
+    for mode in ([], ['--asmjs']):
+        code, out = run(['node', os.path.join('tools', 'worker', 'workercheck.js'),
+                         '--fixtures', ','.join(captures), '--base', 'HEAD', '--head', 'worker.js'] + mode, 600)
+        if code != 0:
+            raise Echec(u'worker.js ne rend plus les memes octets que le dernier commit\n' + tail(out, 12))
+        resumes.append(out.strip().splitlines()[-1])
+    return u'%d capture(s)\n    %s' % (len(captures), u'\n    '.join(resumes))
+
+
 def en_direct(chaine):
     """L'apercu public d'une chaine hors ligne redirige vers une image « 404 » ; en direct, il est servi."""
     class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -408,6 +429,7 @@ def main():
         (u'ordre de construction', lambda: etape_construction()),
         (u'auto-test de l\'extraction', lambda: etape_autotest_extraction()),
         (u'tests unitaires', lambda: etape_tests()),
+        (u'fil de conversion', lambda: etape_fil_conversion()),
     ]
     if not STATIQUE:
         etapes += [
