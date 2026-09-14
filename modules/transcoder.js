@@ -70,7 +70,6 @@ const m_Transcoder = (() => {
         );
         oSegment.bDiscontinuity = true;
       }
-      _nLastLoaded = oSegment.nNumber;
 
       if (typeof oSegment.pData == "number" && _oWorkerThread === null) {
         /*
@@ -95,6 +94,15 @@ const m_Transcoder = (() => {
           nRemove = idx;
         }
       }
+
+      /*
+        Seulement maintenant, et jamais avant le `break` ci-dessus : `_nLastLoaded` veut dire « le
+        dernier segment pris en charge », pas « le dernier segment regarde ». Un segment gare est
+        reexamine au passage suivant ; s'il avait deja avance la numerotation, il se comparerait a
+        lui-meme et se croirait precede d'un trou -- et ressortirait en discontinuite, avec un
+        en-tete d'initialisation et une reinitialisation du decodeur dont il n'a pas besoin.
+      */
+      _nLastLoaded = oSegment.nNumber;
     }
 
     if (kRemove !== 0) {

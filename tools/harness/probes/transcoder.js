@@ -190,25 +190,20 @@
 			`v=${oAttente.pData.bHasVideo} a=${oAttente.pData.bHasAudio}`);
 
 		/*
-			DEFAUT EPINGLE, pas un comportement voulu.
-
-			Un segment gare est reexamine a chaque passage, et la numerotation est avancee avant
-			le test qui gare : au second passage, le module se compare a lui-meme et se croit
-			precede d'un trou. Tout fMP4 qui a attendu ressort donc en discontinuite, avec un
-			en-tete d'initialisation et une reinitialisation du decodeur dont il n'a pas besoin.
-
-			La preuve est dans le journal, qui annonce un trou entre un numero et lui-meme.
-
-			C'est epingle ici, pas corrige : la reecriture doit se comparer a l'existant. La
-			correction vient ensuite, dans son propre commit, avec cette verification retournee.
+			Attendre n'est pas un trou. Un segment gare est reexamine a chaque passage : si la
+			numerotation avancait des le premier regard, il se comparerait a lui-meme au second et
+			se croirait precede d'un trou -- et tout fMP4 ayant attendu ressortirait en
+			discontinuite, avec un en-tete d'initialisation et une reinitialisation du decodeur
+			dont il n'a pas besoin. Le journal le disait a sa facon, en annoncant un trou entre un
+			numero et lui-meme.
 		*/
-		dire('DEFAUT : un fMP4 qui a attendu ressort en discontinuite',
-			oAttente.bDiscontinuity === true, String(oAttente.bDiscontinuity));
-		dire('DEFAUT : et le journal annonce un trou entre un numero et lui-meme',
-			aDefauts.some((s) => /between 11 and 11/.test(s)),
-			(aDefauts.find((s) => /between 11 and 11/.test(s)) || 'aucune ligne de ce genre').slice(12));
-		dire('DEFAUT : il traine donc un en-tete d\'initialisation inutile',
-			oAttente.pData.hasOwnProperty('mbInitializationSegment'));
+		dire('un fMP4 qui a attendu ne ressort pas en discontinuite',
+			oAttente.bDiscontinuity === false, String(oAttente.bDiscontinuity));
+		dire('et le journal n\'annonce pas de trou entre un numero et lui-meme',
+			!aDefauts.some((s) => /between (\d+) and \1\b/.test(s)),
+			(aDefauts.find((s) => /between (\d+) and \1\b/.test(s)) || 'aucune ligne de ce genre').slice(12));
+		dire('hors discontinuite, pas d\'en-tete d\'initialisation',
+			!oAttente.pData.hasOwnProperty('mbInitializationSegment'));
 
 		const oMuet = segmentFmp4(12, true, 'avc1.4d401f');
 		g_maQueue.push(oMuet);
@@ -239,6 +234,17 @@
 		m_Transcoder.ConvertNextSegment();
 		dire('et il passe des que l\'en-tete arrive',
 			oGare.nProcessing === PROCESSING_CONVERTED, `etat ${oGare.nProcessing}`);
+
+		// Un vrai trou reste un vrai trou, meme quand le segment a du attendre en chemin.
+		pInitSegment = null;
+		const oTrouGare = segmentFmp4(oGare.nNumber + 7, false, 'avc1.4d401f,mp4a.40.2');
+		g_maQueue.push(oTrouGare);
+		m_Transcoder.ConvertNextSegment();
+		pInitSegment = new Uint8Array([0, 0, 0, 24, 102, 116, 121, 112]);
+		m_Transcoder.ConvertNextSegment();
+		dire('un segment qui a attendu ET qui suit un trou ressort bien en discontinuite',
+			oTrouGare.nProcessing === PROCESSING_CONVERTED && oTrouGare.bDiscontinuity === true,
+			`etat ${oTrouGare.nProcessing}, discontinuite ${oTrouGare.bDiscontinuity}`);
 
 		// --- Un trou dans la numerotation.
 		const oSaut = segmentFmp4(99, false, 'avc1.4d401f,mp4a.40.2');
