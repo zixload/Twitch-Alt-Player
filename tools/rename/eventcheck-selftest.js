@@ -39,6 +39,8 @@ const PAGE = 'player.html';
 */
 const SCRIPTS = '*.js';
 const PAGES = '*.html';
+// Quatrieme element d'une modification : l'appliquer dans chaque fichier qui porte le motif, pas le premier.
+const PARTOUT = true;
 const CASES = [
 	['panne documentee : prefixe du gabarit emetteur renomme seul',
 		{ 'sans-emetteur': ['window-opened-mainmenu'] },
@@ -103,7 +105,9 @@ const CASES = [
 		].join('\n')]]],
 	['renommage coherent des deux cotes : rien ne doit apparaitre',
 		{ rien: true },
-		[[SCRIPTS, /"player-paused"/g, '"player-pause-toggled"']]],
+		// PARTOUT : un renommage coherent touche l'emetteur et l'ecouteur, qui vivent dans deux fichiers
+		// depuis que les modules sont extraits. Mordre le premier fichier seulement casserait l'appariement.
+		[[SCRIPTS, /"player-paused"/g, '"player-pause-toggled"', PARTOUT]]],
 ];
 
 const pages = (dir) => fs.readdirSync(dir).filter((f) => /\.html$/i.test(f)).sort();
@@ -151,7 +155,7 @@ try {
 	console.log('');
 	CASES.forEach(([label, expected, edits], i) => {
 		const dir = snapshot('case' + (i + 1));
-		for (const [ou, re, to] of edits) {
+		for (const [ou, re, to, bPartout] of edits) {
 			if (re === null) { fs.writeFileSync(path.join(dir, ou), to, 'utf8'); continue; }
 			const candidats = ou === SCRIPTS ? scriptsCharges(dir) : ou === PAGES ? pages(dir) : [ou];
 			let mordu = false;
@@ -162,7 +166,7 @@ try {
 				if (after === before) continue;
 				fs.writeFileSync(p, after, 'utf8');
 				mordu = true;
-				break;
+				if (!bPartout) break;
 			}
 			if (!mordu) {
 				console.log('  INVALIDE  ' + (i + 1) + '. ' + label + ' — ' + re + ' ne se trouve dans aucun de : ' + candidats.join(' '));
