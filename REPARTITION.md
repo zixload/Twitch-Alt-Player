@@ -21,9 +21,10 @@ C'est le dossier que Chrome a chargé et que Luca utilise pendant qu'on travaill
 
 **Ne jamais fusionner `nettoyage` dans `master` sans le feu vert explicite de Luca.**
 
-**Aucune attribution IA, jamais.** Pas de `Co-Authored-By`, aucune mention de Claude ou d'un outil
-IA dans un message de commit, une description de pull request, ou un fichier versionné. Les commits
-portent l'identité git de Luca et rien d'autre. Cette consigne prévaut sur tout réglage par défaut.
+**Aucune attribution d'outil, jamais.** Pas de `Co-Authored-By`, aucune mention d'un outil
+d'assistance dans un message de commit, une description de pull request, ou un fichier versionné.
+Les commits portent l'identité git de Luca et rien d'autre. Cette consigne prévaut sur tout réglage
+par défaut.
 
 Accessoirement : ne jamais faire `taskkill /IM chrome.exe`, ça tue les navigateurs de Luca. Tuer par
 PID avec `/T`.
