@@ -1,27 +1,38 @@
 "use strict";
+/*
+	Le petit en-tete que reclame le chemin fMP4.
 
-/**
- * Cache of #EXT-X-MAP initialisation segments.
- *
- * An fMP4 (CMAF) playlist ships its `moov` box separately from the media segments,
- * and every run of segments needs it appended to the SourceBuffer first. Twitch
- * reuses one URI for a whole broadcast, so a single download serves the session.
- *
- * A failure here is not fatal: the segment is simply not ready yet, the transcoder
- * leaves its media segments queued, and the next call retries the download.
- */
+	Une liste de segments fMP4 annonce, par `#EXT-X-MAP`, l'adresse d'un segment d'initialisation :
+	quelques kilooctets de parametres -- codecs, resolution, tables de decodage -- sans lesquels les
+	segments media qui suivent ne veulent rien dire. Il ne change qu'a une discontinuite, et vingt
+	segments d'affilee reclament le meme. On le garde donc, par adresse.
+
+	**`Get` rend des octets ou null, jamais une promesse.** Le convertisseur l'appelle depuis une
+	boucle qui parcourt la file et doit rester synchrone : lui rendre une promesse l'obligerait a
+	rendre la main au milieu de la file, et l'ordre des segments ne survivrait pas. Quand les octets
+	manquent, il gare la file et s'arrete ; c'est ce module qui le rappelle une fois la descente
+	finie.
+
+	**Un echec efface l'entree.** C'est la seule chose a ne pas oublier ici : une entree laissee en
+	place apres une descente ratee marque l'adresse « en cours » pour toujours, et le flux se gele
+	sans que rien ne leve. Mieux vaut redescendre le meme en-tete deux fois.
+*/
 const m_InitSegment = (() => {
   const REQUEST_TIMEOUT = 20000;
 
-  /** @type {!Map<string, {data: ?Uint8Array}>} */
+  /*
+    Une entree par adresse. `data` reste null tant que les octets ne sont pas la : c'est la presence
+    de l'entree, pas celle des octets, qui dit qu'une descente est deja lancee.
+
+    @type {!Map<string, {data: ?Uint8Array}>}
+  */
   const _amCache = new Map();
 
   /**
-   * Returns the initialisation segment for a URI, starting its download the first
-   * time it is asked for.
+   * Rend le segment d'initialisation d'une adresse, et lance sa descente a la premiere demande.
    *
    * @param {string} sUrl
-   * @returns {?Uint8Array} The bytes, or null while the download is still running.
+   * @returns {?Uint8Array} Les octets, ou null tant que la descente n'est pas finie.
    */
   function Get(sUrl) {
     Check(IsNonEmptyString(sUrl));
@@ -44,32 +55,33 @@ const m_InitSegment = (() => {
           null,
           "initialisation segment",
           false,
+          // Une duree de zero : recu en octets, comme un segment, mais sans peser sur les
+          // mesures de debit, qui n'ont rien a apprendre d'un en-tete de quelques kilooctets.
           0
         )
         .then((bufData) => {
           oEntry.data = new Uint8Array(bufData);
-          m_Log.Wow(
-            `[InitSegment] Downloaded ${oEntry.data.length} bytes`
-          );
-          // Media segments were parked waiting for this; let them through.
+          m_Log.Wow(`[InitSegment] Downloaded ${oEntry.data.length} bytes`);
+          // Des segments media attendaient ces octets pour etre convertis : on les libere.
           m_Transcoder.ConvertNextSegment();
         })
         .catch((pReason) => {
-          // Drop the entry so the next segment retries rather than stalling forever.
-          _amCache.delete(sUrl);
-          m_Log.Oops(
-            `[InitSegment] Download failed: ${ExceptionToString(pReason)}`
-          );
+          ForgetAddress(sUrl, "Download failed", pReason);
         });
     } catch (pException) {
-      _amCache.delete(sUrl);
-      m_Log.Oops(
-        `[InitSegment] Could not start download: ${ExceptionToString(
-          pException
-        )}`
-      );
+      // Le telechargeur a refuse avant meme de partir -- adresse hors des domaines de Twitch,
+      // travail termine. La distinction vaut la peine d'etre gardee : elle dit, dans un rapport,
+      // si la requete a seulement rate ou si elle n'est jamais partie.
+      ForgetAddress(sUrl, "Could not start download", pException);
     }
     return null;
+  }
+
+  // L'adresse redevient neuve : le prochain segment qui la reclame relancera une descente, au
+  // lieu d'attendre indefiniment celle qui vient d'echouer.
+  function ForgetAddress(sUrl, sWhat, pReason) {
+    _amCache.delete(sUrl);
+    m_Log.Oops(`[InitSegment] ${sWhat}: ${ExceptionToString(pReason)}`);
   }
 
   return { Get };
