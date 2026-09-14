@@ -27,21 +27,44 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const CHECK = path.join(__dirname, 'crosscheck.js');
 const COPY = /\.(html|css|js|json)$/i;
 
+/*
+	« ou » est un ensemble de fichiers candidats, pas un fichier. Nommer player.js a casse ce
+	fichier le jour ou un module en est sorti : le motif n'y etait plus, et le cas se declarait
+	invalide alors que le controle allait tres bien. SCRIPTS cherche dans tous les scripts que les
+	pages chargent, PAGES dans tout le balisage, et un nom de fichier reste possible quand le cas
+	porte precisement sur lui -- une feuille de style, par exemple.
+*/
+const SCRIPTS = '*.js';
+const PAGES = '*.html';
+
+const pages = (dir) => fs.readdirSync(dir).filter((f) => /\.html$/i.test(f)).sort();
+const scriptsCharges = (dir) => {
+	const out = [];
+	for (const p of pages(dir)) {
+		const text = fs.readFileSync(path.join(dir, p), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+		for (const m of text.matchAll(/<script\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)/gi)) {
+			const f = m[1].replace(/^\.?\//, '');
+			if (!out.includes(f) && fs.existsSync(path.join(dir, f))) out.push(f);
+		}
+	}
+	return out;
+};
+
 const CASES = [
 	['panne documentee : name= lu dans un gabarit', 'concurrentdownloads',
-		[['player.html', /name=concurrentdownloads\b/g, 'name=parallelloads']]],
+		[[PAGES, /name=concurrentdownloads\b/g, 'name=parallelloads']]],
 	['classe lue dans un gabarit (script seul)', 'numberinput-cell',
-		[['player.js', /> \.numberinput-number`/, '> .numberinput-cell`']]],
+		[[SCRIPTS, /> \.numberinput-number`/, '> .numberinput-cell`']]],
 	['selecteur tenu dans une constante', 'topbar',
-		[['channelbar.js', /'#toppanel \[/, "'#topbar ["]]],
+		[[SCRIPTS, /'#toppanel \[/, "'#topbar ["]]],
 	['attribut data-* renomme au balisage seul', 'data-window-toggle',
-		[['player.html', /data-window-toggle/g, 'data-window-switch']]],
+		[[PAGES, /data-window-toggle/g, 'data-window-switch']]],
 	['classe renommee au CSS seul', 'windowopened',
 		[['player.css', /\.windowopen\b/g, '.windowopened']]],
 	['classe posee via un alias de classList', 'chatleft',
-		[['player.js', /"chatleft"/g, '"panelleft"']]],
+		[[SCRIPTS, /"chatleft"/g, '"panelleft"']]],
 	['id demande par GetNode nu', 'opennews',
-		[['player.html', /id=opennews\b/g, 'id=newsbutton']]],
+		[[PAGES, /id=opennews\b/g, 'id=newsbutton']]],
 	/*
 		Ce cas vient d'une vraie panne. Le lot de 64 noms avait renomme l'identifiant complet dans
 		le balisage sans voir que player.js le construit par prefixe, GetNode(`scrollindicator-${elScroll.id}`) :
@@ -55,9 +78,9 @@ const CASES = [
 	*/
 	["prefixe d'id casse, masque par une reparation (total inchange)", 'scrollindicator-',
 		(base) => {
-			const edits = [['player.html', /id=scrollindicator-newstext\b/g, 'id=scrollhint-newstext']];
+			const edits = [[PAGES, /id=scrollindicator-newstext\b/g, 'id=scrollhint-newstext']];
 			const cls = (base.extension.class || [])[0];
-			if (cls) edits.push(['player.html', /$/, '\n<i class=' + cls + '></i>\n']);
+			if (cls) edits.push([PAGES, /$/, '\n<i class=' + cls + '></i>\n']);
 			return edits;
 		}, { totalInchange: true }],
 ];
@@ -97,17 +120,24 @@ try {
 			failures++;
 			return;
 		}
-		for (const [file, re, to] of edits) {
-			const p = path.join(dir, file);
-			const before = fs.readFileSync(p, 'utf8');
-			const after = before.replace(re, to);
-			if (after === before) {
-				// La mutation doit mordre : sinon le cas ne prouve rien, et le fichier a derive.
-				console.log('  INVALIDE  ' + label + ' — ' + file + ' ne contient plus ' + re);
+		for (const [ou, re, to] of edits) {
+			const candidats = ou === SCRIPTS ? scriptsCharges(dir) : ou === PAGES ? pages(dir) : [ou];
+			let mordu = false;
+			for (const f of candidats) {
+				const p = path.join(dir, f);
+				const before = fs.readFileSync(p, 'utf8');
+				const after = before.replace(re, to);
+				if (after === before) continue;
+				fs.writeFileSync(p, after, 'utf8');
+				mordu = true;
+				break;
+			}
+			if (!mordu) {
+				// La mutation doit mordre quelque part : sinon le cas ne prouve rien.
+				console.log('  INVALIDE  ' + label + ' — ' + re + ' ne se trouve dans aucun de : ' + candidats.join(' '));
 				failures++;
 				return;
 			}
-			fs.writeFileSync(p, after, 'utf8');
 		}
 		const res = dangling(dir);
 		const appeared = [...res.names].filter((n) => !base.names.has(n));
