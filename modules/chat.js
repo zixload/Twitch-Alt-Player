@@ -1,86 +1,107 @@
 "use strict";
+/*
+	The chat panel: whether it is there, which side it is on, and how big it is.
 
+	**Three states, not two.** Unloaded removes the iframe; hidden keeps it loaded behind a class.
+	The difference is paid on reopening: a hidden chat comes back with its scrollback and its
+	connection, an unloaded one reconnects from nothing. Which of the two "closed" means is the
+	viewer's choice, kept in its own setting, and the close button honours it.
+
+	**The side in force is read from the layout, not from the setting.** In automatic mode the
+	stylesheet decides, from the shape of the window; so the module asks the computed flex-direction
+	of #playerandchat rather than guessing. That is also what lets a drag notice that the panel
+	changed side underneath it and give up rather than resize the wrong axis.
+
+	**Fullscreen borrows the panel and gives it back.** Entering hides a visible panel and remembers
+	what it was; leaving restores it. The borrowed state is never written to storage — otherwise
+	leaving fullscreen once would leave the chat closed for good.
+
+	**The size is stored when the drag ends, never during.** A drag sends dozens of steps; writing
+	each one would hammer chrome.storage with values the viewer has not settled on yet.
+*/
 const m_Chat = (() => {
-  let _nodeChat = null;
-  //! <iframe>
-  function GetPanelPosition() {
-    switch (
-    getComputedStyle(document.getElementById("playerandchat"))
-      .flexDirection
-    ) {
-      case "column-reverse":
-        return TOP_SIDE;
+  const NOT_IN_FULLSCREEN = -1;
 
-      case "row":
-        return RIGHT_SIDE;
+  let _elChat = null;
+  let _nStateBeforeFullscreen = NOT_IN_FULLSCREEN;
 
-      case "column":
-        return BOTTOM_SIDE;
-
-      case "row-reverse":
-        return LEFT_SIDE;
-
-      default:
-        Check(false);
+  // Le cote reellement en vigueur, tel que la mise en page l'applique.
+  function CurrentSide() {
+    switch (getComputedStyle(GetNode("playerandchat")).flexDirection) {
+    case "column-reverse":
+      return TOP_SIDE;
+    case "row":
+      return RIGHT_SIDE;
+    case "column":
+      return BOTTOM_SIDE;
+    case "row-reverse":
+      return LEFT_SIDE;
+    default:
+      return Check(false);
     }
   }
-  function InsertPanel() {
-    if (_nodeChat) {
+
+  function AttachPanel() {
+    if (_elChat) {
       return;
     }
     const sAddress = m_Twitch.openChat();
     m_Log.Here(`[Chat] Inserting iframe ${sAddress}`);
-    _nodeChat = document.createElement("iframe");
-    _nodeChat.src = sAddress;
-    _nodeChat.id = "chat";
-    _nodeChat.width = m_Settings.Get("nChatPanelWidth");
-    _nodeChat.height = m_Settings.Get("nChatPanelHeight");
-    GetNode("chatsize").insertAdjacentElement("afterend", _nodeChat);
+    _elChat = document.createElement("iframe");
+    _elChat.src = sAddress;
+    _elChat.id = "chat";
+    _elChat.width = m_Settings.Get("nChatPanelWidth");
+    _elChat.height = m_Settings.Get("nChatPanelHeight");
+    GetNode("chatsize").insertAdjacentElement("afterend", _elChat);
   }
-  function RemovePanel() {
-    if (_nodeChat) {
-      m_Log.Here(`[Chat] Removing iframe ${_nodeChat.src}`);
-      m_Twitch.closeChat();
-      _nodeChat.remove();
-      _nodeChat = null;
+
+  function DetachPanel() {
+    if (!_elChat) {
+      return;
     }
+    m_Log.Here(`[Chat] Removing iframe ${_elChat.src}`);
+    m_Twitch.closeChat();
+    _elChat.remove();
+    _elChat = null;
   }
+
+  // Changer l'adresse veut dire changer de chaine : le cadre se refait, il ne se renavigue pas.
   function ApplyUrl() {
-    if (_nodeChat) {
+    if (_elChat) {
       m_Log.Wow("[Chat] Changing iframe address");
-      RemovePanel();
-      InsertPanel();
+      DetachPanel();
+      AttachPanel();
     }
   }
+
   function ApplyPanelState() {
     const nState = m_Settings.Get("nChatState");
     m_Log.Wow(`[Chat] New panel state: ${nState}`);
     CancelPanelDrag();
     switch (nState) {
-      case CHAT_UNLOADED:
-        document.body.classList.add("hidechat");
-        RemovePanel();
-        break;
-
-      case CHAT_HIDDEN:
-        InsertPanel();
-        document.body.classList.add("hidechat");
-        break;
-
-      case CHAT_PANEL:
-        InsertPanel();
-        document.body.classList.remove("hidechat");
-        break;
-
-      default:
-        Check(false);
+    case CHAT_UNLOADED:
+      document.body.classList.add("hidechat");
+      DetachPanel();
+      break;
+    case CHAT_HIDDEN:
+      AttachPanel();
+      document.body.classList.add("hidechat");
+      break;
+    case CHAT_PANEL:
+      AttachPanel();
+      document.body.classList.remove("hidechat");
+      break;
+    default:
+      Check(false);
     }
     m_MediaQuery.updateSlowly();
   }
+
   function ApplyPanelPosition() {
     CancelPanelDrag();
     const oClasses = document.body.classList;
     if (m_Settings.Get("bAutoChatPosition")) {
+      // La feuille de style choisit selon la forme de la fenetre ; on lui donne ses deux preferences.
       oClasses.add("autochatposition");
       oClasses.toggle(
         "chattop",
@@ -91,18 +112,20 @@ const m_Chat = (() => {
         m_Settings.Get("nHorizontalChatPosition") === LEFT_SIDE
       );
     } else {
-      const nPosition = m_Settings.Get("nChatPanelPosition");
+      const nSide = m_Settings.Get("nChatPanelPosition");
       oClasses.remove("autochatposition");
-      oClasses.toggle("chattop", nPosition === TOP_SIDE);
-      oClasses.toggle("chatright", nPosition === RIGHT_SIDE);
-      oClasses.toggle("chatbottom", nPosition === BOTTOM_SIDE);
-      oClasses.toggle("chatleft", nPosition === LEFT_SIDE);
+      oClasses.toggle("chattop", nSide === TOP_SIDE);
+      oClasses.toggle("chatright", nSide === RIGHT_SIDE);
+      oClasses.toggle("chatbottom", nSide === BOTTOM_SIDE);
+      oClasses.toggle("chatleft", nSide === LEFT_SIDE);
     }
     m_MediaQuery.updateSlowly();
   }
+
   function SaveAndApplyClosedPanelState(nNewState) {
     m_Settings.Change("nClosedChatState", nNewState);
     const nState = m_Settings.Get("nChatState");
+    // Si le chat est deja ferme, le nouveau choix s'applique tout de suite plutot qu'a la prochaine fois.
     if (
       (nState === CHAT_UNLOADED || nState === CHAT_HIDDEN) &&
       nState !== nNewState
@@ -111,207 +134,172 @@ const m_Chat = (() => {
       ApplyPanelState();
     }
   }
+
   function TogglePanelState() {
     const bFullscreen = m_FullscreenMode.Enabled();
     switch (m_Settings.Get("nChatState")) {
-      case CHAT_UNLOADED:
-      case CHAT_HIDDEN:
-        m_Settings.Change("nChatState", CHAT_PANEL, bFullscreen);
-        break;
-
-      case CHAT_PANEL:
-        m_Settings.Change(
-          "nChatState",
-          bFullscreen
-            ? CHAT_HIDDEN
-            : m_Settings.Get("nClosedChatState"),
-          bFullscreen
-        );
-        break;
-
-      default:
-        Check(false);
+    case CHAT_UNLOADED:
+    case CHAT_HIDDEN:
+      // En plein ecran, l'ouverture est un emprunt : elle ne s'enregistre pas.
+      m_Settings.Change("nChatState", CHAT_PANEL, bFullscreen);
+      break;
+    case CHAT_PANEL:
+      m_Settings.Change(
+        "nChatState",
+        bFullscreen ? CHAT_HIDDEN : m_Settings.Get("nClosedChatState"),
+        bFullscreen
+      );
+      break;
+    default:
+      Check(false);
     }
     ApplyPanelState();
   }
+
   function TogglePanelPosition() {
     if (m_Settings.Get("nChatState") !== CHAT_PANEL) {
       return;
     }
-    let nPosition;
+    let nSide;
     if (m_Settings.Get("bAutoChatPosition")) {
+      // Quitter l'automatique en figeant le cote qu'on voit, pour que le tour parte de la.
       m_Settings.Change("bAutoChatPosition", false);
-      nPosition = GetPanelPosition();
+      nSide = CurrentSide();
     } else {
-      nPosition = m_Settings.Get("nChatPanelPosition");
+      nSide = m_Settings.Get("nChatPanelPosition");
     }
-    switch (nPosition) {
-      case TOP_SIDE:
-        m_Settings.Change("nChatPanelPosition", RIGHT_SIDE);
-        break;
-
-      case RIGHT_SIDE:
-        m_Settings.Change("nChatPanelPosition", BOTTOM_SIDE);
-        break;
-
-      case BOTTOM_SIDE:
-        m_Settings.Change("nChatPanelPosition", LEFT_SIDE);
-        break;
-
-      case LEFT_SIDE:
-        m_Settings.Change("nChatPanelPosition", TOP_SIDE);
-        break;
-
-      default:
-        Check(false);
+    switch (nSide) {
+    case TOP_SIDE:
+      m_Settings.Change("nChatPanelPosition", RIGHT_SIDE);
+      break;
+    case RIGHT_SIDE:
+      m_Settings.Change("nChatPanelPosition", BOTTOM_SIDE);
+      break;
+    case BOTTOM_SIDE:
+      m_Settings.Change("nChatPanelPosition", LEFT_SIDE);
+      break;
+    case LEFT_SIDE:
+      m_Settings.Change("nChatPanelPosition", TOP_SIDE);
+      break;
+    default:
+      Check(false);
     }
     ApplyPanelPosition();
   }
+
+  const IsVertical = (nSide) => nSide === RIGHT_SIDE || nSide === LEFT_SIDE;
+
+  // La place qui reste au chat : le conteneur, moins ce que le lecteur exige pour lui.
+  function MaxSize(nSide) {
+    const sDimension = IsVertical(nSide) ? "width" : "height";
+    const sMinimum = IsVertical(nSide) ? "minWidth" : "minHeight";
+    return (
+      Number.parseInt(getComputedStyle(GetNode("playerandchat"))[sDimension], 10) -
+      Number.parseInt(getComputedStyle(GetNode("player"))[sMinimum], 10)
+    );
+  }
+
+  function PanelSize(nSide) {
+    return Number.parseInt(
+      getComputedStyle(_elChat)[IsVertical(nSide) ? "width" : "height"],
+      10
+    );
+  }
+
+  /*
+    L'etat du glisser est range sur l'objet que le glisseur fait traverser les trois temps. C'est
+    son contrat : le meme objet du debut a la fin, et un seul glisser a la fois.
+  */
   function HandlePanelDrag(oParameters) {
     if (oParameters.bCancel) {
       return;
     }
-    const nPosition = GetPanelPosition();
-    if (
-      oParameters.nStep !== 1 &&
-      oParameters._nInitialPosition !== nPosition
-    ) {
+    const nSide = CurrentSide();
+    if (oParameters.nStep !== 1 && oParameters._nInitialPosition !== nSide) {
+      // La mise en page a bouge sous le glisser : on redimensionnerait le mauvais axe.
       m_Log.Oops(
-        `[Chat] Dragged panel position changed from ${oParameters._nInitialPosition} to ${nPosition}`
+        `[Chat] Dragged panel position changed from ${oParameters._nInitialPosition} to ${nSide}`
       );
       CancelPanelDrag();
       return;
     }
     switch (oParameters.nStep) {
-      case 1:
-        oParameters._nInitialPosition = nPosition;
-        if (nPosition === RIGHT_SIDE || nPosition === LEFT_SIDE) {
-          oParameters._nInitialSize = Number.parseInt(
-            getComputedStyle(_nodeChat).width,
-            10
-          );
-        } else {
-          oParameters._nInitialSize = Number.parseInt(
-            getComputedStyle(_nodeChat).height,
-            10
-          );
-        }
-        break;
-
-      case 2:
-        if (nPosition === RIGHT_SIDE || nPosition === LEFT_SIDE) {
-          if (oParameters.bChangedX) {
-            const nMaxSize =
-              Number.parseInt(
-                getComputedStyle(GetNode("playerandchat")).width,
-                10
-              ) -
-              Number.parseInt(
-                getComputedStyle(GetNode("player")).minWidth,
-                10
-              );
-            _nodeChat.width = Math.max(
-              Math.min(
-                nPosition === LEFT_SIDE
-                  ? oParameters._nInitialSize + oParameters.nDeltaX
-                  : oParameters._nInitialSize - oParameters.nDeltaX,
-                nMaxSize
-              ),
-              0
-            );
-            m_MediaQuery.updateSlowly();
-          }
-        } else if (oParameters.bChangedY) {
-          const nMaxSize =
-            Number.parseInt(
-              getComputedStyle(GetNode("playerandchat")).height,
-              10
-            ) -
-            Number.parseInt(
-              getComputedStyle(GetNode("player")).minHeight,
-              10
-            );
-          _nodeChat.height = Math.max(
-            Math.min(
-              nPosition === TOP_SIDE
-                ? oParameters._nInitialSize + oParameters.nDeltaY
-                : oParameters._nInitialSize - oParameters.nDeltaY,
-              nMaxSize
-            ),
-            0
-          );
-          m_MediaQuery.updateSlowly();
-        }
-        break;
-
-      case 3:
-        if (nPosition === RIGHT_SIDE || nPosition === LEFT_SIDE) {
-          m_Settings.Change(
-            "nChatPanelWidth",
-            Number.parseInt(getComputedStyle(_nodeChat).width, 10)
-          );
-        } else {
-          m_Settings.Change(
-            "nChatPanelHeight",
-            Number.parseInt(getComputedStyle(_nodeChat).height, 10)
-          );
-        }
-        break;
-
-      default:
-        Check(false);
+    case 1:
+      oParameters._nInitialPosition = nSide;
+      oParameters._nInitialSize = PanelSize(nSide);
+      break;
+    case 2:
+      ResizePanel(oParameters, nSide);
+      break;
+    case 3:
+      m_Settings.Change(
+        IsVertical(nSide) ? "nChatPanelWidth" : "nChatPanelHeight",
+        PanelSize(nSide)
+      );
+      break;
+    default:
+      Check(false);
     }
   }
+
+  function ResizePanel(oParameters, nSide) {
+    const bVertical = IsVertical(nSide);
+    if (bVertical ? !oParameters.bChangedX : !oParameters.bChangedY) {
+      return;
+    }
+    // Le panneau grandit vers le lecteur : a droite et en bas, l'ecart compte a l'envers.
+    const nDelta = bVertical ? oParameters.nDeltaX : oParameters.nDeltaY;
+    const bGrowsWithDelta = nSide === LEFT_SIDE || nSide === TOP_SIDE;
+    const nWanted = bGrowsWithDelta
+      ? oParameters._nInitialSize + nDelta
+      : oParameters._nInitialSize - nDelta;
+    _elChat[bVertical ? "width" : "height"] = Math.max(
+      Math.min(nWanted, MaxSize(nSide)),
+      0
+    );
+    m_MediaQuery.updateSlowly();
+  }
+
   function CancelPanelDrag() {
     m_Dragger.CancelDrag("chatsize");
   }
-  HandleFullscreenChange.nStateInNormalMode = -1;
+
   function HandleFullscreenChange(bEnabled) {
     if (bEnabled) {
-      if (
-        HandleFullscreenChange.nStateInNormalMode === -1
-      ) {
-        HandleFullscreenChange.nStateInNormalMode =
-          m_Settings.Get("nChatState");
-        if (
-          HandleFullscreenChange.nStateInNormalMode ===
-          CHAT_PANEL
-        ) {
-          m_Settings.Change("nChatState", CHAT_HIDDEN, true);
-          ApplyPanelState();
-        }
+      if (_nStateBeforeFullscreen !== NOT_IN_FULLSCREEN) {
+        return;
       }
-    } else if (
-      HandleFullscreenChange.nStateInNormalMode !== -1
-    ) {
-      if (
-        HandleFullscreenChange.nStateInNormalMode ===
-        CHAT_PANEL
-      ) {
-        m_Settings.Change("nChatState", CHAT_PANEL);
-        ApplyPanelState();
-      } else if (
-        m_Settings.Get("nChatState") === CHAT_HIDDEN &&
-        m_Settings.Get("nClosedChatState") === CHAT_UNLOADED
-      ) {
-        m_Settings.Change("nChatState", CHAT_UNLOADED);
+      _nStateBeforeFullscreen = m_Settings.Get("nChatState");
+      if (_nStateBeforeFullscreen === CHAT_PANEL) {
+        m_Settings.Change("nChatState", CHAT_HIDDEN, true);
         ApplyPanelState();
       }
-      HandleFullscreenChange.nStateInNormalMode = -1;
+      return;
     }
+    if (_nStateBeforeFullscreen === NOT_IN_FULLSCREEN) {
+      return;
+    }
+    if (_nStateBeforeFullscreen === CHAT_PANEL) {
+      m_Settings.Change("nChatState", CHAT_PANEL);
+      ApplyPanelState();
+    } else if (
+      m_Settings.Get("nChatState") === CHAT_HIDDEN &&
+      m_Settings.Get("nClosedChatState") === CHAT_UNLOADED
+    ) {
+      // Le chat a ete ouvert puis referme pendant le plein ecran : on rend le choix du spectateur.
+      m_Settings.Change("nChatState", CHAT_UNLOADED);
+      ApplyPanelState();
+    }
+    _nStateBeforeFullscreen = NOT_IN_FULLSCREEN;
   }
+
   function Restore() {
     ApplyPanelState();
     ApplyPanelPosition();
-    m_Events.AddHandler(
-      "dragger-drag-chatsize",
-      HandlePanelDrag
-    );
-    m_Events.AddHandler(
-      "fullscreen-changed",
-      HandleFullscreenChange
-    );
+    m_Events.AddHandler("dragger-drag-chatsize", HandlePanelDrag);
+    m_Events.AddHandler("fullscreen-changed", HandleFullscreenChange);
   }
+
   return {
     Restore,
     ApplyPanelPosition,
