@@ -1,7 +1,12 @@
-# Répartition entre les deux agents — phase 2 : la réécriture
+# Le chantier — phase 2 : la réécriture
 
-Écrit pour l'agent qui reprend le chantier sur un terminal séparé.
 Lire en entier avant de toucher quoi que ce soit.
+
+**Un seul agent depuis le 14 septembre 2026.** Cette note a d'abord servi à partager le travail
+entre deux agents qui travaillaient en parallèle ; ce partage n'existe plus, et tout ce qui en
+dépendait est marqué comme tel plutôt que supprimé — les mesures qui l'ont motivé restent vraies,
+et le journal des incursions raconte deux collisions qui ont chacune laissé un garde-fou dans
+l'outillage.
 
 La phase 1 — traduire — est terminée. Cette note remplace entièrement la précédente.
 
@@ -154,65 +159,36 @@ l'équilibrer. Mais il n'est plus vrai qu'aucun des quatre ne s'extrait sans les
 
 ## 5. Qui fait quoi
 
-### Agent B — l'outillage, la périphérie, et la preuve
+**Un seul agent.** Tout le dépôt : les modules, l'outillage, le harnais, `tests/`, la branche
+publique. Ce qui suit reste vrai sur le *contenu* du travail, et n'a plus de propriétaire.
 
-**D'abord, et avant toute réécriture :**
+### Ce qui reste à faire, dans l'ordre où ça se tient
 
-1. **Le contrôle des noms d'évènement interne.** *Fait : `tools/rename/eventcheck.js`, étapes 4
-   et 5 de `verify.py`.* C'est le trou connu, et il a déjà coûté une panne
-   silencieuse : le lecteur émettait `окно-открыто-mainmenu` pendant qu'il écoutait
-   `window-opened-mainmenu`, et l'ouverture du menu principal n'avertissait plus personne. Le
-   contrôle croisé ne voit que les noms DOM ; un nom d'évènement interne n'est ni dans le balisage
-   ni dans une feuille de style, et rien ne le vérifie aujourd'hui. Apparier
-   `m_Events.SendEvent(x)` et `m_Events.AddHandler(x)`, y compris quand `x` est construit par
-   préfixe dans un gabarit.
-2. **L'outil d'extraction** : sortir un module dans son fichier, mettre à jour `player.html`, et
-   refuser l'opération si le module appelle un autre module que `m_Log` ou `m_Events` pendant sa
-   construction — voir la règle d'ordre en section 3. *Fait : `tools/extract/extract.js`. Les
-   modules sortent dans `modules/<nom>.js` ; depuis `common.js`, dans `player.html` et dans les
-   scripts de contenu du manifeste, chacun à sa place. Mode d'emploi : `tools/extract/README.md`.*
-3. **La vérification de l'extraction** : un module extrait doit se comporter exactement comme
-   avant. Comparaison de l'arbre syntaxique du corps, à l'identique. *Fait :
-   `tools/extract/extractcheck.js`, lancé par `extract.js` avant d'écrire, et à relancer seul avant
-   de commiter (HEAD contre l'arbre de travail). Étapes 6 et 7 de `verify.py`.*
+La périphérie d'abord — elle est presque finie —, puis le cœur média, `worker.js` en dernier :
+c'est le démultiplexage MPEG-TS et le multiplexage fMP4, le morceau où une erreur d'un octet
+corrompt l'image sans rien lever.
 
-**Ensuite, les modules de périphérie**, du plus isolé au moins isolé :
+Pour le nœud, l'ordre mesuré en section 4 tient toujours : `m_Twitch`, puis `m_Playlist`, puis
+`m_Controls` + `m_Player` ensemble. Les deux premiers ne tiennent au reste que par un membre
+chacun ; le troisième est le seul vrai couple.
 
-`m_Notification` · `m_Window` · `m_Menu` · `m_MediaQuery` · `m_AutoHide` · `m_FocusManager` ·
-`m_Heartbeat` · `m_Appearance` · `m_Scale` · `m_Dragger` · `m_FullscreenMode` +
-`m_PictureInPicture` (ensemble) · `m_News` · `m_i18n` · `m_AudioDevice` · `m_Chat` ·
-`m_Statistics` · `m_Debug`
+### Ce que le travail à deux a laissé, et qui sert encore
 
-Environ 3300 lignes. B possède aussi, comme avant : `tools/`, `Documentation/`, `README.md`, et la
-branche publique.
+- **`extract.js` refuse de partir d'un arbre sale.** Né d'une collision : une extraction a emporté
+  le travail non commité d'un autre agent, et `git commit -- <chemins>` ne le dit pas. La règle
+  vaut pour un seul agent aussi — un commit d'extraction se fait seul, et ce qui traîne dans
+  l'arbre finit dedans.
+- **`verify.py` dit quand l'arbre bouge pendant qu'il mesure.** Né d'un doute : une étape de
+  lecture a échoué parce qu'un fichier était réécrit pendant que le navigateur le lisait. Un vert
+  qui porte sur deux arbres différents n'est pas un vert.
+- **Les auto-tests ne dépendent plus de l'avancement.** L'auto-test de l'extraction travaille sur
+  une fixture, celui des évènements cherche ses motifs dans tous les scripts chargés. Un contrôle
+  qui accompagne la phase ne peut pas dépendre de l'état de la phase.
 
-### Agent A — le cœur média
+### Journal des incursions — clos
 
-A possède aussi `tests/` : un test unitaire par module réécrit, lancé sans navigateur. Le harnais
-lit trente secondes de flux et ne franchit jamais les cas limites — le tour d'un anneau de 1500
-entrées, par exemple. Ces tests-là les franchissent.
-
-`m_Log` · `m_Events` · `m_Settings` · `m_GarbageCollector`, puis le nœud
-`m_Controls` + `m_Player` + `m_Playlist` + `m_Twitch`, puis `m_Downloader`,
-`m_Transcoder` + `m_InitSegment`, et enfin `worker.js`.
-
-Environ 8100 lignes, plus les 1767 de `worker.js`. `worker.js` vient en dernier : c'est le
-démultiplexage MPEG-TS et le multiplexage fMP4, le morceau où une erreur d'un octet corrompt
-l'image sans rien lever.
-
-### Ce que le déséquilibre implique
-
-B finit largement avant A. Quand c'est le cas, B enchaîne sur : la documentation du nouveau
-découpage, la préparation du dépôt public, et l'extension du harnais — en particulier un essai qui
-exerce le chat et le plein écran comme un utilisateur, et une référence de performance qui manque
-encore.
-
-**L'exception reste à sens unique :** B analyse, propose, outille. A applique sur les fichiers de A.
-Jamais l'inverse, sauf accord écrit ici.
-
-### Journal des incursions
-
-Consigne à tenir des deux côtés : ne pas modifier un fichier de l'autre sans l'écrire ici.
+Tenu tant que deux agents se partageaient le dépôt : ne pas modifier un fichier de l'autre sans
+l'écrire ici. Gardé pour ce qu'il raconte.
 
 - **2026-09-13, agent B, `player.js` et `player.html`, en cours.** Chaque extraction d'un module de
   B retire sa declaration de `player.js` et ajoute une balise `<script>` a `player.html`. C'est le
