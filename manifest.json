@@ -87,7 +87,8 @@
 		  "player.html",
 		  "content.css",
 		  "gql_injection.js",
-		  "content_injection.js"
+		  "content_injection.js",
+		  "manifest.png"
 		],
 		"matches": [
 		  "https://*.twitch.tv/*"

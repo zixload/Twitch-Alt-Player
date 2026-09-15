@@ -441,11 +441,7 @@ function insertOurButton() {
       `
 		<div class="tw5-autoredirect tw5-js-remove">
 			<button id="tw5-autoredirect">
-				<svg viewBox="0 0 128 128">
-					<g>
-						<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
-					</g>
-				</svg>
+				<span class="tw5-logo"></span>
 			</button>
 			<style>
 				.tw5-autoredirect
@@ -476,12 +472,15 @@ function insertOurButton() {
 				{
 					background-color: rgba(255, 255, 255, 0.15);
 				}
-				.tw5-autoredirect svg
+				.tw5-autoredirect .tw5-logo
 				{
-					fill: currentColor;
 					width: 75%;
+					aspect-ratio: 1;
+					background-color: currentColor;
+					-webkit-mask: url("${chrome.runtime.getURL("manifest.png")}") center / contain no-repeat;
+					mask: url("${chrome.runtime.getURL("manifest.png")}") center / contain no-repeat;
 				}
-				.tw5-forbidden svg
+				.tw5-forbidden .tw5-logo
 				{
 					opacity: .4;
 				}
@@ -504,11 +503,7 @@ function insertOurButton() {
       `
 		<div class="tw5-autoredirect tw5-js-remove">
 			<button id="tw5-autoredirect">
-				<svg viewBox="0 0 128 128">
-					<g>
-						<path d="M64 53h-19.688l-1.313-15.225h57l1.313-14.7h-74.55l3.937 44.888h51.712l-1.8 19.162-16.6 4.463l-16.8-4.463-1.1-11.813h-14.7l1.838 23.362 30.713 8.4l30.45-8.4 4.2-45.675z"/>
-					</g>
-				</svg>
+				<span class="tw5-logo"></span>
 			</button>
 			<div class="tw5-tooltip">
 				${m_i18n.GetMessage("F0600")}
@@ -541,12 +536,15 @@ function insertOurButton() {
 					background-color: var(--color-background-button-text-active);
 					color: var(--color-fill-button-icon-active);
 				}
-				.tw5-autoredirect svg
+				.tw5-autoredirect .tw5-logo
 				{
-					fill: currentColor;
 					width: 75%;
+					aspect-ratio: 1;
+					background-color: currentColor;
+					-webkit-mask: url("${chrome.runtime.getURL("manifest.png")}") center / contain no-repeat;
+					mask: url("${chrome.runtime.getURL("manifest.png")}") center / contain no-repeat;
 				}
-				.tw5-forbidden svg
+				.tw5-forbidden .tw5-logo
 				{
 					opacity: .4;
 				}
