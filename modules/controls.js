@@ -439,7 +439,6 @@ const m_Controls = (() => {
       m_Statistics.CloseWindow();
       break;
 
-    case "opennews":
     case "opennews2":
       m_News.OpenNews();
       break;

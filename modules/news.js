@@ -190,7 +190,6 @@ const m_News = (() => {
   function HandleLeftClick(oEvent) {
     // Fermer par « j'ai lu » : c'est le seul moment ou la version vue est enregistree.
     if (oEvent.sCallsign === "closenews" && ElementIsShown("postponenews")) {
-      ShowElement("opennews", false);
       m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
       return;
     }
@@ -225,12 +224,10 @@ const m_News = (() => {
     if (sSeenVersion === sNeverSeen) {
       Render(NO_DATED_ENTRIES, SHOW_ONCE);
       OpenWindow(false);
-      ShowElement("opennews", false);
       m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
     } else if (sSeenVersion !== EXTENSION_VERSION) {
       Render(VersionToTime(sSeenVersion), NO_MARKER);
       OpenWindow(true);
-      GetNode("opennews").classList.remove("unread");
     } else {
       Render(EVERY_DATED_ENTRY, NO_MARKER);
       OpenWindow(false);
@@ -246,12 +243,9 @@ const m_News = (() => {
     m_Log.Wow(
       `[News] Extension version changed from ${sSeenVersion} to ${EXTENSION_VERSION}`
     );
-    if (sSeenVersion === sNeverSeen || HasEntriesNewerThan(sSeenVersion)) {
-      ShowElement("opennews", true).classList.add("unread");
-    } else {
-      // Rien de neuf a montrer : on note la version sans rien allumer.
-      m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
-    }
+    // Plus d'icone de notification : on note la version comme vue ; les annonces restent
+    // ouvrables depuis le menu principal.
+    m_Settings.Change("sPreviousVersion", EXTENSION_VERSION);
   }
 
   return {

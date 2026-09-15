@@ -63,8 +63,10 @@ const CASES = [
 		[['player.css', /\.windowopen\b/g, '.windowopened']]],
 	['classe posee via un alias de classList', 'chatleft',
 		[[SCRIPTS, /"chatleft"/g, '"panelleft"']]],
-	['id demande par GetNode nu', 'opennews',
-		[[PAGES, /id=opennews\b/g, 'id=newsbutton']]],
+	// L'id cobaye doit exister : #opennews a ete retire (bouton de notification supprime),
+	// on prend un autre id demande par GetNode nu.
+	['id demande par GetNode nu', 'broadcastvariant',
+		[[PAGES, /id=broadcastvariant\b/g, 'id=broadcastvariantx']]],
 	/*
 		Ce cas vient d'une vraie panne. Le lot de 64 noms avait renomme l'identifiant complet dans
 		le balisage sans voir que player.js le construit par prefixe, GetNode(`scrollindicator-${elScroll.id}`) :
