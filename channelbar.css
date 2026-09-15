@@ -53,8 +53,8 @@
 /* ------------------------------------------------------------------------ the bar */
 
 #alt-channelbar {
-	--cb-ink: 240, 240, 244;
-	--cb-ink-dim: 154, 156, 166;
+	--cb-ink: 246, 247, 252;
+	--cb-ink-dim: 184, 188, 202;
 	--cb-line: 255, 255, 255;
 	--cb-accent: var(--sAccentColour, 168, 128, 255);
 	--cb-live: 236, 62, 62;
@@ -66,7 +66,8 @@
 	padding: .625rem .875rem;
 	font: 400 .8125rem/1.3 "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
 	color: rgb(var(--cb-ink));
-	background: rgba(var(--sBackgroundColour, 16, 16, 21), .55);
+	background: rgba(var(--sBackgroundColour, 16, 16, 21), .42);
+	text-shadow: 0 .0625rem .125rem rgba(0, 0, 0, .5);
 	backdrop-filter: blur(1.25rem) saturate(150%);
 	-webkit-backdrop-filter: blur(1.25rem) saturate(150%);
 	box-shadow: inset 0 .0625rem 0 rgba(var(--cb-line), .07);

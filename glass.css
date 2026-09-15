@@ -14,17 +14,24 @@
 */
 
 :root {
-	--gl-radius: .75rem;
-	--gl-radius-small: .5rem;
-	--gl-blur: blur(1.25rem) saturate(160%);
+	/*
+		Clear-glass skin: panels and windows are more transparent than a flat dark surface, so the
+		video reads through them. Legibility is bought back with a brighter ink and a soft text
+		shadow rather than with opacity -- the blur and a crisp hairline keep each surface defined.
+	*/
+	--gl-radius: .625rem;
+	--gl-radius-small: .375rem;
+	--gl-blur: blur(1.25rem) saturate(150%);
 	--gl-line: 255, 255, 255;
-	--gl-ink: 240, 240, 244;
-	--gl-ink-dim: 158, 160, 170;
+	--gl-ink: 246, 247, 252;
+	--gl-ink-dim: 184, 188, 202;
 	--gl-field: 26, 26, 32;
+	/* Shadow that keeps text legible where a surface is transparent over video. */
+	--gl-text-shadow: 0 .0625rem .125rem rgba(0, 0, 0, .55);
 
 	/* Panels sit over video, so they stay far lighter than free-floating windows. */
-	--gl-panel-alpha: calc(var(--nOpacity, .75) * .26);
-	--gl-window-alpha: calc(var(--nWindowOpacity, .85) * .74);
+	--gl-panel-alpha: calc(var(--nOpacity, .75) * .16);
+	--gl-window-alpha: calc(var(--nWindowOpacity, .85) * .5);
 
 	scrollbar-color: rgba(var(--gl-line), .2) transparent;
 }
@@ -40,20 +47,21 @@
 		rgba(var(--sBackgroundColour), var(--gl-panel-alpha));
 	backdrop-filter: var(--gl-blur);
 	-webkit-backdrop-filter: var(--gl-blur);
+	text-shadow: var(--gl-text-shadow);
 }
 
 .top {
-	box-shadow: inset 0 -.0625rem 0 rgba(var(--gl-line), .07);
+	box-shadow: inset 0 -.0625rem 0 rgba(var(--gl-line), .1);
 }
 
 .bottom {
-	box-shadow: inset 0 .0625rem 0 rgba(var(--gl-line), .07);
+	box-shadow: inset 0 .0625rem 0 rgba(var(--gl-line), .1);
 }
 
 /* ----------------------------------------------------------------- windows */
 
 .window {
-	border: .0625rem solid rgba(var(--gl-line), .1);
+	border: .0625rem solid rgba(var(--gl-line), .14);
 	border-radius: var(--gl-radius);
 	background:
 		linear-gradient(150deg,
@@ -63,8 +71,9 @@
 	backdrop-filter: var(--gl-blur);
 	-webkit-backdrop-filter: var(--gl-blur);
 	box-shadow:
-		0 1.25rem 2.5rem rgba(0, 0, 0, .45),
-		inset 0 .0625rem 0 rgba(var(--gl-line), .08);
+		0 1.25rem 2.5rem rgba(0, 0, 0, .5),
+		inset 0 .0625rem 0 rgba(var(--gl-line), .14);
+	text-shadow: var(--gl-text-shadow);
 }
 
 /* ------------------------------------------------------------------- menus */
