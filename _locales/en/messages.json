@@ -928,6 +928,15 @@
 	{
 		"message": "Link to recording of this broadcast. Use it to continue watching this broadcast later or to share an interesting moment with other people. You can also right click this link."
 	},
+	"F1932":
+	{
+		"message": "Watch from the start",
+		"description": "Punkt menu : lire dans le lecteur l'enregistrement du direct depuis son debut"
+	},
+	"A0926":
+	{
+		"message": "Play this broadcast from its beginning in the player, using the recording Twitch makes of the live stream while the live shrinks to the corner. Available only if the streamer keeps recordings."
+	},
 	"A0666":
 	{
 		"message": "Close"

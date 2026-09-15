@@ -343,6 +343,16 @@ const m_Controls = (() => {
       }
       break;
 
+    case "watchfromstart": {
+      // Rejouer le direct depuis son vrai debut : le VOD en cours, dans le lecteur Videos. Ouvrir la
+      // vue ferme le menu.
+      const sRecordingId = m_Twitch.GetCurrentRecordingId();
+      if (IsNonEmptyString(sRecordingId)) {
+        m_Videos.PlayRecordingFromStart(sRecordingId, GetNode("broadcasttitle").textContent);
+      }
+      break;
+    }
+
     case "togglepause":
       if (_nState === STATE_REPEAT) {
         m_Player.TogglePause();
@@ -846,6 +856,11 @@ const m_Controls = (() => {
       elItem.removeAttribute("href");
       m_Menu.setItemAvailability(elItem, false);
     }
+    // « Regarder depuis le début » ne peut jouer que s'il existe un VOD en cours du direct.
+    m_Menu.setItemAvailability(
+      GetNode("watchfromstart"),
+      IsNonEmptyString(m_Twitch.GetCurrentRecordingId())
+    );
   }
 
   function HandlePause(bPause) {

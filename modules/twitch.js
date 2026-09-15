@@ -58,6 +58,9 @@ const m_Twitch = (() => {
   // The broadcast being watched. Both are forgotten when it ends.
   let _sBroadcastId = "";
   let _sRecordingUrl = "";
+  // L'identifiant du VOD que Twitch enregistre du direct en cours, quand la chaine garde ses VODs.
+  // Il sert a rejouer la diffusion depuis son vrai debut dans le lecteur (m_Videos).
+  let _sRecordingId = "";
 
   let _sViewerId = "";
   let _sViewerLogin = "";
@@ -859,7 +862,8 @@ const m_Twitch = (() => {
           _sBroadcastId = sBroadcastId;
           startViewTracking();
           const sRecordingId = chain(oUser, "stream", "archiveVideo", "id");
-          _sRecordingUrl = IsNonEmptyString(sRecordingId) ? getRecordingUrl(sRecordingId) : "";
+          _sRecordingId = IsNonEmptyString(sRecordingId) ? sRecordingId : "";
+          _sRecordingUrl = _sRecordingId ? getRecordingUrl(_sRecordingId) : "";
           const sType = chain(oUser, "stream", "type");
           oMetadata.sBroadcastType = sType === "live" ? "live" : sType === "rerun" ? "replay" : null;
         }
@@ -895,7 +899,7 @@ const m_Twitch = (() => {
   }
 
   function StartCollectingBroadcastMetadata() {
-    _sBroadcastId = _sRecordingUrl = "";
+    _sBroadcastId = _sRecordingUrl = _sRecordingId = "";
     Check(!_oMetadataUpdateCancel);
     _oMetadataUpdateCancel = new PromiseCancellation();
     updateBroadcastMetadata(_oMetadataUpdateCancel, 0);
@@ -904,7 +908,7 @@ const m_Twitch = (() => {
   // A pause keeps the broadcast known, so a clip can still be made; an end forgets it.
   function FinishCollectingBroadcastMetadata(bBroadcastEnded) {
     if (bBroadcastEnded) {
-      _sBroadcastId = _sRecordingUrl = "";
+      _sBroadcastId = _sRecordingUrl = _sRecordingId = "";
     }
     if (_oMetadataUpdateCancel) {
       m_Log.Here(`[Twitch] Cancelling broadcast metadata update chain BroadcastEnded=${bBroadcastEnded}`);
@@ -1028,6 +1032,12 @@ const m_Twitch = (() => {
   }
 
   // --- Recording and clips ---
+
+  // L'identifiant du VOD en cours du direct, ou "" si la chaine ne garde pas ses VODs. m_Videos s'en
+  // sert pour rejouer la diffusion depuis le debut dans le lecteur.
+  function GetCurrentRecordingId() {
+    return _sRecordingId;
+  }
 
   function GetRecordingUrlForCurrentPosition() {
     if (_sRecordingUrl === "") {
@@ -1333,6 +1343,7 @@ const m_Twitch = (() => {
     FinishCollectingBroadcastMetadata,
     ChangeViewerChannelSubscription,
     GetRecordingUrlForCurrentPosition,
+    GetCurrentRecordingId,
     CreateClip,
     GetChannelVideos,
     GetChannelClips,

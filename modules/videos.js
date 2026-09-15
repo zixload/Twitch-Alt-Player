@@ -245,8 +245,9 @@ const m_Videos = (() => {
     StopVideo();
     const nGeneration = ++_nVideoGeneration;
     _oNowPlaying = oItem;
-    // A broadcast is long enough to resume; a clip is not.
-    _bResumePending = oItem.sKind === "video";
+    // A broadcast is long enough to resume; a clip is not. Watching the live from its start opts out:
+    // the whole point is to begin at the beginning, not where a past visit left off.
+    _bResumePending = oItem.sKind === "video" && !oItem.bFromStart;
     ShowElement(_elStage, true);
     _elNowPlaying.textContent = oItem.sTitle;
     _elNowPlaying.classList.remove("videos-error");
@@ -840,11 +841,23 @@ const m_Videos = (() => {
     _elStage.addEventListener("pointermove", HandleStageMove);
   }
 
+  /*
+    Rejouer le direct depuis son vrai debut. On ouvre la vue sur le VOD que Twitch enregistre du direct
+    en cours -- le meme lecteur que les autres videos, avec la barre complete -- pendant que le direct se
+    reduit dans le coin. Sans enregistrement (la chaine ne garde pas ses VODs), il n'y a rien a jouer.
+  */
+  function PlayRecordingFromStart(sId, sTitle) {
+    Check(IsNonEmptyString(sId));
+    Open();
+    PlayItem({ sKind: "video", sId: sId, sTitle: sTitle || "", bFromStart: true });
+  }
+
   return {
     Start,
     IsOpen,
     Open,
     Close,
     Toggle,
+    PlayRecordingFromStart,
   };
 })();
