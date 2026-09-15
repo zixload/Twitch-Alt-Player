@@ -1495,5 +1495,65 @@
 	"F1914":
 	{
 		"message": "The report is written to a file on this computer. Nothing is sent anywhere. The Twitch playback tokens are left out of it, because they carry your public IP address, your Twitch user id and your device id."
+	},
+	"F1920":
+	{
+		"message": "Past broadcasts"
+	},
+	"F1921":
+	{
+		"message": "Highlights"
+	},
+	"F1922":
+	{
+		"message": "Uploads"
+	},
+	"F1923":
+	{
+		"message": "Clips"
+	},
+	"F1924":
+	{
+		"message": "Back to live"
+	},
+	"A0920":
+	{
+		"message": "Close the videos and bring the live broadcast back to full size"
+	},
+	"A0921":
+	{
+		"message": "Back to the live broadcast"
+	},
+	"A0922":
+	{
+		"message": "Browse this channel's videos while the live broadcast keeps playing in a corner"
+	},
+	"F1925":
+	{
+		"message": "Videos"
+	},
+	"F1926":
+	{
+		"message": "Loading…"
+	},
+	"F1927":
+	{
+		"message": "No videos here yet."
+	},
+	"F1928":
+	{
+		"message": "The videos could not be loaded."
+	},
+	"F1929":
+	{
+		"message": "This video is for subscribers only."
+	},
+	"F1930":
+	{
+		"message": "This video could not be played."
+	},
+	"F1931":
+	{
+		"message": "views"
 	}
 }

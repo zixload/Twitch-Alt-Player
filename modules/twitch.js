@@ -1061,6 +1061,174 @@ const m_Twitch = (() => {
     })}`);
   }
 
+  // --- The channel's videos ---
+
+  /*
+    What the Videos view lists and plays. Every item comes out in one shape, whatever Twitch called
+    its fields: { sKind: "video" | "clip", sId (video id or clip slug), sTitle, nDuration in seconds,
+    kViews, nDate in milliseconds, sThumbnail, sGame, bRecording }.
+
+    The first page of a list needs no integrity token; every following page does, so the token is
+    only fetched when the viewer actually asks for more.
+  */
+  const VIDEOS_PER_PAGE = 24;
+  // An archive that is still being recorded has no thumbnail yet: Twitch sends a placeholder image.
+  const PROCESSING_THUMBNAIL = /\/_404\/404_processing/;
+
+  function GetChannelVideos(sType, sCursor) {
+    Check(sType === "ARCHIVE" || sType === "HIGHLIGHT" || sType === "UPLOAD");
+    return sendGqlRequest(null, `query($login: String!, $first: Int!, $after: Cursor, $type: BroadcastType!) {
+        user(login: $login) {
+          videos(first: $first, after: $after, type: $type, sort: TIME) {
+            edges {
+              cursor
+              node {
+                id
+                title
+                lengthSeconds
+                viewCount
+                publishedAt
+                status
+                previewThumbnailURL(width: 320, height: 180)
+                game {
+                  displayName
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+            }
+          }
+        }
+      }`, { login: _sChannelLogin, first: VIDEOS_PER_PAGE, after: sCursor || null, type: sType },
+    true, Boolean(sCursor), true, `channel videos ${sType}`)
+      .then((oResult) => readVideoPage(oResult, "videos", (o) => ({
+        sKind: "video",
+        sId: String(o.id),
+        sTitle: o.title || "",
+        nDuration: Number(o.lengthSeconds) || 0,
+        kViews: Number(o.viewCount) || 0,
+        nDate: Date.parse(o.publishedAt) || NaN,
+        sThumbnail: PROCESSING_THUMBNAIL.test(o.previewThumbnailURL || "") ? "" : o.previewThumbnailURL || "",
+        sGame: chain(o, "game", "displayName") || "",
+        bRecording: o.status === "RECORDING",
+      })));
+  }
+
+  // The channel's most watched clips of all time, the way twitch.tv lists them by default.
+  function GetChannelClips(sCursor) {
+    return sendGqlRequest(null, `query($login: String!, $first: Int!, $after: Cursor) {
+        user(login: $login) {
+          clips(first: $first, after: $after, criteria: { period: ALL_TIME, sort: VIEWS_DESC }) {
+            edges {
+              cursor
+              node {
+                slug
+                title
+                durationSeconds
+                viewCount
+                createdAt
+                thumbnailURL(width: 480, height: 272)
+                game {
+                  displayName
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+            }
+          }
+        }
+      }`, { login: _sChannelLogin, first: VIDEOS_PER_PAGE, after: sCursor || null },
+    true, Boolean(sCursor), true, "channel clips")
+      .then((oResult) => readVideoPage(oResult, "clips", (o) => ({
+        sKind: "clip",
+        sId: String(o.slug),
+        sTitle: o.title || "",
+        nDuration: Number(o.durationSeconds) || 0,
+        kViews: Number(o.viewCount) || 0,
+        nDate: Date.parse(o.createdAt) || NaN,
+        sThumbnail: o.thumbnailURL || "",
+        sGame: chain(o, "game", "displayName") || "",
+        bRecording: false,
+      })));
+  }
+
+  function readVideoPage(oResult, sList, fItem) {
+    const oList = chain(oResult, "data", "user", sList);
+    if (!IsObject(oList)) {
+      throw oResult.errors ? "Server could not complete the operation" : "No such channel";
+    }
+    const aoEdges = Array.isArray(oList.edges) ? oList.edges.filter((o) => IsObject(chain(o, "node"))) : [];
+    return {
+      aoItems: aoEdges.map((o) => fItem(o.node)),
+      sCursor: chain(oList, "pageInfo", "hasNextPage") && aoEdges.length !== 0 ? aoEdges[aoEdges.length - 1].cursor : null,
+    };
+  }
+
+  /*
+    The playlist address of a past broadcast, highlight or upload. The token is asked for in the
+    viewer's name, so a subscriber gets the subscriber-only ones; Chrome plays the playlist natively.
+    The playlist is requested once here: a refusal would otherwise reach the page as a black player
+    with a decoding error, when it simply means subscribers only.
+  */
+  function GetVideoPlaybackUrl(sVideoId) {
+    Check(IsNonEmptyString(sVideoId));
+    return sendGqlRequest(null, `query($id: ID!) {
+        videoPlaybackAccessToken(id: $id, params: { platform: "web", playerBackend: "mediaplayer", playerType: "site" }) {
+          value
+          signature
+        }
+      }`, { id: sVideoId }, true, false, true, "video playback token")
+      .then((oResult) => {
+        const sToken = chain(oResult, "data", "videoPlaybackAccessToken", "value");
+        const sSignature = chain(oResult, "data", "videoPlaybackAccessToken", "signature");
+        if (!IsNonEmptyString(sToken) || !IsNonEmptyString(sSignature)) {
+          throw "No playback token for this video";
+        }
+        const sAddress = `https://usher.ttvnw.net/vod/${encodeURIComponent(sVideoId)}.m3u8?${new URLSearchParams({
+          allow_source: "true",
+          allow_audio_only: "true",
+          player_backend: "mediaplayer",
+          playlist_include_framerate: "true",
+          p: String(Math.floor(Math.random() * 9999999)),
+          sig: sSignature,
+          token: sToken,
+        })}`;
+        return m_Downloader.Load(null, "GET", sAddress, LOAD_METADATA_NO_LONGER_THAN, null, null, "video playlist", false, "text")
+          .then(() => sAddress, (pReason) => {
+            throw pReason === `${RESPONSE_CODE}403` ? "SUBSCRIBERS_ONLY" : pReason;
+          });
+      });
+  }
+
+  // A clip is a plain MP4 file; the best quality comes first.
+  function GetClipPlaybackUrl(sSlug) {
+    Check(IsNonEmptyString(sSlug));
+    return sendGqlRequest(null, `query($slug: ID!) {
+        clip(slug: $slug) {
+          playbackAccessToken(params: { platform: "web", playerBackend: "mediaplayer", playerType: "site" }) {
+            value
+            signature
+          }
+          videoQualities {
+            quality
+            sourceURL
+          }
+        }
+      }`, { slug: sSlug }, true, false, true, "clip playback token")
+      .then((oResult) => {
+        const sToken = chain(oResult, "data", "clip", "playbackAccessToken", "value");
+        const sSignature = chain(oResult, "data", "clip", "playbackAccessToken", "signature");
+        const aoQualities = chain(oResult, "data", "clip", "videoQualities");
+        if (!IsNonEmptyString(sToken) || !IsNonEmptyString(sSignature) || !Array.isArray(aoQualities) || aoQualities.length === 0
+          || !IsNonEmptyString(aoQualities[0].sourceURL)) {
+          throw "No playback address for this clip";
+        }
+        return `${aoQualities[0].sourceURL}?${new URLSearchParams({ sig: sSignature, token: sToken })}`;
+      });
+  }
+
   // --- Third-party chat extensions ---
 
   /*
@@ -1128,6 +1296,10 @@ const m_Twitch = (() => {
     ChangeViewerChannelSubscription,
     GetRecordingUrlForCurrentPosition,
     CreateClip,
+    GetChannelVideos,
+    GetChannelClips,
+    GetVideoPlaybackUrl,
+    GetClipPlaybackUrl,
     sortVariantList,
     openChat,
     closeChat,

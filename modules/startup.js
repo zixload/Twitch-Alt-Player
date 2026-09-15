@@ -42,6 +42,7 @@ AddExceptionHandler(() => {
       m_Controls.StopWatchingBroadcast();
     }
     m_Statistics.Start();
+    m_Videos.Start();
   }
   if (window.top !== window) {
     return;

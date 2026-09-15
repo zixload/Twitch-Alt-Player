@@ -95,6 +95,8 @@ const m_Controls = (() => {
 
   const handleWheelPress = createElementEventHandler((oEvent) => {
     if (
+      // La vue des videos a sa propre video : le bouton du milieu n'y coupe pas le direct.
+      m_Videos.IsOpen() ||
       oEvent.button !== MIDDLE_BUTTON ||
       HasModifier(oEvent) ||
       // Le bouton du milieu sur un lien ouvre un onglet : on ne le lui prend pas.
@@ -109,6 +111,7 @@ const m_Controls = (() => {
   const handleWheelRotate = AddExceptionHandler((oEvent) => {
     // Au-dessus d'une liste qui defile -- le chat, les reglages --, la molette defile.
     if (
+      m_Videos.IsOpen() ||
       HasModifier(oEvent) ||
       ElementAtThisPointCanScroll(oEvent.clientX, oEvent.clientY)
     ) {
@@ -485,6 +488,21 @@ const m_Controls = (() => {
     // La premiere frappe, pas la repetition d'une touche tenue.
     const bFirstPress = bPress && !oEvent.repeat;
     const bReplay = _nState === STATE_REPEAT;
+
+    /*
+      La vue des videos ouverte, les raccourcis du direct s'effacent : l'espace, les fleches et le
+      volume appartiennent a la video qu'on regarde, pas au direct reduit dans le coin. Seul Echap
+      reste, pour refermer la vue.
+    */
+    if (m_Videos.IsOpen()) {
+      if (oEvent.keyCode === KEY_ESCAPE && !HasModifier(oEvent)) {
+        oEvent.preventDefault();
+        if (bFirstPress) {
+          m_Videos.Close();
+        }
+      }
+      return;
+    }
 
     switch (
       oEvent.keyCode +

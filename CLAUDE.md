@@ -51,6 +51,7 @@ There is no build step. Files load exactly as `manifest.json` and `player.html` 
 | `worker.js` | MPEG-TS demux → fMP4 mux, off the main thread |
 | `wasm.wasm`, `asmjs.js` | Start-code search for the worker (WebAssembly, asm.js fallback). **`wasm.wasm` is binary — never edit it** |
 | `sidebar.js`, `channelbar.js` | Followed/live channels and the channel bar; `sidebar.js` reads the auth cookie itself and never calls into `m_Twitch`, so a failure there cannot take the player down |
+| `modules/videos.js`, `videos.css` | The channel's Videos view: past broadcasts, highlights, uploads and clips, played in a second `<video>` (Chrome plays Twitch's VOD playlists natively, clips are MP4) while the live `#eye` is only restyled into a draggable corner miniature — never moved in the DOM, which would pause it |
 | `player.css`, `glass.css`, `sidebar.css` | `glass.css` changes colour, radius, blur and type only — never geometry the scripts measure |
 | `_locales/{en,ru}/messages.json` | UI strings |
 | `tests/` | Headless unit tests (`*.test.js`) and mutation self-tests (`*-selftest.js`) |
@@ -139,7 +140,12 @@ variant (Twitch's own frame rate differs between qualities).
    space; write them as `\u2002` so a copy cannot silently replace them.
 9. **`worker.js` has no DOM and no `chrome.*`.** It talks to the page only through the message kinds
    `m_Transcoder` reads (segment, log records, crash report, stop message, buffer to discard).
-10. **UI text goes through `_locales/*/messages.json`** and `data-i18n` attributes, never hard-coded.
+10. **While the Videos view is open, the live shortcuts step aside.** `m_Controls` lets every key
+    but Escape through and ignores the wheel and middle click, so they act on the video being watched.
+11. **Channel points are claimed through GraphQL** once a minute alongside minute-watched
+    (`m_Twitch.claimBonusChest`); `autoclaim.js` only covers twitch.tv pages. Pages after the first of
+    a video list, and the claim itself, need the integrity token.
+12. **UI text goes through `_locales/*/messages.json`** and `data-i18n` attributes, never hard-coded.
 
 ---
 

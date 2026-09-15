@@ -73,7 +73,7 @@ const aides = [
 	tranche(srcCommon, 'function combineGqlRequests(', '\n}\n', 'combineGqlRequests'),
 ].join('\n');
 // Les constantes aussi : une valeur qui change dans le code change ici.
-const constantes = [...srcPlayer.matchAll(/^const (SUBSCRIPTION_[A-Z_]+|LOAD_METADATA_NO_LONGER_THAN) = ([^;]+);/gm)]
+const constantes = [...srcPlayer.matchAll(/^const (SUBSCRIPTION_[A-Z_]+|LOAD_METADATA_NO_LONGER_THAN|RESPONSE_CODE) = ([^;]+);/gm)]
 	.map(m => `const ${m[1]} = ${m[2]};`).join('\n')
 	+ '\n' + (srcCommon.match(/^const DO_NOT_REDIRECT_ADDRESS = [^;]+;/m) || [ '' ])[0];
 
@@ -832,6 +832,80 @@ await cas(async () => {
 	t.T.FinishCollectingBroadcastMetadata(false);
 	await t.avancer(180000);
 	ok(t.requetes('channel points').length === 2, 'et elle s arrete avec le suivi de visionnage');
+});
+
+titre('7 ter. Videos de la chaine');
+const pageVideos = (aoNoeuds, bSuite) => ({
+	data: { user: { videos: { edges: aoNoeuds.map((o, i) => ({ cursor: `k${i}`, node: o })), pageInfo: { hasNextPage: bSuite } } } },
+});
+const noeudVideo = (oPlus = {}) => Object.assign({
+	id: 123, title: 'Rediff', lengthSeconds: 3723, viewCount: 45, publishedAt: '2026-01-15T12:00:00Z', status: 'RECORDED',
+	previewThumbnailURL: 'https://static-cdn.jtvnw.net/cf_vods/x/thumb0-320x180.jpg', game: { displayName: 'Jeu' },
+}, oPlus);
+await cas(async () => {
+	const t = charger();
+	await preparer(t, { aoCookies: [ cookieSpectateur(), cookieAppareil(), cookieJetonGql('JETON') ] });
+	t.sur('channel videos', (o, n) => n === 2 ? pageVideos([ noeudVideo({ id: 125 }) ], false) : pageVideos([ noeudVideo(), noeudVideo({ id: 124, status: 'RECORDING', previewThumbnailURL: 'https://vod-secure.twitch.tv/_404/404_processing_320x180.png', game: null }) ], true));
+	const oPage = await t.T.GetChannelVideos('ARCHIVE', null);
+	const oRequete = t.requetes('channel videos ARCHIVE')[0];
+	ok(oRequete && oRequete.oVariables.login === CHAINE && oRequete.oVariables.type === 'ARCHIVE' && oRequete.oVariables.after === null
+		&& oRequete.oVariables.first === 24, 'la premiere page des rediffusions de cette chaine, par vingt-quatre');
+	ok(oRequete && oRequete.oHeaders['Client-Integrity'] === void 0 && oRequete.oHeaders.Authorization === 'OAuth tok',
+		'au nom du spectateur, sans jeton d integrite : la premiere page n en demande pas');
+	const [ o1, o2 ] = oPage.aoItems;
+	ok(o1.sKind === 'video' && o1.sId === '123' && o1.sTitle === 'Rediff' && o1.nDuration === 3723 && o1.kViews === 45
+		&& o1.nDate === Date.parse('2026-01-15T12:00:00Z') && o1.sGame === 'Jeu' && o1.bRecording === false && /thumb0/.test(o1.sThumbnail),
+		'une video ressort sous la forme commune');
+	ok(o2.bRecording === true && o2.sThumbnail === '' && o2.sGame === '', 'une rediffusion en cours : marquee, sans l image d attente de Twitch, sans jeu');
+	ok(oPage.sCursor === 'k1', 'une suite existe : le curseur de la derniere');
+	const oSuite = await t.T.GetChannelVideos('ARCHIVE', 'k1');
+	const oRequete2 = t.requetes('channel videos ARCHIVE')[1];
+	ok(oRequete2 && oRequete2.oVariables.after === 'k1' && oRequete2.oHeaders['Client-Integrity'] === 'JETON',
+		'la page suivante part avec le curseur, et le jeton d integrite que Twitch exige alors');
+	ok(oSuite.sCursor === null, 'sans suite, pas de curseur');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t);
+	t.sur('channel clips', () => ({ data: { user: { clips: { edges: [ { cursor: 'c0', node: {
+		slug: 'Lent-Slug', title: 'Clip', durationSeconds: 42, viewCount: 9, createdAt: '2026-02-01T00:00:00Z', thumbnailURL: 'https://x/y.jpg', game: { displayName: 'Jeu' },
+	} } ], pageInfo: { hasNextPage: false } } } } }));
+	const oPage = await t.T.GetChannelClips(null);
+	const o = oPage.aoItems[0];
+	ok(o && o.sKind === 'clip' && o.sId === 'Lent-Slug' && o.nDuration === 42 && o.kViews === 9 && oPage.sCursor === null, 'un clip ressort sous la meme forme, identifie par son slug');
+	t.sur('channel videos', () => erreurGql('boom'));
+	let pRaison = null;
+	await t.T.GetChannelVideos('HIGHLIGHT', null).catch((p) => { pRaison = p; });
+	ok(typeof pRaison == 'string', 'une reponse en erreur est rejetee avec un motif lisible');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t);
+	t.sur('video playback token', () => ({ data: { videoPlaybackAccessToken: { value: '{"vod_id":123}', signature: 'SIG' } } }));
+	t.sur('video playlist', () => '#EXTM3U');
+	const sAdresse = await t.T.GetVideoPlaybackUrl('123');
+	const oUrl = new URL(sAdresse);
+	ok(oUrl.host === 'usher.ttvnw.net' && oUrl.pathname === '/vod/123.m3u8' && oUrl.searchParams.get('sig') === 'SIG'
+		&& oUrl.searchParams.get('token') === '{"vod_id":123}' && oUrl.searchParams.get('allow_source') === 'true', 'l adresse de la liste de la video, signee');
+	ok(t.requetes('video playback token')[0].oHeaders.Authorization === 'OAuth tok', 'le jeton est demande au nom du spectateur : un abonne voit les videos reservees');
+	ok(t.requetes('video playlist')[0] && t.requetes('video playlist')[0].sUrl === sAdresse, 'la liste est demandee une fois avant d etre rendue');
+	t.sur('video playlist', () => new Rejet('Server returned code 403'));
+	const t2 = charger();
+	await preparer(t2);
+	t2.sur('video playback token', () => ({ data: { videoPlaybackAccessToken: { value: 'v', signature: 's' } } }));
+	t2.sur('video playlist', () => new Rejet('Server returned code 403'));
+	let pRaison = null;
+	await t2.T.GetVideoPlaybackUrl('9').catch((p) => { pRaison = p; });
+	ok(pRaison === 'SUBSCRIBERS_ONLY', 'un refus 403 veut dire reservee aux abonnes, et le dit ainsi');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t);
+	t.sur('clip playback token', () => ({ data: { clip: { playbackAccessToken: { value: 'TOK', signature: 'SIG' },
+		videoQualities: [ { quality: '1080', sourceURL: 'https://production.assets.clips.twitchcdn.net/a.mp4' }, { quality: '720', sourceURL: 'https://x/b.mp4' } ] } } }));
+	const sAdresse = await t.T.GetClipPlaybackUrl('Lent-Slug');
+	ok(sAdresse === 'https://production.assets.clips.twitchcdn.net/a.mp4?sig=SIG&token=TOK', 'un clip se lit dans sa meilleure qualite, signee');
+	ok(t.requetes('clip playback token')[0].oVariables.slug === 'Lent-Slug', 'demande par son slug');
 });
 
 titre('8. Enregistrement et clips');

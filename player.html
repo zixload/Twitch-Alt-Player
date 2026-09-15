@@ -31,6 +31,7 @@
 <script src=modules/player.js defer></script>
 <script src=player.js defer></script>
 <script src=modules/controls.js defer></script>
+<script src=modules/videos.js defer></script>
 <script src=modules/playlist.js defer></script>
 <script src=modules/dragger.js defer></script>
 <script src=modules/fullscreen-mode.js defer></script>
@@ -43,6 +44,7 @@
 <link rel=stylesheet href=player.css>
 <link rel=stylesheet href=sidebar.css>
 <link rel=stylesheet href=channelbar.css>
+<link rel=stylesheet href=videos.css>
 <link rel=stylesheet href=glass.css>
 <body hidden>
 	<aside id=alt-sidebar hidden>
@@ -72,6 +74,31 @@
 		<div id=alt-stage>
 		<div id=player>
 			<video id=eye playsinline tabindex=-1></video>
+			<section id=videos hidden>
+				<div class=videos-header>
+					<div class=videos-tabs role=tablist>
+						<button type=button class=videos-tab role=tab data-videos-tab=ARCHIVE aria-selected=true data-i18n=F1920></button>
+						<button type=button class=videos-tab role=tab data-videos-tab=HIGHLIGHT aria-selected=false data-i18n=F1921></button>
+						<button type=button class=videos-tab role=tab data-videos-tab=UPLOAD aria-selected=false data-i18n=F1922></button>
+						<button type=button class=videos-tab role=tab data-videos-tab=CLIPS aria-selected=false data-i18n=F1923></button>
+					</div>
+					<button id=videos-close type=button class=alt-cb-button data-i18n=F1924^A0920></button>
+				</div>
+				<div id=videos-stage class=videos-stage hidden>
+					<video id=videos-video controls playsinline></video>
+					<div id=videos-nowplaying class=videos-nowplaying></div>
+				</div>
+				<div id=videos-status class=videos-status hidden></div>
+				<div id=videos-grid class=videos-grid></div>
+				<button id=videos-more type=button class="alt-cb-button videos-more" data-i18n=F1903 hidden></button>
+			</section>
+			<div id=videos-mini class=videos-mini data-i18n=^A0921 hidden>
+				<div class=videos-mini-move data-dragger=videos-mini data-i18n=^A0667>
+					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+						<use xlink:href=#svg-move />
+					</svg>
+				</div>
+			</div>
 			<svg class=spinner xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 				<use class=svg-busy xlink:href=#svg-busy />
 				<use class=svg-end xlink:href=#svg-end />
@@ -881,6 +908,12 @@ Possible causes of buffer overflow:
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 						<use xlink:href=#svg-channel />
 					</svg>
+				</button>
+				<button id=alt-cb-videos type=button class=alt-cb-button data-i18n=^A0922>
+					<svg xmlns=http://www.w3.org/2000/svg viewBox="0 0 24 24">
+						<path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v10h11V7z"/>
+					</svg>
+					<span data-i18n=F1925></span>
 				</button>
 				<button id=alt-cb-follow type=button class="alt-cb-button alt-cb-follow" hidden></button>
 				<button id=alt-cb-leave type=button class="alt-cb-button alt-cb-leave" data-i18n=^A0902>

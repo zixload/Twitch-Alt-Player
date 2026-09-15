@@ -1,0 +1,321 @@
+@charset "utf-8";
+
+/*
+	The channel's videos, laid over the video area while the live broadcast shrinks into a corner.
+
+	The live video element is never moved in the document -- moving it would pause it. It is only
+	restyled while body.videosopen: absolute in the bottom-right corner, offset by the two custom
+	properties modules/videos.js sets while the miniature is dragged. #videos-mini is a transparent
+	layer with exactly the same box, so a click on the miniature lands on it and not on the video.
+*/
+
+.videosopen #player {
+	--videos-mini-width: clamp(12rem, 28%, 22rem);
+	cursor: auto !important;
+}
+
+/* The live controls belong to the full-size broadcast; the view has its own way back. */
+.videosopen #player>.panel,
+.videosopen #player>.spinner,
+.videosopen #player>#notification {
+	display: none !important;
+}
+
+.videosopen #eye,
+.videos-mini {
+	top: auto;
+	left: auto;
+	right: 1rem;
+	bottom: 1rem;
+	width: var(--videos-mini-width);
+	height: auto;
+	aspect-ratio: 16 / 9;
+	transform: translate(var(--videos-mini-x, 0px), var(--videos-mini-y, 0px));
+	border-radius: .625rem;
+}
+
+.videosopen #eye {
+	z-index: 21;
+	object-fit: cover;
+	background: #000;
+	box-shadow: 0 .5rem 2rem rgba(0, 0, 0, .55), 0 0 0 .0625rem rgba(255, 255, 255, .12);
+}
+
+.videos-mini {
+	position: absolute;
+	z-index: 22;
+	cursor: pointer;
+}
+
+.videos-mini[hidden] {
+	display: none !important;
+}
+
+.videos-mini:hover {
+	box-shadow: inset 0 0 0 .125rem rgb(var(--sAccentColour, 168, 128, 255));
+}
+
+.videos-mini-move {
+	position: absolute;
+	top: .375rem;
+	left: .375rem;
+	width: 1.75rem;
+	height: 1.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: .375rem;
+	cursor: move;
+	color: #fff;
+	background: rgba(0, 0, 0, .55);
+	opacity: 0;
+	transition: opacity .15s ease;
+}
+
+.videos-mini:hover .videos-mini-move {
+	opacity: 1;
+}
+
+.videos-mini-move>svg {
+	width: 1rem;
+	height: 1rem;
+	fill: currentColor;
+	pointer-events: none;
+}
+
+/* ------------------------------------------------------------------------------ the view */
+
+#videos {
+	--vd-ink: 240, 240, 244;
+	--vd-ink-dim: 154, 156, 166;
+	--vd-line: 255, 255, 255;
+	--vd-accent: var(--sAccentColour, 168, 128, 255);
+	--vd-live: 236, 62, 62;
+	/* The close and « more » buttons borrow the channel bar's button style, and its colours. */
+	--cb-ink: var(--vd-ink);
+	--cb-ink-dim: var(--vd-ink-dim);
+	--cb-line: var(--vd-line);
+	--cb-accent: var(--vd-accent);
+	--cb-live: var(--vd-live);
+
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	overflow-y: auto;
+	padding: 0 1.25rem 1.5rem;
+	font: 400 .8125rem/1.35 "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+	color: rgb(var(--vd-ink));
+	background: rgb(var(--sBackgroundColour, 16, 16, 21));
+}
+
+#videos[hidden] {
+	display: none !important;
+}
+
+.videos-header {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin: 0 -1.25rem 1rem;
+	padding: .75rem 1.25rem;
+	background: rgba(var(--sBackgroundColour, 16, 16, 21), .9);
+	backdrop-filter: blur(1rem);
+	-webkit-backdrop-filter: blur(1rem);
+	box-shadow: inset 0 -.0625rem 0 rgba(var(--vd-line), .08);
+}
+
+.videos-tabs {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	gap: .25rem;
+	overflow-x: auto;
+}
+
+/*
+	Every button in the player gets a fixed height from player.css and a field-like border and
+	background from glass.css, hover included. The tabs and the cards are buttons too, so their rules
+	are anchored on #videos to win over both.
+*/
+#videos .videos-tab {
+	flex: none;
+	height: 2rem;
+	border: 0;
+	border-radius: .5rem;
+	padding: 0 .875rem;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	color: rgb(var(--vd-ink-dim));
+	background: transparent;
+	transition: background-color .15s ease, color .15s ease;
+}
+
+#videos .videos-tab:enabled:hover {
+	color: rgb(var(--vd-ink));
+	background: rgba(var(--vd-line), .08);
+}
+
+#videos .videos-tab[aria-selected="true"] {
+	color: rgb(var(--vd-ink));
+	background: rgba(var(--vd-accent), .22);
+	box-shadow: inset 0 -.125rem 0 rgb(var(--vd-accent));
+}
+
+/* ----------------------------------------------------------------------- what is playing */
+
+.videos-stage {
+	margin-bottom: 1.25rem;
+}
+
+.videos-stage[hidden] {
+	display: none !important;
+}
+
+#videos-video {
+	width: 100%;
+	max-height: 70vh;
+	aspect-ratio: 16 / 9;
+	display: block;
+	border-radius: .625rem;
+	background: #000;
+}
+
+.videos-nowplaying {
+	margin-top: .5rem;
+	font-size: .9375rem;
+	font-weight: 600;
+}
+
+.videos-nowplaying.videos-error {
+	color: rgb(var(--vd-live));
+}
+
+/* ------------------------------------------------------------------------------ the grid */
+
+.videos-status {
+	padding: 2rem 0;
+	text-align: center;
+	color: rgb(var(--vd-ink-dim));
+}
+
+.videos-status[hidden] {
+	display: none !important;
+}
+
+.videos-status.videos-error {
+	color: rgb(var(--vd-live));
+}
+
+.videos-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	gap: 1.125rem 1rem;
+}
+
+#videos .videos-card,
+#videos .videos-card:enabled:hover,
+#videos .videos-card:enabled:active {
+	min-width: 0;
+	height: auto;
+	display: flex;
+	flex-direction: column;
+	gap: .375rem;
+	border: 0;
+	border-radius: 0;
+	padding: 0;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	color: inherit;
+	background: none;
+}
+
+.videos-thumb {
+	position: relative;
+	display: block;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: .5rem;
+	background: rgba(var(--vd-line), .06);
+	transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.videos-card:hover .videos-thumb,
+.videos-card:focus-visible .videos-thumb {
+	transform: translate(.25rem, -.25rem);
+	box-shadow: -.25rem .25rem 0 rgb(var(--vd-accent));
+}
+
+.videos-thumb>img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: cover;
+}
+
+.videos-duration,
+.videos-live {
+	position: absolute;
+	bottom: .375rem;
+	border-radius: .25rem;
+	padding: 0 .3125rem;
+	font-size: .75rem;
+	line-height: 1.25rem;
+	font-variant-numeric: tabular-nums;
+	color: #fff;
+	background: rgba(0, 0, 0, .7);
+}
+
+.videos-duration {
+	right: .375rem;
+}
+
+.videos-live {
+	left: .375rem;
+	font-weight: 700;
+	background: rgb(var(--vd-live));
+}
+
+.videos-title {
+	overflow: hidden;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.videos-card:hover .videos-title {
+	color: rgb(var(--vd-accent));
+}
+
+.videos-meta {
+	overflow: hidden;
+	font-size: .75rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: rgb(var(--vd-ink-dim));
+}
+
+.videos-more {
+	margin: 1.5rem auto 0;
+}
+
+.videos-more[hidden] {
+	display: none !important;
+}
+
+/* The list must stay readable around the miniature. */
+.videosopen #videos {
+	padding-bottom: calc(1.5rem + var(--videos-mini-width) * 9 / 16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.videos-tab,
+	.videos-thumb,
+	.videos-mini-move {
+		transition: none;
+	}
+}
