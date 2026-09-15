@@ -21,6 +21,9 @@ debug\console\*.log
 # Images
 *.png
 !manifest.png
+!icon-16.png
+!icon-32.png
+!icon-48.png
 *.jpg
 debug\window.addEventListener unload - future depreciation.png
 

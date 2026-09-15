@@ -6,6 +6,9 @@
 	"version": "2025.5.28",
 	"description": "__MSG_M0001__",
 	"icons": {
+	  "16": "icon-16.png",
+	  "32": "icon-32.png",
+	  "48": "icon-48.png",
 	  "128": "manifest.png"
 	},
 	"author": "zix, d'apres Alexander Choporov (CoolCmd)",
