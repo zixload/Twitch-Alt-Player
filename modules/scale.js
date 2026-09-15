@@ -11,8 +11,9 @@
 	video reports a new time, and a width would put the page through layout each time; a transform
 	is composited and costs nothing. Four decimals is more than a screen can show.
 
-	**A click only means something during a replay.** Live, there is nowhere to go, and the click is
-	dropped rather than clamped to the end.
+	**A click seeks during a replay, and during the live DVR.** In a replay it moves within the frozen
+	recording; live, it rewinds into the buffer without cutting the stream, and a click near the end is
+	a return to the live edge. Only when the broadcast is fully stopped is a click dropped.
 
 	Where the click lands is measured on the bar's content box: the bar carries padding so the
 	handle can hang over its ends without leaving it, and the padding is not part of the timeline.
@@ -46,7 +47,8 @@ const m_Scale = (() => {
   }
 
   const HandleClick = AddExceptionHandler((oEvent) => {
-    if (m_Controls.GetState() !== STATE_REPEAT) {
+    const nState = m_Controls.GetState();
+    if (nState !== STATE_REPEAT && nState !== STATE_PLAYING) {
       return;
     }
     const elScale = oEvent.currentTarget;
@@ -62,7 +64,13 @@ const m_Scale = (() => {
       (oEvent.clientX + POINTER_OFFSET - nBarStart) / (nBarEnd - nBarStart);
     const nSeekTo = InsideWindow(nAlong * (_nEnd - _nStart) + _nStart);
     m_Log.Wow(`[Scale] Seeking to ${nSeekTo}`);
-    m_Player.SeekReplayTo(nSeekTo);
+    // En rediffusion, on se deplace dans l'enregistrement fige ; en direct, on rembobine dans le
+    // tampon sans couper le flux (DVR).
+    if (nState === STATE_PLAYING) {
+      m_Player.SeekLiveTo(nSeekTo);
+    } else {
+      m_Player.SeekReplayTo(nSeekTo);
+    }
   });
 
   /*

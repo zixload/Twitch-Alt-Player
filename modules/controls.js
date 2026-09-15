@@ -337,6 +337,12 @@ const m_Controls = (() => {
       ToggleWatchingBroadcast();
       break;
 
+    case "golive":
+      if (_nState === STATE_PLAYING) {
+        m_Player.JumpToLive();
+      }
+      break;
+
     case "togglepause":
       if (_nState === STATE_REPEAT) {
         m_Player.TogglePause();
@@ -846,6 +852,16 @@ const m_Controls = (() => {
     ChangeButton("togglepause", bPause);
   }
 
+  /*
+    La pastille du direct (DVR). Pleine et rouge quand on suit le bord ; creuse et cliquable quand le
+    spectateur a rembobine, pour revenir au direct d'un clic. m_Player previent a chaque bascule.
+  */
+  function HandleFollowingLive(bFollowing) {
+    const elGoLive = GetNode("golive");
+    elGoLive.classList.toggle("golive-live", bFollowing);
+    elGoLive.title = GetText(bFollowing ? "J0151" : "J0152");
+  }
+
   function HandleBufferingPresetChange() {
     UpdateSettingsWindow();
     m_Statistics.ClearHistory();
@@ -1008,6 +1024,7 @@ const m_Controls = (() => {
     m_Events.AddHandler("playlist-adend", handleAdEnd);
     m_Events.AddHandler("player-bufferoverflow", handleBufferOverflow);
     m_Events.AddHandler("player-paused", HandlePause);
+    m_Events.AddHandler("player-followinglive", HandleFollowingLive);
     m_Events.AddHandler("settings-presetchanged-buffering", HandleBufferingPresetChange);
     m_Events.AddHandler("twitch-channelmetadatareceived", ShowChannelMetadata);
     m_Events.AddHandler("twitch-viewermetadatareceived", ShowViewerMetadata);
@@ -1082,7 +1099,11 @@ const m_Controls = (() => {
 
     case STATE_LOADING:
     case STATE_PLAYBACK_START:
+      break;
+
     case STATE_PLAYING:
+      // On (re)vient au direct : la pastille montre d'emblee qu'on suit le bord.
+      HandleFollowingLive(true);
       break;
 
     case STATE_STOP:

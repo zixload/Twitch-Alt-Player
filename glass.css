@@ -266,6 +266,27 @@ kbd,
 	background-image: none;
 }
 
+/*
+	The live DVR pill. Following the edge, it is a solid red badge; once the viewer has rewound it goes
+	hollow and lights up on hover, an invitation to click back to live.
+*/
+#golive.golive-live {
+	color: #fff;
+	background: rgb(216, 44, 44);
+	box-shadow: 0 0 .5rem rgba(216, 44, 44, .45);
+}
+
+#golive:not(.golive-live) {
+	color: rgb(var(--gl-ink-dim));
+	background: rgba(var(--gl-line), .1);
+	box-shadow: inset 0 0 0 .0625rem rgba(var(--gl-line), .25);
+}
+
+#golive:not(.golive-live):hover {
+	color: rgb(var(--gl-ink));
+	background: rgba(var(--gl-line), .16);
+}
+
 .broadcasttype {
 	border-radius: 999rem;
 	padding: .125rem .4375rem;

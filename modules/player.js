@@ -88,6 +88,14 @@ const m_Player = (() => {
   // L'ecart entre l'horloge de l'element video et la position dans la diffusion.
   let _nBroadcastOffset = NaN;
   let _bSeekNeeded = false;
+  /*
+    Le DVR du direct. Suit-on le bord (true) ou le spectateur a-t-il rembobine dans le tampon deja
+    telecharge (false) ? Un rembobinage ne coupe rien : les segments continuent d'arriver et de
+    s'empiler ; on cesse seulement de se recaler sur le bord. La fenetre en arriere est ce que le
+    tampon retient deja -- la duree de rediffusion reglee -- si bien que rien de neuf n'est garde en
+    memoire pour l'obtenir.
+  */
+  let _bFollowingLive = true;
 
   // ------------------------------------------------------------------------------------------
   // Les deux comportements
@@ -103,6 +111,7 @@ const m_Player = (() => {
       if (!_bAsyncOperation) {
         StartPlayback(CheckPlaybackPosition(CHECK_SEGMENT_ADDITION));
       }
+      UpdateLiveScale();
     },
     HandleWaiting() {},
     HandlePlaying() {
@@ -120,6 +129,7 @@ const m_Player = (() => {
       if (!_oMediaElement.seeking && !_oMediaElement.paused && !_oMediaElement.ended) {
         CheckPlaybackPosition(CHECK_PLAYBACK);
       }
+      UpdateLiveScale();
     },
   };
 
@@ -378,6 +388,7 @@ const m_Player = (() => {
     ShowState("Wow", "Reloading player");
     m_Controls.ChangeState(nNewState);
     _oBehaviour = _oLiveBroadcast;
+    _bFollowingLive = true;
     _oMediaSourceBuffer = null;
     _bSeekNeeded = false;
     attachMediaSourceToMediaElement();
@@ -497,15 +508,31 @@ const m_Player = (() => {
     if (nCheckSource === CHECK_SEGMENT_ADDITION) {
       const nBufferSize = m_Settings.Get("nMaxBufferSize");
       const nOverflow = nBufferSize + m_Settings.Get("nBufferStretch");
-      if (nUnwatched <= nOverflow) {
+      /*
+        Le spectateur a rembobine (DVR) : on ne le ramene pas au bord. Les segments continuent de
+        s'empiler, il reste ou il regarde. On borne seulement la fenetre pour que le tampon devant lui
+        ne grossisse pas sans fin, et on se remet a suivre le bord des qu'il l'a rejoint vers l'avant.
+      */
+      if (!_bFollowingLive) {
+        const nWindow = Math.max(GetDvrWindow(), nOverflow);
+        if (nUnwatched <= nBufferSize) {
+          SetFollowingLive(true);
+        } else if (nUnwatched <= nWindow) {
+          return;
+        } else {
+          sSeekReason += `DVR window ${nUnwatched.toFixed(2)}s > ${nWindow}s, sliding. `;
+          nSeekTo = oBuffer.end(nLastRegion) - nWindow;
+        }
+      } else if (nUnwatched <= nOverflow) {
         return;
+      } else {
+        // Avant le premier demarrage, sauter n'est pas un incident : on ne le signale pas.
+        if (_nPlaybackStarted === PLAYBACK_STARTED) {
+          m_Events.SendEvent("player-bufferoverflow", nUnwatched - nBufferSize);
+        }
+        sSeekReason += `Player buffer overflow ${nUnwatched.toFixed(2)}s > ${nOverflow}s. `;
+        nSeekTo = oBuffer.end(nLastRegion) - nBufferSize - 0.1;
       }
-      // Avant le premier demarrage, sauter n'est pas un incident : on ne le signale pas.
-      if (_nPlaybackStarted === PLAYBACK_STARTED) {
-        m_Events.SendEvent("player-bufferoverflow", nUnwatched - nBufferSize);
-      }
-      sSeekReason += `Player buffer overflow ${nUnwatched.toFixed(2)}s > ${nOverflow}s. `;
-      nSeekTo = oBuffer.end(nLastRegion) - nBufferSize - 0.1;
     }
 
     if (nCheckSource === CHECK_PLAYBACK_START && _nPlaybackStarted !== PLAYBACK_STARTED) {
@@ -905,6 +932,81 @@ const m_Player = (() => {
   }
 
   // ------------------------------------------------------------------------------------------
+  // Le DVR du direct : rembobiner sans couper, revenir au bord
+
+  // La profondeur du DVR en arriere : ce que le tampon retient deja derriere la lecture. En mode
+  // automatique (une piste video n'est jamais retiree), tout est garde, donc rien ne borne la fenetre.
+  function GetDvrWindow() {
+    const nReplayDuration = m_Settings.Get("nReplayDuration2");
+    return nReplayDuration === AUTO_SETTING ? Infinity : nReplayDuration;
+  }
+
+  function IsFollowingLive() {
+    return _bFollowingLive;
+  }
+
+  function SetFollowingLive(bFollowing) {
+    if (_bFollowingLive === bFollowing) {
+      return;
+    }
+    _bFollowingLive = bFollowing;
+    m_Events.SendEvent("player-followinglive", bFollowing);
+  }
+
+  // Tenir la barre a jour pendant le direct : la fenetre va du debut du tampon au bord, la position
+  // vue suit l'horloge. Sans tampon encore, il n'y a rien a peindre.
+  function UpdateLiveScale() {
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length === 0) {
+      return;
+    }
+    m_Scale.SetStartAndEnd(oBuffer.start(0), oBuffer.end(oBuffer.length - 1));
+    m_Scale.SetWatched(_oMediaElement.currentTime);
+  }
+
+  /*
+    Rembobiner dans le tampon du direct. Le telechargement continue ; on cesse seulement de suivre le
+    bord. Un point tout au bord -- a moins d'un tampon du direct -- est un retour au direct.
+  */
+  function SeekLiveTo(nSeekTo) {
+    Check(m_Controls.GetState() === STATE_PLAYING);
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length === 0) {
+      return;
+    }
+    const nEdge = oBuffer.end(oBuffer.length - 1);
+    nSeekTo = Clamp(nSeekTo, oBuffer.start(0), nEdge);
+    if (nEdge - nSeekTo <= m_Settings.Get("nMaxBufferSize")) {
+      JumpToLive();
+      return;
+    }
+    SetFollowingLive(false);
+    ShowState("Wow", `DVR seeking to ${nSeekTo}`);
+    _oMediaElement.currentTime = nSeekTo;
+    if (_oMediaElement.paused) {
+      _oMediaElement.play().catch(STUB);
+    }
+    UpdateLiveScale();
+  }
+
+  // Sauter au bord du direct et s'y recaler. Le tampon normal de latence nous en separe.
+  function JumpToLive() {
+    Check(m_Controls.GetState() === STATE_PLAYING);
+    SetFollowingLive(true);
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length !== 0) {
+      const nEdge = oBuffer.end(oBuffer.length - 1);
+      const nSeekTo = Math.max(nEdge - m_Settings.Get("nMaxBufferSize"), oBuffer.start(0));
+      ShowState("Wow", `Returning to live edge, seeking to ${nSeekTo}`);
+      _oMediaElement.currentTime = nSeekTo;
+    }
+    if (_oMediaElement.paused) {
+      _oMediaElement.play().catch(STUB);
+    }
+    UpdateLiveScale();
+  }
+
+  // ------------------------------------------------------------------------------------------
   // La rediffusion
 
   function SeekReplayTo(nSeekTo) {
@@ -1051,6 +1153,9 @@ const m_Player = (() => {
     Reload: ReloadAndWaitForBufferFill,
     ApplyVolume,
     AddNextSegment,
+    IsFollowingLive,
+    SeekLiveTo,
+    JumpToLive,
     SeekReplayTo,
     SeekReplayBy,
     TogglePause,
