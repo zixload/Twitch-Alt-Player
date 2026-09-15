@@ -659,15 +659,40 @@ body:not([data-state="6"]) .fordvr {
 .scale-background {
 /* .scale-background */
 	flex: 1;
-	height: .75rem;
+	height: .25rem;
 	background: rgba(var(--sButtonColour), .3)
 	/* background: rgba(var(--sButtonColor),.3) */
+}
+/* La barre survolee s'epaissit un peu, l'affordance habituelle d'un rail de lecture. */
+#scale:hover .scale-background {
+	height: .375rem
 }
 #scale-watched {
 /* #scale-viewed */
 	background: currentColor;
 	height: 100%;
 	transform-origin: 0
+}
+/*
+	Barre de lecture pleine largeur, facon lecteur video : au direct (DVR, etat 6) comme en rediffusion
+	(etat 8), le rail passe sur sa propre ligne, au-dessus de la rangee de commandes. Le panneau bas,
+	d'ordinaire une seule rangee a hauteur fixe, s'ouvre alors sur deux lignes.
+*/
+body[data-state="6"] .panel.bottom,
+body[data-state="8"] .panel.bottom {
+	height: auto;
+	overflow: visible;
+	flex-wrap: wrap;
+	padding-top: .375rem;
+	row-gap: .125rem
+}
+body[data-state="6"] #scale,
+body[data-state="8"] #scale {
+	order: -1;
+	flex: 0 0 100%;
+	height: auto;
+	min-width: 0;
+	padding: .125rem .5rem
 }
 #notification {
 /* #notification */
