@@ -43,6 +43,7 @@
 		GetChannelVideos: m_Twitch.GetChannelVideos,
 		GetChannelClips: m_Twitch.GetChannelClips,
 		GetVideoPlaybackUrl: m_Twitch.GetVideoPlaybackUrl,
+		resolveVodQualities: TwitchNoSub.resolveVodQualities,
 	};
 	const bMuteReglage = m_Settings.Get('bMute');
 	const nVolumeReglage = m_Settings.Get('nVolume2');
@@ -137,8 +138,10 @@
 			cartes()[0] && cartes()[0].querySelector('.videos-duration').textContent);
 
 		// --------------------------------------------------- Reserve aux abonnes.
+		// Rien resolu par le port ET usher qui refuse : c'est ce qui donne le message « abonnes ».
 		m_Twitch.GetChannelVideos = oVrai.GetChannelVideos;
 		m_Twitch.GetChannelClips = oVrai.GetChannelClips;
+		TwitchNoSub.resolveVodQualities = () => Promise.resolve([]);
 		m_Twitch.GetVideoPlaybackUrl = () => Promise.reject('SUBSCRIBERS_ONLY');
 		elOnglet('ARCHIVE').click();
 		await attendre(() => cartes().length > 0, 15000);
@@ -147,6 +150,7 @@
 		dire('une rediffusion reservee aux abonnes le dit', !$('#videos-stage').hidden && $('#videos-nowplaying').classList.contains('videos-error')
 			&& $('#videos-nowplaying').textContent.trim() !== '');
 		dire('et le direct garde son son', eye.muted === bMuteReglage);
+		TwitchNoSub.resolveVodQualities = oVrai.resolveVodQualities;
 		m_Twitch.GetVideoPlaybackUrl = oVrai.GetVideoPlaybackUrl;
 
 		// --------------------------------------------------------- Lire une rediffusion.
@@ -154,11 +158,27 @@
 		const sTitre = elAJouer.querySelector('.videos-title').textContent;
 		elAJouer.click();
 		const elVideo = $('#videos-video');
-		dire('cliquer une rediffusion la lit en haut de la vue', await attendre(() => !$('#videos-stage').hidden && elVideo.currentTime > 2, 25000),
+		dire('cliquer une rediffusion la lit en haut de la vue', await attendre(() => !$('#videos-stage').hidden && elVideo.currentTime > 2, 30000),
 			`t=${elVideo.currentTime > 2 ? 'avance' : elVideo.currentTime} err=${elVideo.error && elVideo.error.code}`);
 		dire('avec son titre', $('#videos-nowplaying').textContent.includes(sTitre));
 		dire('le direct se tait pendant ce temps', eye.muted === true);
 		dire('et continue de jouer', !eye.paused);
+
+		// ------------------------------------------------------------- La qualite (port TwitchNoSub).
+		const elQualite = $('#videos-quality');
+		dire('un menu de qualite propose plusieurs qualites', !elQualite.hidden && elQualite.options.length > 1,
+			`${elQualite.options.length} qualite(s)`);
+		dire('la source est proposee', [...elQualite.options].some((o) => o.value === 'chunked'),
+			[...elQualite.options].map((o) => o.value).join(','));
+		if (elQualite.options.length > 1) {
+			const sSrcAvant = elVideo.getAttribute('src');
+			const sAutre = [...elQualite.options].map((o) => o.value).find((v) => v !== elQualite.value);
+			elQualite.value = sAutre;
+			elQualite.dispatchEvent(new Event('change'));
+			dire('changer de qualite change la source lue', await attendre(() => elVideo.getAttribute('src') !== sSrcAvant, 8000),
+				elVideo.getAttribute('src') !== sSrcAvant ? 'changee' : 'inchangee');
+			dire('et la lecture repart', await attendre(() => elVideo.currentTime > 1, 20000), `t=${elVideo.currentTime}`);
+		}
 
 		// Un vrai clip : un fichier MP4, par un autre chemin que les rediffusions.
 		elOnglet('CLIPS').click();
@@ -166,6 +186,7 @@
 		cartes()[0].click();
 		dire('cliquer un clip le lit aussi', await attendre(() => elVideo.currentTime > 2 && /\.mp4/.test(elVideo.getAttribute('src') || ''), 20000),
 			`err=${elVideo.error && elVideo.error.code}`);
+		dire('et un clip n\'a pas de menu de qualite', elQualite.hidden, `${elQualite.options.length} option(s)`);
 
 		// ------------------------------------------------------- Raccourcis et molette.
 		const nEtat = m_Controls.GetState();
@@ -202,6 +223,26 @@
 		elBouton.click();
 		await attendre(vueOuverte, 2000);
 		dire('rouvrir retrouve la liste sans lecture en cours', cartes().length > 0 && $('#videos-stage').hidden);
+
+		// ------------------------------------------------ Redimensionner et fermer la miniature.
+		const nLargeurAvant = rect(eye).width;
+		const rGrip = rect($('#videos-mini-resize'));
+		const gripEvt = (sType, nX) => $('#videos-mini-resize').dispatchEvent(new PointerEvent(sType, {
+			bubbles: true, cancelable: true, button: 0, clientX: nX, clientY: rGrip.top + 4,
+		}));
+		gripEvt('pointerdown', rGrip.left + 4);
+		document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: rGrip.left - 100, clientY: rGrip.top + 4 }));
+		document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+		await dormir(100);
+		dire('tirer la poignee agrandit la miniature', rect(eye).width > nLargeurAvant + 40,
+			`${Math.round(nLargeurAvant)} -> ${Math.round(rect(eye).width)}`);
+
+		$('#videos-mini-close').click();
+		await dormir(100);
+		dire('la croix ferme le direct dans le coin', document.body.classList.contains('videos-mini-closed')
+			&& eye.offsetParent === null, `closed=${document.body.classList.contains('videos-mini-closed')}`);
+		dire('mais la vue des videos reste ouverte', vueOuverte());
+
 		const eEchap = touche(27);
 		await attendre(() => !vueOuverte(), 2000);
 		dire('Echap ferme la vue', !vueOuverte() && eEchap.defaultPrevented);
@@ -213,7 +254,10 @@
 	} catch (oErreur) {
 		dire('la sonde va jusqu\'au bout', false, String((oErreur && oErreur.stack) || oErreur).slice(0, 300));
 	} finally {
-		Object.assign(m_Twitch, oVrai);
+		m_Twitch.GetChannelVideos = oVrai.GetChannelVideos;
+		m_Twitch.GetChannelClips = oVrai.GetChannelClips;
+		m_Twitch.GetVideoPlaybackUrl = oVrai.GetVideoPlaybackUrl;
+		TwitchNoSub.resolveVodQualities = oVrai.resolveVodQualities;
 		m_Settings.Change('nVolume2', nVolumeReglage);
 		if (document.body.classList.contains('videosopen') && $('#videos-close')) {
 			$('#videos-close').click();

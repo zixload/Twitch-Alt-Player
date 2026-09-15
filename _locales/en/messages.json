@@ -1555,5 +1555,17 @@
 	"F1931":
 	{
 		"message": "views"
+	},
+	"A0923":
+	{
+		"message": "Close the live broadcast in the corner"
+	},
+	"A0924":
+	{
+		"message": "Drag to resize"
+	},
+	"A0925":
+	{
+		"message": "Video quality"
 	}
 }

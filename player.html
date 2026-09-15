@@ -31,6 +31,7 @@
 <script src=modules/player.js defer></script>
 <script src=player.js defer></script>
 <script src=modules/controls.js defer></script>
+<script src=videos-twitchnosub.js defer></script>
 <script src=modules/videos.js defer></script>
 <script src=modules/playlist.js defer></script>
 <script src=modules/dragger.js defer></script>
@@ -86,6 +87,7 @@
 				</div>
 				<div id=videos-stage class=videos-stage hidden>
 					<video id=videos-video controls playsinline></video>
+					<select id=videos-quality class=videos-quality data-i18n=^A0925 hidden></select>
 					<div id=videos-nowplaying class=videos-nowplaying></div>
 				</div>
 				<div id=videos-status class=videos-status hidden></div>
@@ -98,6 +100,12 @@
 						<use xlink:href=#svg-move />
 					</svg>
 				</div>
+				<button id=videos-mini-close type=button class=videos-mini-close data-i18n=^A0923>
+					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+						<use xlink:href=#svg-close />
+					</svg>
+				</button>
+				<div id=videos-mini-resize class=videos-mini-resize data-i18n=^A0924></div>
 			</div>
 			<svg class=spinner xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
 				<use class=svg-busy xlink:href=#svg-busy />

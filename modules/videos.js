@@ -21,6 +21,7 @@ const m_Videos = (() => {
   const TABS = ["ARCHIVE", "HIGHLIGHT", "UPLOAD", "CLIPS"];
   // The miniature stays this far inside the player, whichever way it is dragged.
   const MINI_MARGIN = 8;
+  const MINI_MIN_WIDTH = 160;
 
   let _bOpen = false;
   let _sTab = TABS[0];
@@ -29,6 +30,9 @@ const m_Videos = (() => {
   // Increases with every new list or new video: a late answer to an older request is ignored.
   let _nListGeneration = 0;
   let _nVideoGeneration = 0;
+  // The qualities of the video currently playing, best first, and the one chosen.
+  let _aoQualities = [];
+  let _sQualityKey = "";
 
   let _elView = null;
   let _elGrid = null;
@@ -37,6 +41,7 @@ const m_Videos = (() => {
   let _elStage = null;
   let _elVideo = null;
   let _elNowPlaying = null;
+  let _elQuality = null;
   let _elMini = null;
   let _elPlayer = null;
 
@@ -52,6 +57,7 @@ const m_Videos = (() => {
     _bOpen = true;
     m_Window.close(false);
     document.body.classList.add("videosopen");
+    document.body.classList.remove("videos-mini-closed");
     ShowElement(_elView, true);
     ShowElement(_elMini, true);
     if (!_bLoaded) {
@@ -68,7 +74,7 @@ const m_Videos = (() => {
     StopVideo();
     ShowElement(_elView, false);
     ShowElement(_elMini, false);
-    document.body.classList.remove("videosopen");
+    document.body.classList.remove("videosopen", "videos-mini-closed");
   }
 
   function Toggle() {
@@ -214,33 +220,117 @@ const m_Videos = (() => {
     _elNowPlaying.textContent = oItem.sTitle;
     _elNowPlaying.classList.remove("videos-error");
     _elView.scrollTop = 0;
-    const oAddress = oItem.sKind === "clip"
-      ? m_Twitch.GetClipPlaybackUrl(oItem.sId)
-      : m_Twitch.GetVideoPlaybackUrl(oItem.sId);
-    oAddress
-      .then(AddExceptionHandler((sAddress) => {
-        if (nGeneration !== _nVideoGeneration || !_bOpen) {
-          return;
-        }
-        // The live broadcast keeps playing in its corner, silently.
-        document.getElementById("eye").muted = true;
-        _elVideo.src = sAddress;
-        _elVideo.play().catch((pReason) => {
-          m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
-        });
-      }))
-      .catch(AddExceptionHandler((pReason) => {
-        if (typeof pReason != "string") {
-          throw pReason;
-        }
-        if (nGeneration !== _nVideoGeneration) {
-          return;
-        }
-        m_Log.Oops(`[Videos] Could not play ${oItem.sKind} ${oItem.sId}. ${pReason}`);
-        _elNowPlaying.textContent = GetText(pReason === "SUBSCRIBERS_ONLY" ? "F1929" : "F1930");
-        _elNowPlaying.classList.add("videos-error");
-      }));
+
+    if (oItem.sKind === "clip") {
+      m_Twitch.GetClipPlaybackUrl(oItem.sId).then(WhenReady(nGeneration, PlayAddress), WhenFailed(nGeneration, oItem));
+      return;
+    }
+
+    /*
+      A past broadcast. TwitchNoSub (videos-twitchnosub.js) resolves every quality of the broadcast
+      from its storyboards path, which also reaches the ones reserved for subscribers, so it is tried
+      first: it gives the quality menu and the subscriber-only unlock at once. Usher, Twitch's own
+      signed playlist, is the fallback -- and the only path if the port is ever removed.
+    */
+    if (typeof TwitchNoSub !== "undefined") {
+      TwitchNoSub.resolveVodQualities(oItem.sId).then(
+        WhenReady(nGeneration, (aoQualities) => {
+          if (aoQualities.length !== 0) {
+            _aoQualities = aoQualities;
+            BuildQualityMenu();
+            PlayQuality(aoQualities[0].sKey);
+          } else {
+            PlayThroughUsher(oItem, nGeneration);
+          }
+        }),
+        WhenFailed(nGeneration, oItem)
+      );
+    } else {
+      PlayThroughUsher(oItem, nGeneration);
+    }
   }
+
+  function PlayThroughUsher(oItem, nGeneration) {
+    m_Twitch.GetVideoPlaybackUrl(oItem.sId).then(WhenReady(nGeneration, PlayAddress), WhenFailed(nGeneration, oItem));
+  }
+
+  // Wraps a success handler so a stale answer, or one that arrives after the view closed, is dropped.
+  function WhenReady(nGeneration, fHandle) {
+    return AddExceptionHandler((pValue) => {
+      if (nGeneration === _nVideoGeneration && _bOpen) {
+        fHandle(pValue);
+      }
+    });
+  }
+
+  // A refusal, shown in place of the video: subscriber-only broadcasts say so, the rest is generic.
+  function WhenFailed(nGeneration, oItem) {
+    return AddExceptionHandler((pReason) => {
+      if (typeof pReason != "string") {
+        throw pReason;
+      }
+      if (nGeneration !== _nVideoGeneration) {
+        return;
+      }
+      m_Log.Oops(`[Videos] Could not play ${oItem.sKind} ${oItem.sId}. ${pReason}`);
+      _elNowPlaying.textContent = GetText(pReason === "SUBSCRIBERS_ONLY" ? "F1929" : "F1930");
+      _elNowPlaying.classList.add("videos-error");
+    });
+  }
+
+  function PlayAddress(sAddress) {
+    // The live broadcast keeps playing in its corner, silently.
+    document.getElementById("eye").muted = true;
+    _elVideo.src = sAddress;
+    _elVideo.play().catch((pReason) => {
+      m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
+    });
+  }
+
+  // ------------------------------------------------------------------------------------------
+  // Quality
+
+  function BuildQualityMenu() {
+    _elQuality.textContent = "";
+    for (const oQuality of _aoQualities) {
+      const elOption = _elQuality.appendChild(document.createElement("option"));
+      elOption.value = oQuality.sKey;
+      elOption.textContent = oQuality.sName;
+    }
+    _elQuality.value = _aoQualities[0].sKey;
+    // Nothing to choose between one quality: no menu.
+    ShowElement(_elQuality, _aoQualities.length > 1);
+  }
+
+  // Switching quality keeps the position: the new playlist is a different encode of the same video.
+  function PlayQuality(sKey) {
+    const oQuality = _aoQualities.find((o) => o.sKey === sKey);
+    if (!oQuality) {
+      return;
+    }
+    _sQualityKey = sKey;
+    _elQuality.value = sKey;
+    const nTime = _elVideo.currentTime;
+    const bWasPlaying = !_elVideo.paused && !_elVideo.ended;
+    document.getElementById("eye").muted = true;
+    _elVideo.src = oQuality.sUrl;
+    _elVideo.addEventListener("loadedmetadata", function AtMetadata() {
+      _elVideo.removeEventListener("loadedmetadata", AtMetadata);
+      if (nTime > 0 && Number.isFinite(_elVideo.duration) && nTime < _elVideo.duration) {
+        _elVideo.currentTime = nTime;
+      }
+      if (bWasPlaying) {
+        _elVideo.play().catch(() => {});
+      }
+    });
+    _elVideo.play().catch((pReason) => {
+      m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
+    });
+  }
+
+  const HandleQualityChange = AddExceptionHandler(() => {
+    PlayQuality(_elQuality.value);
+  });
 
   function StopVideo() {
     ++_nVideoGeneration;
@@ -250,6 +340,9 @@ const m_Videos = (() => {
       // Without load(), the element keeps the last stream open and keeps downloading it.
       _elVideo.load();
     }
+    _aoQualities = [];
+    _sQualityKey = "";
+    ShowElement(_elQuality, false);
     ShowElement(_elStage, false);
     _elNowPlaying.textContent = "";
     m_Player.ApplyVolume();
@@ -317,9 +410,48 @@ const m_Videos = (() => {
   }
 
   const HandleMiniClick = AddExceptionHandler((oEvent) => {
-    if (oEvent.button === LEFT_BUTTON && !oEvent.target.closest("[data-dragger]")) {
+    // The move handle, the close button and the resize grip have their own jobs; the rest of the
+    // miniature brings the live broadcast back to full size.
+    if (
+      oEvent.button === LEFT_BUTTON &&
+      !oEvent.target.closest("[data-dragger]") &&
+      !oEvent.target.closest(".videos-mini-close") &&
+      !oEvent.target.closest(".videos-mini-resize")
+    ) {
       Close();
     }
+  });
+
+  // Closing the corner hides both the miniature and the live video behind it; it keeps decoding,
+  // muted and out of sight. "Back to live" brings everything back.
+  const HandleMiniClose = AddExceptionHandler((oEvent) => {
+    oEvent.stopPropagation();
+    document.body.classList.add("videos-mini-closed");
+  });
+
+  /*
+    A resize grip on the corner facing the video. The miniature is anchored bottom-right, so pulling
+    the grip left widens it. The width lives in one custom property; height follows from the 16:9 box.
+  */
+  const HandleResizeDown = AddExceptionHandler((oEvent) => {
+    if (oEvent.button !== LEFT_BUTTON) {
+      return;
+    }
+    oEvent.preventDefault();
+    oEvent.stopPropagation();
+    const nStartX = oEvent.clientX;
+    const nStartWidth = _elMini.offsetWidth;
+    const nMaxWidth = _elPlayer.clientWidth - 2 * MINI_MARGIN;
+    const AtMove = AddExceptionHandler((oMove) => {
+      const nWidth = Clamp(nStartWidth + (nStartX - oMove.clientX), MINI_MIN_WIDTH, nMaxWidth);
+      _elPlayer.style.setProperty("--videos-mini-width", `${nWidth}px`);
+    });
+    const AtUp = AddExceptionHandler(() => {
+      document.removeEventListener("pointermove", AtMove);
+      document.removeEventListener("pointerup", AtUp);
+    });
+    document.addEventListener("pointermove", AtMove);
+    document.addEventListener("pointerup", AtUp);
   });
 
   // ------------------------------------------------------------------------------------------
@@ -334,6 +466,7 @@ const m_Videos = (() => {
     _elStage = GetNode("videos-stage");
     _elVideo = GetNode("videos-video");
     _elNowPlaying = GetNode("videos-nowplaying");
+    _elQuality = GetNode("videos-quality");
     _elMini = GetNode("videos-mini");
 
     GetNode("alt-cb-videos").addEventListener("click", AddExceptionHandler(Toggle));
@@ -342,7 +475,10 @@ const m_Videos = (() => {
     for (const el of _elView.querySelectorAll("[data-videos-tab]")) {
       el.addEventListener("click", AddExceptionHandler(() => SelectTab(el.dataset.videosTab)));
     }
+    _elQuality.addEventListener("change", HandleQualityChange);
     _elMini.addEventListener("click", HandleMiniClick);
+    GetNode("videos-mini-close").addEventListener("click", HandleMiniClose);
+    GetNode("videos-mini-resize").addEventListener("pointerdown", HandleResizeDown);
     _elVideo.addEventListener("error", HandleVideoError);
     m_Events.AddHandler("dragger-drag-videos-mini", HandleMiniDrag);
   }

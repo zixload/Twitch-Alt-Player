@@ -83,6 +83,66 @@
 	pointer-events: none;
 }
 
+/* Close the corner: a cross opposite the move handle. */
+.videos-mini-close {
+	position: absolute;
+	top: .375rem;
+	right: .375rem;
+	width: 1.75rem;
+	height: 1.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: .375rem;
+	padding: 0;
+	cursor: pointer;
+	color: #fff;
+	background: rgba(0, 0, 0, .55);
+	opacity: 0;
+	transition: opacity .15s ease, background-color .15s ease;
+}
+
+.videos-mini:hover .videos-mini-close {
+	opacity: 1;
+}
+
+.videos-mini-close:enabled:hover {
+	background: rgb(var(--vd-live, 236, 62, 62));
+}
+
+.videos-mini-close>svg {
+	width: .9375rem;
+	height: .9375rem;
+	fill: currentColor;
+	pointer-events: none;
+}
+
+/* Resize grip on the top-left corner, the one facing the video. */
+.videos-mini-resize {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1.25rem;
+	height: 1.25rem;
+	cursor: nwse-resize;
+	background:
+		linear-gradient(135deg, rgba(255, 255, 255, .8) 0 2px, transparent 2px) no-repeat,
+		linear-gradient(135deg, transparent 4px, rgba(255, 255, 255, .8) 4px 6px, transparent 6px) no-repeat;
+	opacity: 0;
+	transition: opacity .15s ease;
+}
+
+.videos-mini:hover .videos-mini-resize {
+	opacity: .9;
+}
+
+/* The corner is closed: hide the miniature and the live video behind it. */
+.videos-mini-closed #eye,
+.videos-mini-closed .videos-mini {
+	display: none !important;
+}
+
 /* ------------------------------------------------------------------------------ the view */
 
 #videos {
@@ -168,6 +228,7 @@
 /* ----------------------------------------------------------------------- what is playing */
 
 .videos-stage {
+	position: relative;
 	margin-bottom: 1.25rem;
 }
 
@@ -192,6 +253,23 @@
 
 .videos-nowplaying.videos-error {
 	color: rgb(var(--vd-live));
+}
+
+/* Over the video's top-right corner, so it stays reachable whatever the video's height. */
+#videos .videos-quality {
+	position: absolute;
+	top: .5rem;
+	right: .5rem;
+	z-index: 2;
+	height: 2rem;
+	padding: 0 1.75rem 0 .625rem;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+#videos .videos-quality[hidden] {
+	display: none !important;
 }
 
 /* ------------------------------------------------------------------------------ the grid */
