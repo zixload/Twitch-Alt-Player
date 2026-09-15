@@ -1,7 +1,7 @@
 {
 	"M0001":
 	{
-		"message": "Alternate player of live broadcasts for Twitch.tv website.",
+		"message": "An alternate Twitch.tv player that skips ads, plays subscriber-only videos, and shows live stream stats.",
 		"description": "Краткое описание расширения. Копия этой строки есть в AMO и Windows Store."
 	},
 	"M0010":
