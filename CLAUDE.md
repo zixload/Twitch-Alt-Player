@@ -151,9 +151,8 @@ variant (Twitch's own frame rate differs between qualities).
 
 ## Open points waiting for Luca
 
-- **Comment language.** Identifiers are English everywhere. Comments are not consistent: `m_Twitch`
-  and the first rewritten peripheral modules are commented in English, most media modules and
-  `worker.js` in French. Pick one and harmonise.
+Comments are in English in some modules and French in others; that is accepted as it is.
+
 - **The ad-free fallback stream** (`ListUpdatesWithoutAds` in `modules/playlist.js`) still has the
   shape of an investigation: it clears the ad flag on every segment it receives, and writes a
   `console.error` when it fails.
