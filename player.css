@@ -683,8 +683,10 @@ body[data-state="8"] .panel.bottom {
 	height: auto;
 	overflow: visible;
 	flex-wrap: wrap;
-	padding-top: .375rem;
-	row-gap: .125rem
+	/* De l'air : le rail respire en haut, les boutons ne sont pas colles au bas, et une bonne
+	   separation entre la ligne de lecture et la rangee de commandes. */
+	padding: 1rem .75rem .75rem;
+	row-gap: .75rem
 }
 body[data-state="6"] #scale,
 body[data-state="8"] #scale {
@@ -692,7 +694,12 @@ body[data-state="8"] #scale {
 	flex: 0 0 100%;
 	height: auto;
 	min-width: 0;
-	padding: .125rem .5rem
+	padding: 0 .5rem
+}
+/* Un peu plus d'espace entre les icones de la rangee du bas quand la barre de lecture est la. */
+body[data-state="6"] .panel.bottom .panelitem,
+body[data-state="8"] .panel.bottom .panelitem {
+	padding: 0 .625rem
 }
 #notification {
 /* #notification */

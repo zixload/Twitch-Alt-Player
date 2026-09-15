@@ -58,6 +58,22 @@
 	box-shadow: inset 0 .0625rem 0 rgba(var(--gl-line), .1);
 }
 
+/*
+	When the seek bar rides on top (live DVR / replay), the bottom panel becomes a scrim that fades
+	upward -- opaque under the buttons, clear over the video by the time it reaches the rail. The
+	frosted blur is dropped here so the transparent top really shows the picture through.
+*/
+body[data-state="6"] .panel.bottom,
+body[data-state="8"] .panel.bottom {
+	background: linear-gradient(to top,
+		rgba(var(--sBackgroundColour), calc(var(--nOpacity, .75) * .62)) 0%,
+		rgba(var(--sBackgroundColour), calc(var(--nOpacity, .75) * .28)) 45%,
+		rgba(var(--sBackgroundColour), 0) 100%);
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	box-shadow: none;
+}
+
 /* ----------------------------------------------------------------- windows */
 
 .window {
