@@ -86,8 +86,60 @@
 					<button id=videos-close type=button class=alt-cb-button data-i18n=F1924^A0920></button>
 				</div>
 				<div id=videos-stage class=videos-stage hidden>
-					<video id=videos-video controls playsinline></video>
-					<select id=videos-quality class=videos-quality data-i18n=^A0925 hidden></select>
+					<video id=videos-video playsinline></video>
+					<div id=videos-controls class=videos-controls>
+						<div id=videos-seek class=videos-seek>
+							<span id=videos-buffered class=videos-buffered></span>
+							<span id=videos-played class=videos-played></span>
+							<span id=videos-head class=videos-head></span>
+							<div id=videos-preview class=videos-preview hidden>
+								<div id=videos-preview-image class=videos-preview-image></div>
+								<span id=videos-preview-time class=videos-preview-time></span>
+							</div>
+						</div>
+						<div class=videos-controls-row>
+							<button id=videos-playpause type=button class="button videos-control">
+								<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+									<use class=svg-play xlink:href=#svg-play xlink:title=J0113 />
+									<use class=svg-pause xlink:href=#svg-pause xlink:title=J0112 />
+								</svg>
+							</button>
+							<button id=videos-mute type=button class="button videos-control">
+								<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+									<use class=svg-mute-false xlink:href=#svg-mute-false xlink:title=J0108 />
+									<use class=svg-mute-true xlink:href=#svg-mute-true xlink:title=J0109 />
+								</svg>
+							</button>
+							<input id=videos-volume class=videos-volume type=range max=100 step=1 value=100 data-i18n=^A0506>
+							<span id=videos-time class=videos-time></span>
+							<span class=videos-controls-filler></span>
+							<select id=videos-quality class=videos-quality data-i18n=^A0925 hidden></select>
+							<select id=videos-speed class=videos-speed data-i18n=^A0536>
+								<option value=3>
+								<option value=2>
+								<option value=1.75>
+								<option value=1.5>
+								<option value=1.25>
+								<option value=1 selected>
+								<option value=0.75>
+								<option value=0.5>
+								<option value=0.25>
+								<option value=0.1>
+							</select>
+							<button id=videos-pip type=button class="button videos-control" data-i18n=^A0672>
+								<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+									<use class=svg-pip-false xlink:href=#svg-pip-false />
+									<use class=svg-pip-true xlink:href=#svg-pip-true />
+								</svg>
+							</button>
+							<button id=videos-fullscreen type=button class="button videos-control" data-i18n=^A0511>
+								<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+									<use class=svg-fullscreen-false xlink:href=#svg-fullscreen-false />
+									<use class=svg-fullscreen-true xlink:href=#svg-fullscreen-true />
+								</svg>
+							</button>
+						</div>
+					</div>
 					<div id=videos-nowplaying class=videos-nowplaying></div>
 				</div>
 				<div id=videos-status class=videos-status hidden></div>

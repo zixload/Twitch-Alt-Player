@@ -255,14 +255,128 @@
 	color: rgb(var(--vd-live));
 }
 
-/* Over the video's top-right corner, so it stays reachable whatever the video's height. */
-#videos .videos-quality {
+/*
+	The transport bar keeps the alternate player's own look: a glass strip laid over the foot of the
+	video, without the live-only controls. It rides in from below on movement and slides away again
+	once the video plays untouched, exactly as the live panel does.
+*/
+.videos-controls {
 	position: absolute;
-	top: .5rem;
-	right: .5rem;
-	z-index: 2;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
+	padding: 1.5rem .75rem .625rem;
+	border-radius: 0 0 .625rem .625rem;
+	background: linear-gradient(to top, rgba(0, 0, 0, .78), rgba(0, 0, 0, 0));
+	opacity: 0;
+	transform: translateY(.5rem);
+	pointer-events: none;
+	transition: opacity .18s ease, transform .18s ease;
+}
+
+.videos-controls-shown .videos-controls {
+	opacity: 1;
+	transform: none;
+	pointer-events: auto;
+}
+
+/* The video keeps the cursor while the bar is hidden and the pointer is still. */
+.videos-stage:not(.videos-controls-shown) #videos-video {
+	cursor: none;
+}
+
+.videos-controls-row {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+}
+
+.videos-controls-filler {
+	flex: 1;
+}
+
+/* Bare icon buttons, the same idea as the live bar: the glyph does the work, no chip behind it. */
+#videos .videos-control {
+	flex: none;
+	width: 2rem;
 	height: 2rem;
-	padding: 0 1.75rem 0 .625rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: .375rem;
+	padding: 0;
+	cursor: pointer;
+	color: #fff;
+	background: none;
+}
+
+#videos .videos-control>svg {
+	width: 1.375rem;
+	height: 1.375rem;
+	fill: currentColor;
+	filter: drop-shadow(0 .0625rem .125rem rgba(0, 0, 0, .6));
+	transition: transform .12s ease, opacity .12s ease;
+}
+
+#videos .videos-control:enabled:hover>svg {
+	transform: scale(1.08);
+}
+
+#videos .videos-control:enabled:active>svg {
+	transform: scale(.92);
+}
+
+/* One glyph shows at a time; the state class picks which. */
+#videos-playpause .svg-pause,
+#videos-playpause.videos-playing .svg-play,
+#videos-mute .svg-mute-true,
+#videos-mute.videos-muted .svg-mute-false,
+#videos-fullscreen .svg-fullscreen-true,
+#videos-pip .svg-pip-true {
+	display: none;
+}
+
+#videos-playpause.videos-playing .svg-pause,
+#videos-mute.videos-muted .svg-mute-true,
+#videos-stage:fullscreen #videos-fullscreen .svg-fullscreen-true {
+	display: block;
+}
+
+#videos-stage:fullscreen #videos-fullscreen .svg-fullscreen-false {
+	display: none;
+}
+
+.videos-time {
+	flex: none;
+	padding: 0 .25rem;
+	font-size: .8125rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	color: #fff;
+	text-shadow: 0 .0625rem .125rem rgba(0, 0, 0, .6);
+}
+
+/* Volume: a slim track that grows on hover, coloured to the accent, like the live one. */
+.videos-volume {
+	flex: none;
+	width: 5rem;
+	height: .25rem;
+	margin: 0;
+	cursor: pointer;
+	accent-color: rgb(var(--vd-accent));
+}
+
+.videos-speed,
+#videos .videos-quality {
+	flex: none;
+	height: 2rem;
+	padding: 0 .5rem;
 	font: inherit;
 	font-weight: 600;
 	cursor: pointer;
@@ -270,6 +384,134 @@
 
 #videos .videos-quality[hidden] {
 	display: none !important;
+}
+
+/* The seek bar: buffered under played under the head, all on one track. */
+.videos-seek {
+	position: relative;
+	height: .875rem;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	touch-action: none;
+}
+
+.videos-seek::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: .25rem;
+	border-radius: 999rem;
+	background: rgba(255, 255, 255, .25);
+}
+
+.videos-buffered,
+.videos-played {
+	position: absolute;
+	left: 0;
+	height: .25rem;
+	border-radius: 999rem;
+	pointer-events: none;
+}
+
+.videos-buffered {
+	width: 0;
+	background: rgba(255, 255, 255, .4);
+}
+
+.videos-played {
+	width: 0;
+	background: rgb(var(--vd-accent));
+}
+
+.videos-head {
+	position: absolute;
+	left: 0;
+	width: .875rem;
+	height: .875rem;
+	transform: translateX(-50%);
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 .0625rem .1875rem rgba(0, 0, 0, .6);
+	pointer-events: none;
+	transition: opacity .12s ease;
+}
+
+/* The track thickens under the pointer and the head appears, the usual seek affordance. */
+.videos-seek:not(:hover) .videos-head {
+	opacity: 0;
+}
+
+.videos-seek:hover::before,
+.videos-seek:hover .videos-buffered,
+.videos-seek:hover .videos-played {
+	height: .375rem;
+}
+
+/*
+	Hover preview: Twitch's own storyboard thumbnail, sized by the two custom properties
+	modules/videos.js reads from the storyboard, floated above the seek bar and centred on the cursor.
+	The script sets `left` relative to the seek bar, so the box lives inside it.
+*/
+.videos-preview {
+	position: absolute;
+	bottom: calc(100% + .5rem);
+	left: 0;
+	transform: translateX(-50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: .25rem;
+	pointer-events: none;
+}
+
+.videos-preview[hidden] {
+	display: none !important;
+}
+
+.videos-preview-image {
+	width: var(--preview-w, 10rem);
+	height: var(--preview-h, 5.625rem);
+	max-width: 16rem;
+	border-radius: .375rem;
+	background-repeat: no-repeat;
+	background-color: #000;
+	box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .6), 0 0 0 .0625rem rgba(255, 255, 255, .18);
+}
+
+.videos-preview-image[hidden] {
+	display: none !important;
+}
+
+.videos-preview-time {
+	padding: .0625rem .375rem;
+	border-radius: .25rem;
+	font-size: .75rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: #fff;
+	background: rgba(0, 0, 0, .8);
+}
+
+/* Fullscreen wraps the stage, so the video and its bar fill the screen together. */
+#videos-stage:fullscreen {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #000;
+}
+
+#videos-stage:fullscreen #videos-video {
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	border-radius: 0;
+}
+
+#videos-stage:fullscreen .videos-controls {
+	border-radius: 0;
 }
 
 /* ------------------------------------------------------------------------------ the grid */

@@ -33,6 +33,19 @@ const m_Videos = (() => {
   // The qualities of the video currently playing, best first, and the one chosen.
   let _aoQualities = [];
   let _sQualityKey = "";
+  // What is playing, so its position can be remembered under its id.
+  let _oNowPlaying = null;
+  let _bResumePending = false;
+  let _nLastSaved = 0;
+  let _bScrubbing = false;
+  let _nHideTimer = 0;
+
+  // How long a position is worth resuming: not the first seconds, not the last.
+  const RESUME_MIN = 10;
+  const RESUME_TAIL = 15;
+  // The controls fade out this long after the pointer stops, while playing.
+  const CONTROLS_IDLE = 2600;
+  const POSITION_KEY = "tw5-vod-position";
 
   let _elView = null;
   let _elGrid = null;
@@ -44,6 +57,21 @@ const m_Videos = (() => {
   let _elQuality = null;
   let _elMini = null;
   let _elPlayer = null;
+  let _elControls = null;
+  let _elSeek = null;
+  let _elBuffered = null;
+  let _elPlayed = null;
+  let _elHead = null;
+  let _elTime = null;
+  let _elPlayPause = null;
+  let _elVolume = null;
+  let _elMute = null;
+  let _elSpeed = null;
+  let _elPreview = null;
+  let _elPreviewImg = null;
+  let _elPreviewTime = null;
+  // The hover-preview thumbnails of the video currently playing, or null while none.
+  let _oStoryboard = null;
 
   function IsOpen() {
     return _bOpen;
@@ -216,15 +244,22 @@ const m_Videos = (() => {
     // before it even leaves.
     StopVideo();
     const nGeneration = ++_nVideoGeneration;
+    _oNowPlaying = oItem;
+    // A broadcast is long enough to resume; a clip is not.
+    _bResumePending = oItem.sKind === "video";
     ShowElement(_elStage, true);
     _elNowPlaying.textContent = oItem.sTitle;
     _elNowPlaying.classList.remove("videos-error");
     _elView.scrollTop = 0;
+    ShowControls();
 
     if (oItem.sKind === "clip") {
       m_Twitch.GetClipPlaybackUrl(oItem.sId).then(WhenReady(nGeneration, PlayAddress), WhenFailed(nGeneration, oItem));
       return;
     }
+
+    // The seek-bar thumbnails, loaded alongside; the bar works without them.
+    LoadStoryboard(oItem.sId, nGeneration);
 
     /*
       A past broadcast. TwitchNoSub (videos-twitchnosub.js) resolves every quality of the broadcast
@@ -335,6 +370,7 @@ const m_Videos = (() => {
   function StopVideo() {
     ++_nVideoGeneration;
     if (_elVideo.getAttribute("src")) {
+      SavePosition();
       _elVideo.pause();
       _elVideo.removeAttribute("src");
       // Without load(), the element keeps the last stream open and keeps downloading it.
@@ -342,10 +378,299 @@ const m_Videos = (() => {
     }
     _aoQualities = [];
     _sQualityKey = "";
+    _oNowPlaying = null;
+    HidePreview();
     ShowElement(_elQuality, false);
     ShowElement(_elStage, false);
     _elNowPlaying.textContent = "";
     m_Player.ApplyVolume();
+  }
+
+  // ------------------------------------------------------------------------------------------
+  // The controls -- the alternate player's own look, without the live-only parts
+
+  // mm:ss, or h:mm:ss past an hour. Same shape as the thumbnails.
+  function FormatTime(nSeconds) {
+    const kTotal = Math.max(0, Math.floor(nSeconds || 0));
+    const kHours = Math.floor(kTotal / 3600);
+    const kMinutes = Math.floor(kTotal / 60) % 60;
+    const sSeconds = String(kTotal % 60).padStart(2, "0");
+    return kHours !== 0
+      ? `${kHours}:${String(kMinutes).padStart(2, "0")}:${sSeconds}`
+      : `${kMinutes}:${sSeconds}`;
+  }
+
+  const TogglePlay = AddExceptionHandler(() => {
+    if (_elVideo.paused || _elVideo.ended) {
+      _elVideo.play().catch(() => {});
+    } else {
+      _elVideo.pause();
+    }
+  });
+
+  // The play/pause glyph follows the real state, wherever the state changed from.
+  const HandlePlayState = AddExceptionHandler(() => {
+    _elPlayPause.classList.toggle("videos-playing", !_elVideo.paused && !_elVideo.ended);
+    if (_elVideo.paused) {
+      ShowControls(true);
+    } else {
+      ShowControls();
+    }
+  });
+
+  const HandleTimeUpdate = AddExceptionHandler(() => {
+    UpdateProgress();
+    UpdateTime();
+    // Resume once, when the position is finally seekable.
+    if (_bResumePending) {
+      _bResumePending = false;
+      RestorePosition();
+    } else {
+      SavePositionThrottled();
+    }
+  });
+
+  const HandleProgress = AddExceptionHandler(UpdateProgress);
+
+  function UpdateProgress() {
+    const nDuration = _elVideo.duration;
+    if (!Number.isFinite(nDuration) || nDuration <= 0) {
+      return;
+    }
+    _elPlayed.style.width = `${(_elVideo.currentTime / nDuration) * 100}%`;
+    _elHead.style.left = `${(_elVideo.currentTime / nDuration) * 100}%`;
+    // The furthest buffered range that covers the current position.
+    let nBufferedEnd = 0;
+    for (let idx = 0; idx < _elVideo.buffered.length; ++idx) {
+      if (_elVideo.buffered.start(idx) <= _elVideo.currentTime) {
+        nBufferedEnd = Math.max(nBufferedEnd, _elVideo.buffered.end(idx));
+      }
+    }
+    _elBuffered.style.width = `${(nBufferedEnd / nDuration) * 100}%`;
+  }
+
+  function UpdateTime() {
+    _elTime.textContent = `${FormatTime(_elVideo.currentTime)} / ${FormatTime(_elVideo.duration)}`;
+  }
+
+  // --- The seek bar
+
+  function SeekRatioFromEvent(oEvent) {
+    const oRect = _elSeek.getBoundingClientRect();
+    return Clamp((oEvent.clientX - oRect.left) / oRect.width, 0, 1);
+  }
+
+  const HandleSeekDown = AddExceptionHandler((oEvent) => {
+    if (oEvent.button !== LEFT_BUTTON || !Number.isFinite(_elVideo.duration)) {
+      return;
+    }
+    oEvent.preventDefault();
+    _bScrubbing = true;
+    SeekToRatio(SeekRatioFromEvent(oEvent));
+    const AtMove = AddExceptionHandler((oMove) => {
+      SeekToRatio(SeekRatioFromEvent(oMove));
+      ShowPreview(oMove);
+    });
+    const AtUp = AddExceptionHandler(() => {
+      _bScrubbing = false;
+      document.removeEventListener("pointermove", AtMove);
+      document.removeEventListener("pointerup", AtUp);
+    });
+    document.addEventListener("pointermove", AtMove);
+    document.addEventListener("pointerup", AtUp);
+  });
+
+  function SeekToRatio(nRatio) {
+    if (Number.isFinite(_elVideo.duration)) {
+      _elVideo.currentTime = nRatio * _elVideo.duration;
+      UpdateProgress();
+      UpdateTime();
+    }
+  }
+
+  const HandleSeekHover = AddExceptionHandler((oEvent) => {
+    ShowPreview(oEvent);
+  });
+
+  const HandleSeekLeave = AddExceptionHandler(() => {
+    if (!_bScrubbing) {
+      HidePreview();
+    }
+  });
+
+  // --- Volume, speed, fullscreen, picture-in-picture
+
+  const HandleVolume = AddExceptionHandler(() => {
+    _elVideo.volume = _elVolume.valueAsNumber / 100;
+    _elVideo.muted = _elVolume.valueAsNumber === 0;
+    ReflectVolume();
+  });
+
+  const HandleMute = AddExceptionHandler(() => {
+    _elVideo.muted = !_elVideo.muted;
+    ReflectVolume();
+  });
+
+  function ReflectVolume() {
+    _elMute.classList.toggle("videos-muted", _elVideo.muted || _elVideo.volume === 0);
+    if (!_elVideo.muted) {
+      _elVolume.value = Math.round(_elVideo.volume * 100);
+    } else {
+      _elVolume.value = 0;
+    }
+  }
+
+  const HandleSpeed = AddExceptionHandler(() => {
+    _elVideo.playbackRate = Number(_elSpeed.value);
+  });
+
+  // Fullscreen wraps the stage, not the video, so the custom controls come with it.
+  const HandleFullscreen = AddExceptionHandler(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      _elStage.requestFullscreen().catch((pReason) => {
+        m_Log.Oops(`[Videos] Fullscreen refused. ${pReason}`);
+      });
+    }
+  });
+
+  const HandlePip = AddExceptionHandler(() => {
+    if (document.pictureInPictureElement === _elVideo) {
+      document.exitPictureInPicture();
+    } else if (_elVideo.getAttribute("src")) {
+      _elVideo.requestPictureInPicture().catch((pReason) => {
+        m_Log.Oops(`[Videos] Picture-in-picture refused. ${pReason}`);
+      });
+    }
+  });
+
+  // --- Auto-hide, like the live interface
+
+  const HandleStageMove = AddExceptionHandler(() => ShowControls());
+
+  function ShowControls(bKeep) {
+    _elStage.classList.add("videos-controls-shown");
+    clearTimeout(_nHideTimer);
+    _nHideTimer = 0;
+    // Paused, scrubbing or hovering: the bar stays. Otherwise it fades after a pause in movement.
+    if (bKeep || _elVideo.paused || _bScrubbing) {
+      return;
+    }
+    _nHideTimer = setTimeout(
+      AddExceptionHandler(() => {
+        if (!_elVideo.paused && !_bScrubbing) {
+          _elStage.classList.remove("videos-controls-shown");
+        }
+      }),
+      CONTROLS_IDLE
+    );
+  }
+
+  // --- Resume where the viewer left off
+
+  function ReadPositions() {
+    try {
+      return JSON.parse(localStorage.getItem(POSITION_KEY)) || {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function SavePosition() {
+    if (!_oNowPlaying || _oNowPlaying.sKind !== "video" || !Number.isFinite(_elVideo.duration)) {
+      return;
+    }
+    const nTime = _elVideo.currentTime;
+    try {
+      const oPositions = ReadPositions();
+      // Near the end, the video is finished: forget it rather than resume at the credits.
+      if (nTime < RESUME_MIN || nTime > _elVideo.duration - RESUME_TAIL) {
+        delete oPositions[_oNowPlaying.sId];
+      } else {
+        oPositions[_oNowPlaying.sId] = Math.floor(nTime);
+      }
+      localStorage.setItem(POSITION_KEY, JSON.stringify(oPositions));
+    } catch (_) {
+      // A viewer with storage blocked simply gets no memory; not worth a fuss.
+    }
+    _nLastSaved = nTime;
+  }
+
+  function SavePositionThrottled() {
+    if (Math.abs(_elVideo.currentTime - _nLastSaved) >= 5) {
+      SavePosition();
+    }
+  }
+
+  function RestorePosition() {
+    _nLastSaved = _elVideo.currentTime;
+    if (!_oNowPlaying || _oNowPlaying.sKind !== "video" || !Number.isFinite(_elVideo.duration)) {
+      return;
+    }
+    const nSaved = ReadPositions()[_oNowPlaying.sId];
+    if (Number.isFinite(nSaved) && nSaved >= RESUME_MIN && nSaved < _elVideo.duration - RESUME_TAIL) {
+      m_Log.Here(`[Videos] Resuming ${_oNowPlaying.sId} at ${FormatTime(nSaved)}`);
+      _elVideo.currentTime = nSaved;
+    }
+  }
+
+  // --- Hover preview, from Twitch's own seek thumbnails (storyboards)
+
+  function LoadStoryboard(sVideoId, nGeneration) {
+    _oStoryboard = null;
+    m_Twitch.GetVideoStoryboards(sVideoId).then(
+      AddExceptionHandler((oStoryboard) => {
+        // Ignore an answer for a video the viewer has already left.
+        if (nGeneration === _nVideoGeneration && oStoryboard) {
+          _oStoryboard = oStoryboard;
+          _elPreview.style.setProperty("--preview-w", `${oStoryboard.nWidth}px`);
+          _elPreview.style.setProperty("--preview-h", `${oStoryboard.nHeight}px`);
+        }
+      }),
+      AddExceptionHandler((pReason) => {
+        // No thumbnails is not a failure: the preview just shows the time.
+        m_Log.Here(`[Videos] No storyboard: ${pReason}`);
+      })
+    );
+  }
+
+  function ShowPreview(oEvent) {
+    if (!Number.isFinite(_elVideo.duration)) {
+      return;
+    }
+    const oRect = _elSeek.getBoundingClientRect();
+    const nRatio = Clamp((oEvent.clientX - oRect.left) / oRect.width, 0, 1);
+    _elPreviewTime.textContent = FormatTime(nRatio * _elVideo.duration);
+    // Centre the preview on the cursor, kept inside the seek bar's width.
+    const nLeft = Clamp(oEvent.clientX - oRect.left, 60, oRect.width - 60);
+    _elPreview.style.left = `${nLeft}px`;
+
+    if (_oStoryboard) {
+      const o = _oStoryboard;
+      const kPerImage = o.nRows * o.nCols;
+      const kIndex = Math.min(Math.floor((nRatio * _elVideo.duration) / o.nInterval), o.kCount - 1);
+      const kImage = Math.floor(kIndex / kPerImage);
+      const kCell = kIndex % kPerImage;
+      if (kImage < o.asImages.length) {
+        _elPreviewImg.style.backgroundImage = `url("${o.sBaseUrl}${o.asImages[kImage]}")`;
+        _elPreviewImg.style.backgroundSize = `${o.nCols * o.nWidth}px ${o.nRows * o.nHeight}px`;
+        _elPreviewImg.style.backgroundPosition =
+          `-${(kCell % o.nCols) * o.nWidth}px -${Math.floor(kCell / o.nCols) * o.nHeight}px`;
+        _elPreviewImg.hidden = false;
+      } else {
+        _elPreviewImg.hidden = true;
+      }
+    } else {
+      _elPreviewImg.hidden = true;
+    }
+    ShowElement(_elPreview, true);
+  }
+
+  function HidePreview() {
+    if (_elPreview) {
+      ShowElement(_elPreview, false);
+    }
   }
 
   const HandleVideoError = AddExceptionHandler(() => {
@@ -468,6 +793,19 @@ const m_Videos = (() => {
     _elNowPlaying = GetNode("videos-nowplaying");
     _elQuality = GetNode("videos-quality");
     _elMini = GetNode("videos-mini");
+    _elControls = GetNode("videos-controls");
+    _elSeek = GetNode("videos-seek");
+    _elBuffered = GetNode("videos-buffered");
+    _elPlayed = GetNode("videos-played");
+    _elHead = GetNode("videos-head");
+    _elTime = GetNode("videos-time");
+    _elPlayPause = GetNode("videos-playpause");
+    _elVolume = GetNode("videos-volume");
+    _elMute = GetNode("videos-mute");
+    _elSpeed = GetNode("videos-speed");
+    _elPreview = GetNode("videos-preview");
+    _elPreviewImg = GetNode("videos-preview-image");
+    _elPreviewTime = GetNode("videos-preview-time");
 
     GetNode("alt-cb-videos").addEventListener("click", AddExceptionHandler(Toggle));
     GetNode("videos-close").addEventListener("click", AddExceptionHandler(Close));
@@ -481,6 +819,25 @@ const m_Videos = (() => {
     GetNode("videos-mini-resize").addEventListener("pointerdown", HandleResizeDown);
     _elVideo.addEventListener("error", HandleVideoError);
     m_Events.AddHandler("dragger-drag-videos-mini", HandleMiniDrag);
+
+    // The controls: play/pause, progress, time, volume, speed, fullscreen, picture-in-picture.
+    _elVideo.addEventListener("timeupdate", HandleTimeUpdate);
+    _elVideo.addEventListener("progress", HandleProgress);
+    _elVideo.addEventListener("play", HandlePlayState);
+    _elVideo.addEventListener("pause", HandlePlayState);
+    _elVideo.addEventListener("ended", HandlePlayState);
+    _elVideo.addEventListener("click", TogglePlay);
+    _elVideo.addEventListener("dblclick", HandleFullscreen);
+    _elPlayPause.addEventListener("click", TogglePlay);
+    _elSeek.addEventListener("pointerdown", HandleSeekDown);
+    _elSeek.addEventListener("pointermove", HandleSeekHover);
+    _elSeek.addEventListener("pointerleave", HandleSeekLeave);
+    _elVolume.addEventListener("input", HandleVolume);
+    _elMute.addEventListener("click", HandleMute);
+    _elSpeed.addEventListener("change", HandleSpeed);
+    GetNode("videos-fullscreen").addEventListener("click", HandleFullscreen);
+    GetNode("videos-pip").addEventListener("click", HandlePip);
+    _elStage.addEventListener("pointermove", HandleStageMove);
   }
 
   return {

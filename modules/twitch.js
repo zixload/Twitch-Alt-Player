@@ -1229,6 +1229,44 @@ const m_Twitch = (() => {
       });
   }
 
+  /*
+    The seek-bar thumbnails of a past broadcast. Twitch publishes them as a mosaic: `seekPreviewsURL`
+    points to a small JSON listing, per quality, the mosaic images, their grid (rows x cols), the
+    thumbnail size, and the seconds between two thumbnails. The Videos view reads one thumbnail out
+    of a mosaic to show where the pointer is on the bar. The high-quality set is preferred.
+  */
+  function GetVideoStoryboards(sVideoId) {
+    Check(IsNonEmptyString(sVideoId));
+    return sendGqlRequest(null, `query($id: ID!) {
+        video(id: $id) {
+          seekPreviewsURL
+        }
+      }`, { id: sVideoId }, true, false, true, "video storyboards")
+      .then((oResult) => {
+        const sUrl = chain(oResult, "data", "video", "seekPreviewsURL");
+        if (!IsNonEmptyString(sUrl)) {
+          throw "No storyboard for this video";
+        }
+        return m_Downloader.LoadJson(null, sUrl, LOAD_METADATA_NO_LONGER_THAN, "storyboard info", false)
+          .then((aoSpecs) => {
+            if (!Array.isArray(aoSpecs) || aoSpecs.length === 0) {
+              throw "Empty storyboard";
+            }
+            const oSpec = aoSpecs.find((o) => o.quality === "high") || aoSpecs[aoSpecs.length - 1];
+            return {
+              sBaseUrl: sUrl.slice(0, sUrl.lastIndexOf("/") + 1),
+              nInterval: oSpec.interval,
+              nWidth: oSpec.width,
+              nHeight: oSpec.height,
+              nCols: oSpec.cols,
+              nRows: oSpec.rows,
+              kCount: oSpec.count,
+              asImages: oSpec.images,
+            };
+          });
+      });
+  }
+
   // --- Third-party chat extensions ---
 
   /*
@@ -1300,6 +1338,7 @@ const m_Twitch = (() => {
     GetChannelClips,
     GetVideoPlaybackUrl,
     GetClipPlaybackUrl,
+    GetVideoStoryboards,
     sortVariantList,
     openChat,
     closeChat,
