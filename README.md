@@ -1,26 +1,29 @@
-# Twitch Alternate Player
+# Twitch-No-Ads
 
-**Work in progress.**
+A Chrome extension that replaces the Twitch player with its own.
 
-A Chrome extension that replaces the Twitch video player with its own.
+## What it does
 
-The codebase started out with every name in Russian — variables, functions, element ids,
-comments. It is being translated to English and reworked, fixing what breaks along the way.
+- **Skips ads** — plays the stream through a second playlist Twitch serves without the stitched-in ads.
+- **Videos tab** — browse a channel's past broadcasts, highlights, uploads and clips while the live
+  stream keeps playing in a corner. Pick the quality; subscriber-only videos play too.
+- **Claims channel points** — the bonus chest is collected on its own while you watch.
+- **Diagnostics overlay** — press `S` for live stream stats.
+- Chat panel, followed/live sidebar, follow and clip buttons, replay of the buffered stream.
 
-## Technology
+## Install
 
-- Chrome extension, Manifest V3, plain JavaScript: no build step, no runtime dependencies.
-- HLS playback through Media Source Extensions. MPEG-TS segments are remuxed to fMP4 in a Web
-  Worker backed by WebAssembly; fMP4 segments are appended as they are.
-- `tools/`: Node scripts that rename identifiers through a JavaScript parser and check that
-  scripts, markup and stylesheets still agree on every name; Python scripts that drive Chrome over
-  the DevTools protocol to test the running extension.
+Open `chrome://extensions`, turn on Developer mode, and use **Load unpacked** on this folder.
 
-## Trying it
+## How it works
 
-Open `chrome://extensions`, enable Developer mode, and load this directory as an unpacked
-extension.
+Manifest V3, plain JavaScript, no build step. HLS through Media Source Extensions; MPEG-TS segments
+are remuxed to fMP4 in a Web Worker (WebAssembly, asm.js fallback), fMP4 segments play as they are.
+`tools/` holds the scripts that verify a change — static checks, unit tests, and a harness that
+drives Chrome to test the running extension.
+
+Sub-only video access reuses the method from [TwitchNoSub](https://github.com/besuper/TwitchNoSub).
 
 ## License
 
-BSD 3-Clause, see [LICENSE](LICENSE).
+Fork of Alexander Choporov's (CoolCmd) player. BSD 3-Clause, see [LICENSE](LICENSE).

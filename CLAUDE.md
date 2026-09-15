@@ -1,4 +1,4 @@
-# Twitch Alternate Player — working notes
+# Twitch-No-Ads — working notes
 
 Read this before changing anything. `REPARTITION.md` (in French) holds the history and the measurements
 behind the current layout; this file holds what is true now and how to work.
@@ -7,11 +7,10 @@ behind the current layout; this file holds what is true now and how to work.
 
 ## Rules that are not up for discussion
 
-- **Never modify `C:\Users\ingam\OneDrive\Documents\twitch_alternate_player-v2`.** It is the folder
-  Chrome has loaded and that Luca uses day to day. It stays on `master @ 6c6fc18`. All work happens
-  in the worktree `twitch-alt-v2-nettoyage`, branch `nettoyage`.
-- **Never merge `nettoyage` into `master`, and never push it, without Luca's explicit go-ahead.**
-  The branch has never been published; the `public` branch is a separate worktree.
+- **This branch is the original now.** The phase-2 rewrite has shipped to `master` and been published
+  as `Twitch-No-Ads`; the pre-rewrite `master @ 6c6fc18` is abandoned and no longer used. Work
+  happens in the worktree `twitch-alt-v2-nettoyage` (branch `nettoyage`), which is fast-forwarded into
+  `master` and pushed. The old rule against touching `twitch_alternate_player-v2` is retired.
 - **No tool attribution of any kind.** No `Co-Authored-By` trailer, and no mention of any assistant
   or automated tool in commit messages, pull request descriptions or versioned files. Commits carry
   Luca's git identity only.
