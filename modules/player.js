@@ -953,15 +953,20 @@ const m_Player = (() => {
     m_Events.SendEvent("player-followinglive", bFollowing);
   }
 
-  // Tenir la barre a jour pendant le direct : la fenetre va du debut du tampon au bord, la position
-  // vue suit l'horloge. Sans tampon encore, il n'y a rien a peindre.
+  /*
+    Tenir la barre a jour pendant le direct : la fenetre va du debut du tampon au bord. Tant qu'on
+    suit le bord, la barre reste pleine et immobile -- peindre la position reelle la ferait osciller a
+    chaque petit recalage. Elle ne se deplace qu'une fois le spectateur en arriere (DVR). Sans tampon
+    encore, il n'y a rien a peindre.
+  */
   function UpdateLiveScale() {
     const oBuffer = _oMediaElement.buffered;
     if (oBuffer.length === 0) {
       return;
     }
-    m_Scale.SetStartAndEnd(oBuffer.start(0), oBuffer.end(oBuffer.length - 1));
-    m_Scale.SetWatched(_oMediaElement.currentTime);
+    const nEdge = oBuffer.end(oBuffer.length - 1);
+    m_Scale.SetStartAndEnd(oBuffer.start(0), nEdge);
+    m_Scale.SetWatched(_bFollowingLive ? nEdge : _oMediaElement.currentTime);
   }
 
   /*
