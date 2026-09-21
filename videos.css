@@ -471,9 +471,9 @@
 }
 
 .videos-preview-image {
-	width: var(--preview-w, 10rem);
-	height: var(--preview-h, 5.625rem);
-	max-width: 16rem;
+	width: var(--preview-w, 17.5rem);
+	height: var(--preview-h, 9.844rem);
+	max-width: 22rem;
 	border-radius: .375rem;
 	background-repeat: no-repeat;
 	background-color: #000;

@@ -33,8 +33,16 @@ const m_Videos = (() => {
   // The qualities of the video currently playing, best first, and the one chosen.
   let _aoQualities = [];
   let _sQualityKey = "";
-  // L'adresse d'une liste de lecture refermee, a liberer quand on change de video.
-  let _sClosedPlaylistUrl = "";
+  // Les adresses de listes refermees qu'on a fabriquees, a liberer quand on change de video.
+  let _asClosedPlaylistUrls = [];
+  // Le lecteur cache qui sert de vignette au survol, faute de planche chez Twitch.
+  let _elPreviewVideo = null;
+  let _nPreviewSeekTimer = 0;
+  let _nPreviewLastMove = 0;
+  let _nPreviewWanted = -1;
+  // Tant qu'aucune image n'a ete atteinte, la bulle ne montre que l'heure : la premiere image du
+  // VOD ferait croire qu'on survole le debut.
+  let _bPreviewSeeked = false;
   // What is playing, so its position can be remembered under its id.
   let _oNowPlaying = null;
   let _bResumePending = false;
@@ -277,6 +285,7 @@ const m_Videos = (() => {
             _aoQualities = aoQualities;
             BuildQualityMenu();
             PlayQuality(aoQualities[0].sKey);
+            WarmPreview();
           } else {
             PlayThroughUsher(oItem, nGeneration);
           }
@@ -357,11 +366,11 @@ const m_Videos = (() => {
     return asClosed.join("\n");
   }
 
-  function ReleaseClosedPlaylist() {
-    if (_sClosedPlaylistUrl !== "") {
-      URL.revokeObjectURL(_sClosedPlaylistUrl);
-      _sClosedPlaylistUrl = "";
+  function ReleaseClosedPlaylists() {
+    for (const sUrl of _asClosedPlaylistUrls) {
+      URL.revokeObjectURL(sUrl);
     }
+    _asClosedPlaylistUrls = [];
   }
 
   /*
@@ -379,12 +388,12 @@ const m_Videos = (() => {
         if (!sText || !sText.includes("#EXTINF") || sText.includes("#EXT-X-ENDLIST")) {
           return sUrl;
         }
-        ReleaseClosedPlaylist();
-        _sClosedPlaylistUrl = URL.createObjectURL(
+        const sClosed = URL.createObjectURL(
           new Blob([ClosePlaylist(sText, sUrl)], { type: PLAYLIST_MEDIA_TYPE })
         );
+        _asClosedPlaylistUrls.push(sClosed);
         m_Log.Wow("[Videos] Growing playlist closed so the seek bar works");
-        return _sClosedPlaylistUrl;
+        return sClosed;
       })
       .catch((pReason) => {
         m_Log.Oops(`[Videos] Could not close the playlist. ${pReason}`);
@@ -471,7 +480,8 @@ const m_Videos = (() => {
       // Without load(), the element keeps the last stream open and keeps downloading it.
       _elVideo.load();
     }
-    ReleaseClosedPlaylist();
+    ReleasePreviewVideo();
+    ReleaseClosedPlaylists();
     _aoQualities = [];
     _sQualityKey = "";
     _oNowPlaying = null;
@@ -731,6 +741,112 @@ const m_Videos = (() => {
     );
   }
 
+  /*
+    Twitch ne fabrique la planche de vignettes qu'une fois la diffusion terminee : pour le VOD d'un
+    direct en cours, elle repond 403, et la barre ne montrait que l'heure. On fournit donc l'image
+    nous-memes, avec un second lecteur cache pose dans la bulle et deplace a l'heure survolee.
+
+    Il joue la qualite la PLUS BASSE de la liste -- 160p, des segments de quelques dizaines de
+    kilo-octets : une vignette ne merite pas de telecharger la source. L'element video sert
+    d'image tel quel, sans canevas, ce qui evite d'avoir a teindre un canevas avec une video servie
+    par un autre domaine.
+
+    Il n'est cree qu'au premier survol : celui qui ne survole jamais la barre ne telecharge rien.
+  */
+  function EnsurePreviewVideo() {
+    if (_elPreviewVideo !== null || _aoQualities.length === 0) {
+      return _elPreviewVideo;
+    }
+    const oLowest = _aoQualities[_aoQualities.length - 1];
+    _elPreviewVideo = document.createElement("video");
+    _elPreviewVideo.className = "videos-preview-image";
+    _elPreviewVideo.muted = true;
+    _elPreviewVideo.playsInline = true;
+    _elPreviewVideo.preload = "auto";
+    _elPreviewVideo.hidden = true;
+    _elPreviewVideo.addEventListener(
+      "seeked",
+      AddExceptionHandler(() => {
+        _bPreviewSeeked = true;
+      })
+    );
+    _elPreview.insertBefore(_elPreviewVideo, _elPreviewTime);
+    const nGeneration = _nVideoGeneration;
+    ResolvePlayableUrl(oLowest.sUrl).then(
+      AddExceptionHandler((sPlayable) => {
+        if (nGeneration === _nVideoGeneration && _elPreviewVideo !== null) {
+          m_Log.Here(`[Videos] Preview thumbnails from ${oLowest.sName}`);
+          _elPreviewVideo.src = sPlayable;
+        }
+      })
+    );
+    return _elPreviewVideo;
+  }
+
+  /*
+    A cadence, pas a l'arret du curseur : le premier mouvement deplace tout de suite, les suivants
+    au plus une fois par PREVIEW_MIN_INTERVAL. Attendre que le curseur se pose donnait une vignette
+    qui arrivait toujours apres coup ; balayer sans limite demanderait un segment par pixel.
+
+    L'image precedente reste affichee pendant la recherche : mieux vaut une image en retard qu'un
+    trou noir.
+  */
+  // Mesure : une recherche dans la vignette coute 65 a 100 ms. La cadence peut donc etre serree.
+  const PREVIEW_MIN_INTERVAL = 60;
+
+  function SeekPreview() {
+    _nPreviewSeekTimer = 0;
+    _nPreviewLastMove = performance.now();
+    // Un ecart d'une seconde ne changerait pas l'image : la recherche couterait un segment pour rien.
+    if (_elPreviewVideo !== null && _elPreviewVideo.readyState !== 0
+      && Math.abs(_elPreviewVideo.currentTime - _nPreviewWanted) > 1) {
+      _elPreviewVideo.currentTime = _nPreviewWanted;
+    }
+  }
+
+  function MovePreviewTo(nTime) {
+    const elVideo = EnsurePreviewVideo();
+    if (elVideo === null) {
+      return false;
+    }
+    _nPreviewWanted = nTime;
+    if (_nPreviewSeekTimer === 0) {
+      const nSince = performance.now() - _nPreviewLastMove;
+      if (nSince >= PREVIEW_MIN_INTERVAL) {
+        SeekPreview();
+      } else {
+        _nPreviewSeekTimer = setTimeout(AddExceptionHandler(SeekPreview), PREVIEW_MIN_INTERVAL - nSince);
+      }
+    }
+    elVideo.hidden = !_bPreviewSeeked || elVideo.readyState < 2;
+    return !elVideo.hidden;
+  }
+
+  /*
+    Sans planche de vignettes, le lecteur qui les rend est monte des l'ouverture : la premiere
+    vignette demandait sinon plus de deux secondes -- charger la liste, ouvrir le flux, chercher --
+    et arrivait toujours apres le curseur.
+  */
+  function WarmPreview() {
+    if (!_oStoryboard) {
+      EnsurePreviewVideo();
+    }
+  }
+
+  function ReleasePreviewVideo() {
+    clearTimeout(_nPreviewSeekTimer);
+    _nPreviewSeekTimer = 0;
+    _nPreviewLastMove = 0;
+    _nPreviewWanted = -1;
+    _bPreviewSeeked = false;
+    if (_elPreviewVideo !== null) {
+      _elPreviewVideo.removeAttribute("src");
+      _elPreviewVideo.load();
+      _elPreviewVideo.remove();
+      _elPreviewVideo = null;
+    }
+  }
+
   function ShowPreview(oEvent) {
     if (!Number.isFinite(_elVideo.duration)) {
       return;
@@ -757,10 +873,20 @@ const m_Videos = (() => {
       } else {
         _elPreviewImg.hidden = true;
       }
+      HidePreviewVideo();
     } else {
       _elPreviewImg.hidden = true;
+      MovePreviewTo(nRatio * _elVideo.duration);
     }
     ShowElement(_elPreview, true);
+  }
+
+  function HidePreviewVideo() {
+    clearTimeout(_nPreviewSeekTimer);
+    _nPreviewSeekTimer = 0;
+    if (_elPreviewVideo !== null) {
+      _elPreviewVideo.hidden = true;
+    }
   }
 
   function HidePreview() {
@@ -926,6 +1052,16 @@ const m_Videos = (() => {
     _elVideo.addEventListener("dblclick", HandleFullscreen);
     _elPlayPause.addEventListener("click", TogglePlay);
     _elSeek.addEventListener("pointerdown", HandleSeekDown);
+    // Prepare le lecteur-vignette des que le curseur entre sur la barre, et seulement quand Twitch
+    // n'a pas de planche : le premier survol ne paie plus le chargement.
+    _elSeek.addEventListener(
+      "pointerenter",
+      AddExceptionHandler(() => {
+        if (!_oStoryboard) {
+          EnsurePreviewVideo();
+        }
+      })
+    );
     _elSeek.addEventListener("pointermove", HandleSeekHover);
     _elSeek.addEventListener("pointerleave", HandleSeekLeave);
     _elVolume.addEventListener("input", HandleVolume);
