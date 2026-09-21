@@ -623,6 +623,7 @@ body:not([data-state="8"]) .forreplay,
 /* La barre de lecture sert au direct (DVR) comme a la rediffusion ; hors de la, elle ne parait pas.
    La pastille du direct n'a de sens que pendant le direct. */
 body:not([data-state="6"]):not([data-state="8"]) .seekbar,
+body:not([data-state="6"]):not([data-state="8"]) .forpause,
 body:not([data-state="6"]) .fordvr {
 	display: none
 }

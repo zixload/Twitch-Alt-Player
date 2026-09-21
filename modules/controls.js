@@ -354,7 +354,7 @@ const m_Controls = (() => {
     }
 
     case "togglepause":
-      if (_nState === STATE_REPEAT) {
+      if (_nState === STATE_REPEAT || _nState === STATE_PLAYING) {
         m_Player.TogglePause();
       }
       break;
@@ -670,7 +670,8 @@ const m_Controls = (() => {
 
     case KEY_K:
     case KEY_CLEAR:
-      if (bFirstPress && bReplay) {
+      // La pause vaut aussi pour le direct : elle y fige l'image sans couper le telechargement.
+      if (bFirstPress && (bReplay || _nState === STATE_PLAYING)) {
         m_Player.TogglePause();
         m_AutoHide.Show();
       }

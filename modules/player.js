@@ -96,6 +96,12 @@ const m_Player = (() => {
     memoire pour l'obtenir.
   */
   let _bFollowingLive = true;
+  /*
+    La pause demandee par le spectateur pendant le direct. Sans ce drapeau, StartPlayback relancerait
+    la lecture des le segment suivant -- il ne s'active justement que sur un element en pause -- et
+    la pause ne tiendrait pas trois secondes.
+  */
+  let _bLivePaused = false;
 
   // ------------------------------------------------------------------------------------------
   // Les deux comportements
@@ -389,6 +395,7 @@ const m_Player = (() => {
     m_Controls.ChangeState(nNewState);
     _oBehaviour = _oLiveBroadcast;
     _bFollowingLive = true;
+    _bLivePaused = false;
     _oMediaSourceBuffer = null;
     _bSeekNeeded = false;
     attachMediaSourceToMediaElement();
@@ -593,6 +600,7 @@ const m_Player = (() => {
   */
   function StartPlayback(nCheck) {
     if (
+      _bLivePaused ||
       _oMediaElement.seeking ||
       nCheck === PLAYBACK_POSSIBLE_AFTER_SEEK ||
       !_oMediaElement.paused ||
@@ -986,6 +994,7 @@ const m_Player = (() => {
       return;
     }
     SetFollowingLive(false);
+    _bLivePaused = false;
     ShowState("Wow", `DVR seeking to ${nSeekTo}`);
     _oMediaElement.currentTime = nSeekTo;
     if (_oMediaElement.paused) {
@@ -998,6 +1007,7 @@ const m_Player = (() => {
   function JumpToLive() {
     Check(m_Controls.GetState() === STATE_PLAYING);
     SetFollowingLive(true);
+    _bLivePaused = false;
     const oBuffer = _oMediaElement.buffered;
     if (oBuffer.length !== 0) {
       const nEdge = oBuffer.end(oBuffer.length - 1);
@@ -1033,8 +1043,40 @@ const m_Player = (() => {
     }
   }
 
+  /*
+    Mettre un direct en pause, c'est cesser de suivre le bord. Les segments continuent d'arriver et
+    de s'empiler ; l'image reste ou le spectateur l'a laissee. Sans cela le lecteur le ramenerait de
+    lui-meme au bord des que le tampon deborde, et la pause ne tiendrait pas.
+
+    Reprendre ne ramene pas au direct : la lecture repart d'ou elle s'etait arretee, et le bouton
+    du direct est la pour revenir au bord quand il le veut.
+
+    Jusqu'ou il peut rester en arriere, c'est la fenetre du DVR qui le dit -- le reglage de duree de
+    rediffusion, « Auto » pour ne rien jeter. Au-dela, le lecteur avance la fenetre pour que le
+    tampon ne grossisse pas sans fin.
+  */
+  function TogglePauseLive() {
+    if (_bLivePaused) {
+      m_Log.Wow("[Player] Resuming the live where it was paused");
+      _bLivePaused = false;
+      _oMediaElement.play().catch(STUB);
+    } else {
+      m_Log.Wow("[Player] Pausing the live");
+      _bLivePaused = true;
+      SetFollowingLive(false);
+      _oMediaElement.pause();
+    }
+    UpdateLiveScale();
+    m_Events.SendEvent("player-paused", _oMediaElement.paused);
+  }
+
   function TogglePause() {
-    Check(m_Controls.GetState() === STATE_REPEAT);
+    const nState = m_Controls.GetState();
+    Check(nState === STATE_REPEAT || nState === STATE_PLAYING);
+    if (nState === STATE_PLAYING) {
+      TogglePauseLive();
+      return;
+    }
     _oReplay.bPause = !_oReplay.bPause;
     if (_oReplay.bPause) {
       m_Log.Wow("[Player] Pausing replay");
