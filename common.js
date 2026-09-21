@@ -422,7 +422,12 @@ const m_Settings = (() => {
 		sAudioDeviceId: Setting.Create(''),
 		sVariantLabel: Setting.Create('CoolCmd'),
 		nVariantBitrate: Setting.Create(MAX_SETTING_VALUE),
-		nReplayDuration2: Setting.CreateRange(60, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
+		/*
+			Mesure sur un direct : en mode « Auto », ou l'on ne jette rien, le tampon cesse de grandir a
+			166 s. C'est Chrome qui tranche, en jetant le plus ancien de lui-meme, sans erreur ni coupure.
+			La profondeur par defaut part donc du maximum reglable : au-dela, seul le navigateur decide.
+		*/
+		nReplayDuration2: Setting.CreateRange(MAX_REPEAT_DURATION, MIN_REPEAT_DURATION, MAX_REPEAT_DURATION, 'J0124'),
 		bScaleImage: Setting.Create(true),
 		nChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN, CHAT_PANEL ]),
 		nClosedChatState: Setting.CreateEnum(CHAT_UNLOADED, [ CHAT_UNLOADED, CHAT_HIDDEN ]),
