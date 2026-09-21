@@ -41,6 +41,14 @@ const m_Rewind = (() => {
       })
     );
     _elVideo.addEventListener(
+      "timeupdate",
+      AddExceptionHandler(() => {
+        if (_bShown) {
+          m_Controls.UpdateBroadcastScale();
+        }
+      })
+    );
+    _elVideo.addEventListener(
       "error",
       AddExceptionHandler(() => {
         m_Log.Oops(`[Rewind] Playback failed. ${_elVideo.error && _elVideo.error.message}`);

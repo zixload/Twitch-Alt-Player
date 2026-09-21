@@ -984,6 +984,10 @@ const m_Player = (() => {
     encore, il n'y a rien a peindre.
   */
   function UpdateLiveScale() {
+    // L'echelle de la diffusion entiere quand on la connait ; a defaut, celle du seul tampon.
+    if (m_Controls.UpdateBroadcastScale()) {
+      return;
+    }
     const oBuffer = _oMediaElement.buffered;
     if (oBuffer.length === 0) {
       return;
@@ -1017,6 +1021,21 @@ const m_Player = (() => {
       _oMediaElement.play().catch(STUB);
     }
     UpdateLiveScale();
+  }
+
+  // Se placer a tant de secondes derriere le bord du direct. C'est la forme qui convient a une
+  // barre graduee en secondes de diffusion : elle sait le retard voulu, pas le temps media.
+  function SeekLiveToBehind(nBehind) {
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length !== 0) {
+      SeekLiveTo(oBuffer.end(oBuffer.length - 1) - nBehind);
+    }
+  }
+
+  // Combien de secondes le tampon du direct retient derriere le bord.
+  function GetLiveDepth() {
+    const oBuffer = _oMediaElement.buffered;
+    return oBuffer.length === 0 ? 0 : oBuffer.end(oBuffer.length - 1) - oBuffer.start(0);
   }
 
   // Sauter au bord du direct et s'y recaler. Le tampon normal de latence nous en separe.
@@ -1219,6 +1238,8 @@ const m_Player = (() => {
     AddNextSegment,
     IsFollowingLive,
     SeekLiveTo,
+    SeekLiveToBehind,
+    GetLiveDepth,
     JumpToLive,
     SeekReplayTo,
     SeekReplayBy,

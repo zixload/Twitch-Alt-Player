@@ -67,7 +67,9 @@ const m_Scale = (() => {
     // En rediffusion, on se deplace dans l'enregistrement fige ; en direct, on rembobine dans le
     // tampon sans couper le flux (DVR).
     if (nState === STATE_PLAYING) {
-      m_Player.SeekLiveTo(nSeekTo);
+      // La fenetre peut etre celle de la diffusion entiere : seul m_Controls sait alors laquelle
+      // des deux sources doit prendre le point vise.
+      m_Controls.SeekBroadcastTo(nSeekTo);
     } else {
       m_Player.SeekReplayTo(nSeekTo);
     }

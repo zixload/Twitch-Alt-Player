@@ -875,6 +875,54 @@ const m_Controls = (() => {
     La pastille du direct (DVR). Pleine et rouge quand on suit le bord ; creuse et cliquable quand le
     spectateur a rembobine, pour revenir au direct d'un clic. m_Player previent a chaque bascule.
   */
+  /*
+    La barre du direct va du debut de la diffusion jusqu'a maintenant, pas du seul tampon. Les deux
+    sources s'y placent sur la meme graduation : le direct par son retard sur le bord, l'enregistrement
+    par sa propre position, qui compte deja depuis le debut de la diffusion.
+
+    Rend false tant que la diffusion n'est pas connue -- au demarrage, ou sur une rediffusion --
+    auquel cas le lecteur garde la barre de son tampon.
+  */
+  function UpdateBroadcastScale() {
+    const nElapsed = m_Twitch.GetBroadcastElapsed();
+    if (!Number.isFinite(nElapsed) || _nState !== STATE_PLAYING) {
+      return false;
+    }
+    let nWatched = nElapsed;
+    if (m_Rewind.IsShown()) {
+      nWatched = m_Rewind.GetPosition();
+    } else {
+      const nBehind = m_Player.GetSecondsBehindLiveEdge();
+      if (nBehind >= 0) {
+        nWatched = nElapsed - nBehind;
+      }
+    }
+    m_Scale.SetStartAndEnd(0, nElapsed);
+    m_Scale.SetWatched(Math.max(nWatched, 0));
+    return true;
+  }
+
+  /*
+    Ou tombe un clic sur la barre pendant le direct. Ce que le tampon retient encore reste au
+    direct -- meme flux, meme latence, pub toujours ecartee. Au-dela, c'est l'enregistrement qui
+    prend la suite ; il porte toute la diffusion.
+  */
+  function SeekBroadcastTo(nPosition) {
+    const nElapsed = m_Twitch.GetBroadcastElapsed();
+    if (!Number.isFinite(nElapsed)) {
+      m_Player.SeekLiveTo(nPosition);
+      return;
+    }
+    const nBehind = nElapsed - nPosition;
+    // Une marge : le bord du tampon bouge entre le clic et le deplacement.
+    if (nBehind < m_Player.GetLiveDepth() - 1) {
+      m_Rewind.Stop();
+      m_Player.SeekLiveToBehind(Math.max(nBehind, 0));
+      return;
+    }
+    m_Rewind.PlayAt(nPosition);
+  }
+
   function HandleFollowingLive(bFollowing) {
     const elGoLive = GetNode("golive");
     elGoLive.classList.toggle("golive-live", bFollowing);
@@ -1335,6 +1383,8 @@ const m_Controls = (() => {
   return {
     Start,
     GetState,
+    UpdateBroadcastScale,
+    SeekBroadcastTo,
     ChangeState,
     getReplaySpeed,
     UpdateTrackCount,

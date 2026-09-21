@@ -1053,6 +1053,13 @@ const m_Twitch = (() => {
 
     Hors direct, ou tant que la diffusion n'est pas connue, l'ancien calcul reste le seul possible.
   */
+  // Depuis combien de secondes la diffusion dure, ou NaN tant qu'on ne la connait pas.
+  function GetBroadcastElapsed() {
+    return Number.isNaN(_nBroadcastStart)
+      ? NaN
+      : (performance.now() + g_nExactTime - _nBroadcastStart) / 1e3;
+  }
+
   function GetBroadcastPosition(bForClip) {
     if (!Number.isNaN(_nBroadcastStart)) {
       const nBehind = m_Player.GetSecondsBehindLiveEdge();
@@ -1373,6 +1380,7 @@ const m_Twitch = (() => {
     GetRecordingUrlForCurrentPosition,
     GetCurrentRecordingId,
     GetBroadcastPosition,
+    GetBroadcastElapsed,
     CreateClip,
     GetChannelVideos,
     GetChannelClips,
