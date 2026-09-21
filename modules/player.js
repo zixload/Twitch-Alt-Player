@@ -318,6 +318,22 @@ const m_Player = (() => {
     connait pas. Pour un clip en rediffusion, c'est la fin de l'enregistrement qui compte -- le clip
     se cree sur les dernieres secondes de Twitch, pas sur la position du spectateur.
   */
+  /*
+    Le retard du spectateur sur le bord du direct, en secondes ; -1 hors direct ou sans tampon.
+    C'est tout ce que le lecteur peut dire de sur : ou ce retard se place dans la diffusion, seul
+    m_Twitch le sait, qui connait l'heure a laquelle elle a commence.
+  */
+  function GetSecondsBehindLiveEdge() {
+    if (m_Controls.GetState() !== STATE_PLAYING) {
+      return -1;
+    }
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length === 0) {
+      return -1;
+    }
+    return Math.max(oBuffer.end(oBuffer.length - 1) - _oMediaElement.currentTime, 0);
+  }
+
   function GetBroadcastPlaybackPosition(bForClip) {
     if (Number.isNaN(_nBroadcastOffset)) {
       return -1;
@@ -1196,6 +1212,7 @@ const m_Player = (() => {
     GetBufferFill,
     GetDroppedFrameCount,
     GetBroadcastPlaybackPosition,
+    GetSecondsBehindLiveEdge,
     ShowState,
     Reload: ReloadAndWaitForBufferFill,
     ApplyVolume,

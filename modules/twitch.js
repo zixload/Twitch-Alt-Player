@@ -61,6 +61,9 @@ const m_Twitch = (() => {
   // L'identifiant du VOD que Twitch enregistre du direct en cours, quand la chaine garde ses VODs.
   // Il sert a rejouer la diffusion depuis son vrai debut dans le lecteur (m_Videos).
   let _sRecordingId = "";
+  // L'heure a laquelle la diffusion a commence, telle que Twitch l'annonce. C'est elle qui donne
+  // une position dans la diffusion, quel que soit le format du flux.
+  let _nBroadcastStart = NaN;
 
   let _sViewerId = "";
   let _sViewerLogin = "";
@@ -879,7 +882,8 @@ const m_Twitch = (() => {
           if (sGameSlug) {
             oMetadata.sGameUrl = getCategoryUrl(sGameSlug);
           }
-          oMetadata.nBroadcastDuration = performance.now() + g_nExactTime - Date.parse(chain(oUser, "stream", "createdAt"));
+          _nBroadcastStart = Date.parse(chain(oUser, "stream", "createdAt"));
+          oMetadata.nBroadcastDuration = performance.now() + g_nExactTime - _nBroadcastStart;
         }
         m_Events.SendEvent("twitch-broadcastmetadatareceived", oMetadata);
         updateBroadcastMetadata(oPromiseCancellation, BROADCAST_METADATA_INTERVAL);
@@ -908,6 +912,7 @@ const m_Twitch = (() => {
   // A pause keeps the broadcast known, so a clip can still be made; an end forgets it.
   function FinishCollectingBroadcastMetadata(bBroadcastEnded) {
     if (bBroadcastEnded) {
+      _nBroadcastStart = NaN;
       _sBroadcastId = _sRecordingUrl = _sRecordingId = "";
     }
     if (_oMetadataUpdateCancel) {
@@ -1035,6 +1040,29 @@ const m_Twitch = (() => {
 
   // L'identifiant du VOD en cours du direct, ou "" si la chaine ne garde pas ses VODs. m_Videos s'en
   // sert pour rejouer la diffusion depuis le debut dans le lecteur.
+  /*
+    Ou en est le spectateur dans la diffusion, en secondes depuis son debut.
+
+    Le lecteur le deduisait d'un decalage lu dans les segments MPEG-TS, stream_offset. Deux ennuis :
+    sur les chaines servies en fMP4 le convertisseur n'est pas sur le chemin, le decalage n'existe
+    pas, et l'adresse de l'enregistrement partait sans position du tout ; sur les autres, il
+    annoncait deux secondes pour une diffusion de quatre heures.
+
+    On part donc de l'heure de debut annoncee par Twitch -- deja connue, elle sert a afficher la
+    duree -- moins le retard du spectateur sur le bord. Vrai quel que soit le conteneur.
+
+    Hors direct, ou tant que la diffusion n'est pas connue, l'ancien calcul reste le seul possible.
+  */
+  function GetBroadcastPosition(bForClip) {
+    if (!Number.isNaN(_nBroadcastStart)) {
+      const nBehind = m_Player.GetSecondsBehindLiveEdge();
+      if (nBehind >= 0) {
+        return Math.max((performance.now() + g_nExactTime - _nBroadcastStart) / 1e3 - nBehind, 0);
+      }
+    }
+    return m_Player.GetBroadcastPlaybackPosition(bForClip);
+  }
+
   function GetCurrentRecordingId() {
     return _sRecordingId;
   }
@@ -1044,7 +1072,7 @@ const m_Twitch = (() => {
       m_Log.Oops("[Twitch] Recording address unknown");
       return "";
     }
-    const nPosition = m_Player.GetBroadcastPlaybackPosition(false);
+    const nPosition = GetBroadcastPosition(false);
     if (nPosition === -1) {
       m_Log.Here("[Twitch] Recording address created without a playback position");
       return _sRecordingUrl;
@@ -1056,7 +1084,7 @@ const m_Twitch = (() => {
   }
 
   function CreateClip() {
-    const nPosition = m_Player.GetBroadcastPlaybackPosition(true);
+    const nPosition = GetBroadcastPosition(true);
     if (_sBroadcastId === "" || nPosition <= 0) {
       m_Log.Oops(`[Twitch] Not enough data to create a clip BroadcastId=${_sBroadcastId} Position=${nPosition}`);
       m_Notification.ShowAss();
@@ -1344,6 +1372,7 @@ const m_Twitch = (() => {
     ChangeViewerChannelSubscription,
     GetRecordingUrlForCurrentPosition,
     GetCurrentRecordingId,
+    GetBroadcastPosition,
     CreateClip,
     GetChannelVideos,
     GetChannelClips,

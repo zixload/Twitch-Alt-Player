@@ -124,6 +124,8 @@ function charger({ nHasard = 0.5 } = {}) {
 		aoCadres: [],
 		oReglages: { nRandomNumber: 0.25, bFullChat: true, bDimChat: false },
 		nPosition: -1,
+		// Le retard sur le bord du direct ; -1 veut dire « pas en direct ».
+		nRetard: -1,
 		nMaintenant: 0,
 		bFini: false,
 	};
@@ -221,7 +223,10 @@ function charger({ nHasard = 0.5 } = {}) {
 		GetText: s => `<${s}>`,
 		m_Log: { Here() {}, Wow() {}, Oops: s => t.asJournal.push(s), O: p => JSON.stringify(p), F0: n => String(Math.round(n)) },
 		m_Settings: { Get: s => t.oReglages[s] },
-		m_Player: { GetBroadcastPlaybackPosition: () => t.nPosition },
+		m_Player: {
+			GetBroadcastPlaybackPosition: () => t.nPosition,
+			GetSecondsBehindLiveEdge: () => t.nRetard,
+		},
 		m_Events: { SendEvent: (s, p) => t.aoEvenements.push([ s, p ]) },
 		m_Notification: { ShowAss: () => { t.kAss++; }, Show: (s, b) => t.aoNotifications.push([ s, b ]) },
 		m_Debug: {
@@ -940,6 +945,43 @@ await cas(async () => {
 		&& oUrl.searchParams.get('broadcasterLogin') === CHAINE && oUrl.searchParams.get('offsetSeconds') === '126',
 		'le clip s ouvre sur clips.twitch.tv, a la seconde superieure');
 	ok(t.aoNotifications[0][0] === 'svg-cut', 'avec la notification des ciseaux');
+});
+
+titre('8 bis. Ou en est le spectateur dans la diffusion');
+/*
+	La position ne se deduit plus d'un decalage lu dans les segments -- absent des chaines servies en
+	fMP4, et faux ailleurs -- mais de l'heure de debut annoncee par Twitch, moins le retard sur le
+	bord du direct. Ici la diffusion a commence une heure avant l'instant du test.
+*/
+await cas(async () => {
+	const t = charger();
+	await preparer(t);
+	t.sur('broadcast metadata', () => reponseDiffusion());
+	t.T.StartCollectingBroadcastMetadata();
+	await t.avancer(0);
+	t.nPosition = 7;
+	t.nRetard = 10;
+	ok(t.T.GetRecordingUrlForCurrentPosition() === 'https://www.twitch.tv/videos/999?t=0h59m50s',
+		'une heure de diffusion, dix secondes de retard : la position vaut 59 min 50 s');
+	t.nRetard = 0;
+	ok(t.T.GetRecordingUrlForCurrentPosition() === 'https://www.twitch.tv/videos/999?t=1h0m0s',
+		'au bord du direct : l heure pleine');
+	await t.avancer(120000);
+	t.nRetard = 0;
+	ok(t.T.GetRecordingUrlForCurrentPosition() === 'https://www.twitch.tv/videos/999?t=1h2m0s',
+		'deux minutes plus tard, deux minutes de plus : l horloge avance seule');
+	// Hors direct, le lecteur reste seul juge : l ancien calcul.
+	t.nRetard = -1;
+	ok(t.T.GetRecordingUrlForCurrentPosition() === 'https://www.twitch.tv/videos/999?t=0h0m7s',
+		'hors direct, on retombe sur la position que donne le lecteur');
+});
+await cas(async () => {
+	const t = charger();
+	await preparer(t);
+	t.nPosition = 7;
+	t.nRetard = 10;
+	ok(t.T.GetRecordingUrlForCurrentPosition() === '',
+		'sans diffusion connue, pas d adresse d enregistrement du tout');
 });
 
 titre('9. Suivre et ne plus suivre');
