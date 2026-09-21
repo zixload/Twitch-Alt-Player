@@ -33,6 +33,8 @@ const m_Videos = (() => {
   // The qualities of the video currently playing, best first, and the one chosen.
   let _aoQualities = [];
   let _sQualityKey = "";
+  // L'adresse d'une liste de lecture refermee, a liberer quand on change de video.
+  let _sClosedPlaylistUrl = "";
   // What is playing, so its position can be remembered under its id.
   let _oNowPlaying = null;
   let _bResumePending = false;
@@ -314,13 +316,97 @@ const m_Videos = (() => {
     });
   }
 
-  function PlayAddress(sAddress) {
-    // The live broadcast keeps playing in its corner, silently.
-    document.getElementById("eye").muted = true;
-    _elVideo.src = sAddress;
-    _elVideo.play().catch((pReason) => {
-      m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
+  const PLAYLIST_MEDIA_TYPE = "application/vnd.apple.mpegurl";
+
+  /*
+    Le VOD d'un direct en cours est servi comme une liste qui grandit : « EVENT », sans
+    #EXT-X-ENDLIST. Chrome la lit alors comme un direct -- duree infinie, aucune plage deplacable --
+    et la barre ne peut plus rien faire : elle affichait « Infinity:NaN:NaN » et le curseur restait
+    au depart.
+
+    Or cette liste porte deja TOUT depuis le debut de la diffusion : sequence 0, chaque segment
+    depuis le premier. Il ne lui manque que sa marque de fin. On la referme donc nous-memes et on
+    sert la copie au lecteur, qui y voit une video finie et la parcourt d'un bout a l'autre.
+
+    Les adresses de segments deviennent absolues : un blob n'a plus d'adresse de base pour resoudre
+    « 1356.mp4 ».
+
+    C'est un instantane. Il s'arrete ou la diffusion en etait ; rouvrir la rediffusion en prend un
+    nouveau, plus long.
+  */
+  function ClosePlaylist(sText, sBaseUrl) {
+    const asLines = sText.split("\n");
+    const asClosed = asLines.map((sLine) => {
+      const sTrimmed = sLine.trim();
+      if (sTrimmed === "") {
+        return sLine;
+      }
+      if (sTrimmed.startsWith("#EXT-X-PLAYLIST-TYPE:")) {
+        return "#EXT-X-PLAYLIST-TYPE:VOD";
+      }
+      if (sTrimmed.startsWith("#")) {
+        // Une balise peut porter une adresse : #EXT-X-MAP, #EXT-X-KEY.
+        return sTrimmed.replace(/URI="([^"]*)"/g, (sAll, sUri) => `URI="${new URL(sUri, sBaseUrl).href}"`);
+      }
+      return new URL(sTrimmed, sBaseUrl).href;
     });
+    if (!sText.includes("#EXT-X-PLAYLIST-TYPE:")) {
+      asClosed.splice(1, 0, "#EXT-X-PLAYLIST-TYPE:VOD");
+    }
+    asClosed.push("#EXT-X-ENDLIST", "");
+    return asClosed.join("\n");
+  }
+
+  function ReleaseClosedPlaylist() {
+    if (_sClosedPlaylistUrl !== "") {
+      URL.revokeObjectURL(_sClosedPlaylistUrl);
+      _sClosedPlaylistUrl = "";
+    }
+  }
+
+  /*
+    L'adresse a donner a l'element video : la meme, ou celle d'une copie refermee quand la liste
+    grandit encore. Tout ce qui echoue rend l'adresse d'origine : au pire on retombe sur le
+    comportement d'avant, jamais sur une video qui ne part pas.
+  */
+  function ResolvePlayableUrl(sUrl) {
+    if (!/\.m3u8(\?|$)/.test(sUrl)) {
+      return Promise.resolve(sUrl);
+    }
+    return fetch(sUrl, { cache: "no-store" })
+      .then((oResponse) => (oResponse.ok ? oResponse.text() : ""))
+      .then((sText) => {
+        if (!sText || !sText.includes("#EXTINF") || sText.includes("#EXT-X-ENDLIST")) {
+          return sUrl;
+        }
+        ReleaseClosedPlaylist();
+        _sClosedPlaylistUrl = URL.createObjectURL(
+          new Blob([ClosePlaylist(sText, sUrl)], { type: PLAYLIST_MEDIA_TYPE })
+        );
+        m_Log.Wow("[Videos] Growing playlist closed so the seek bar works");
+        return _sClosedPlaylistUrl;
+      })
+      .catch((pReason) => {
+        m_Log.Oops(`[Videos] Could not close the playlist. ${pReason}`);
+        return sUrl;
+      });
+  }
+
+  function PlayAddress(sAddress) {
+    const nGeneration = _nVideoGeneration;
+    ResolvePlayableUrl(sAddress).then(
+      AddExceptionHandler((sPlayable) => {
+        if (nGeneration !== _nVideoGeneration || !_bOpen) {
+          return;
+        }
+        // The live broadcast keeps playing in its corner, silently.
+        document.getElementById("eye").muted = true;
+        _elVideo.src = sPlayable;
+        _elVideo.play().catch((pReason) => {
+          m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
+        });
+      })
+    );
   }
 
   // ------------------------------------------------------------------------------------------
@@ -348,8 +434,19 @@ const m_Videos = (() => {
     _elQuality.value = sKey;
     const nTime = _elVideo.currentTime;
     const bWasPlaying = !_elVideo.paused && !_elVideo.ended;
-    document.getElementById("eye").muted = true;
-    _elVideo.src = oQuality.sUrl;
+    const nGeneration = _nVideoGeneration;
+    ResolvePlayableUrl(oQuality.sUrl).then(
+      AddExceptionHandler((sPlayable) => {
+        if (nGeneration !== _nVideoGeneration || !_bOpen) {
+          return;
+        }
+        document.getElementById("eye").muted = true;
+        _elVideo.src = sPlayable;
+        _elVideo.play().catch((pReason) => {
+          m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
+        });
+      })
+    );
     _elVideo.addEventListener("loadedmetadata", function AtMetadata() {
       _elVideo.removeEventListener("loadedmetadata", AtMetadata);
       if (nTime > 0 && Number.isFinite(_elVideo.duration) && nTime < _elVideo.duration) {
@@ -358,9 +455,6 @@ const m_Videos = (() => {
       if (bWasPlaying) {
         _elVideo.play().catch(() => {});
       }
-    });
-    _elVideo.play().catch((pReason) => {
-      m_Log.Oops(`[Videos] Playback did not start. ${pReason}`);
     });
   }
 
@@ -377,6 +471,7 @@ const m_Videos = (() => {
       // Without load(), the element keeps the last stream open and keeps downloading it.
       _elVideo.load();
     }
+    ReleaseClosedPlaylist();
     _aoQualities = [];
     _sQualityKey = "";
     _oNowPlaying = null;
