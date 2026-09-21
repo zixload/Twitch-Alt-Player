@@ -40,6 +40,12 @@ const m_Videos = (() => {
   let _nPreviewSeekTimer = 0;
   let _nPreviewLastMove = 0;
   let _nPreviewWanted = -1;
+  // Une image gardee toutes les deux minutes, et la marche de fond qui les ramasse.
+  let _elPreviewCanvas = null;
+  let _mPreviewFrames = new Map();
+  let _nPreviewWalkTimer = 0;
+  let _kPreviewWalk = 0;
+  let _bPreviewCanCapture = true;
   // Tant qu'aucune image n'a ete atteinte, la bulle ne montre que l'heure : la premiere image du
   // VOD ferait croire qu'on survole le debut.
   let _bPreviewSeeked = false;
@@ -761,6 +767,7 @@ const m_Videos = (() => {
     _elPreviewVideo = document.createElement("video");
     _elPreviewVideo.className = "videos-preview-image";
     _elPreviewVideo.muted = true;
+    _elPreviewVideo.crossOrigin = "anonymous";
     _elPreviewVideo.playsInline = true;
     _elPreviewVideo.preload = "auto";
     _elPreviewVideo.hidden = true;
@@ -768,6 +775,8 @@ const m_Videos = (() => {
       "seeked",
       AddExceptionHandler(() => {
         _bPreviewSeeked = true;
+        CapturePreviewFrame();
+        ScheduleWalk(PREVIEW_WALK_PAUSE);
       })
     );
     _elPreview.insertBefore(_elPreviewVideo, _elPreviewTime);
@@ -780,6 +789,7 @@ const m_Videos = (() => {
         }
       })
     );
+    ScheduleWalk(PREVIEW_WALK_PAUSE);
     return _elPreviewVideo;
   }
 
@@ -818,8 +828,10 @@ const m_Videos = (() => {
         _nPreviewSeekTimer = setTimeout(AddExceptionHandler(SeekPreview), PREVIEW_MIN_INTERVAL - nSince);
       }
     }
-    elVideo.hidden = !_bPreviewSeeked || elVideo.readyState < 2;
-    return !elVideo.hidden;
+    const bExact = _bPreviewSeeked && elVideo.readyState >= 2 && Math.abs(elVideo.currentTime - nTime) <= 1;
+    elVideo.hidden = !bExact;
+    _elPreviewImg.hidden = bExact || !ShowKeptFrame(nTime);
+    return bExact || !_elPreviewImg.hidden;
   }
 
   /*
@@ -833,12 +845,94 @@ const m_Videos = (() => {
     }
   }
 
+  /*
+    Une image toutes les deux minutes, gardee de cote.
+
+    Une recherche coute une centaine de millisecondes : assez peu pour suivre le curseur, assez
+    pour qu'on voie l'image arriver. La bulle montre donc d'abord la vignette gardee la plus
+    proche -- au pire a une minute de la position visee, ce qui suffit a se reperer -- et l'image
+    exacte la remplace des qu'elle est la.
+
+    Les images sont ramassees par une marche de fond qui parcourt la diffusion de deux minutes en
+    deux minutes. Le spectateur passe devant : tant qu'il survole la barre, la marche attend.
+  */
+  const PREVIEW_CACHE_STEP = 120;
+  const PREVIEW_WALK_PAUSE = 250;
+
+  const PreviewSlice = (nTime) => Math.round(nTime / PREVIEW_CACHE_STEP);
+
+  function CapturePreviewFrame() {
+    if (!_bPreviewCanCapture || _elPreviewVideo === null || _elPreviewVideo.readyState < 2) {
+      return;
+    }
+    if (_elPreviewCanvas === null) {
+      _elPreviewCanvas = document.createElement("canvas");
+    }
+    _elPreviewCanvas.width = _elPreviewVideo.videoWidth;
+    _elPreviewCanvas.height = _elPreviewVideo.videoHeight;
+    try {
+      _elPreviewCanvas.getContext("2d").drawImage(_elPreviewVideo, 0, 0);
+      _mPreviewFrames.set(
+        PreviewSlice(_elPreviewVideo.currentTime),
+        _elPreviewCanvas.toDataURL("image/jpeg", 0.6)
+      );
+    } catch (pException) {
+      // Video servie sans en-tete d'autorisation : le canevas est teint, on s'en passe.
+      _bPreviewCanCapture = false;
+      m_Log.Oops(`[Videos] Preview frames cannot be kept. ${pException}`);
+    }
+  }
+
+  function ScheduleWalk(nDelay) {
+    if (_nPreviewWalkTimer === 0 && _bPreviewCanCapture) {
+      _nPreviewWalkTimer = setTimeout(AddExceptionHandler(WalkPreview), nDelay);
+    }
+  }
+
+  function WalkPreview() {
+    _nPreviewWalkTimer = 0;
+    if (_elPreviewVideo === null || !_bPreviewCanCapture || !Number.isFinite(_elVideo.duration)) {
+      return;
+    }
+    if (performance.now() - _nPreviewLastMove < 500) {
+      ScheduleWalk(500);
+      return;
+    }
+    const kLast = Math.floor(_elVideo.duration / PREVIEW_CACHE_STEP);
+    while (_kPreviewWalk <= kLast && _mPreviewFrames.has(_kPreviewWalk)) {
+      _kPreviewWalk++;
+    }
+    if (_kPreviewWalk > kLast) {
+      return;
+    }
+    _nPreviewWanted = Math.min(_kPreviewWalk * PREVIEW_CACHE_STEP, _elVideo.duration - 1);
+    SeekPreview();
+  }
+
+  // L'image gardee la plus proche, quand elle n'est pas trop loin de ce qui est survole.
+  function ShowKeptFrame(nTime) {
+    const sImage = _mPreviewFrames.get(PreviewSlice(nTime));
+    if (sImage === void 0) {
+      return false;
+    }
+    _elPreviewImg.style.backgroundImage = `url("${sImage}")`;
+    _elPreviewImg.style.backgroundSize = "cover";
+    _elPreviewImg.style.backgroundPosition = "0 0";
+    _elPreviewImg.hidden = false;
+    return true;
+  }
+
   function ReleasePreviewVideo() {
     clearTimeout(_nPreviewSeekTimer);
     _nPreviewSeekTimer = 0;
     _nPreviewLastMove = 0;
     _nPreviewWanted = -1;
     _bPreviewSeeked = false;
+    clearTimeout(_nPreviewWalkTimer);
+    _nPreviewWalkTimer = 0;
+    _kPreviewWalk = 0;
+    _bPreviewCanCapture = true;
+    _mPreviewFrames = new Map();
     if (_elPreviewVideo !== null) {
       _elPreviewVideo.removeAttribute("src");
       _elPreviewVideo.load();
@@ -875,7 +969,6 @@ const m_Videos = (() => {
       }
       HidePreviewVideo();
     } else {
-      _elPreviewImg.hidden = true;
       MovePreviewTo(nRatio * _elVideo.duration);
     }
     ShowElement(_elPreview, true);
