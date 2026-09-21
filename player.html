@@ -33,6 +33,7 @@
 <script src=modules/controls.js defer></script>
 <script src=videos-twitchnosub.js defer></script>
 <script src=modules/videos.js defer></script>
+<script src=modules/rewind.js defer></script>
 <script src=modules/playlist.js defer></script>
 <script src=modules/dragger.js defer></script>
 <script src=modules/fullscreen-mode.js defer></script>
@@ -75,6 +76,8 @@
 		<div id=alt-stage>
 		<div id=player>
 			<video id=eye playsinline tabindex=-1></video>
+			<!-- La meme diffusion, vue depuis son enregistrement, quand on remonte au-dela du tampon. -->
+			<video id=rewind playsinline tabindex=-1 hidden></video>
 			<section id=videos hidden>
 				<div class=videos-header>
 					<div class=videos-tabs role=tablist>

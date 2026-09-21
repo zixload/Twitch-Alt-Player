@@ -366,7 +366,8 @@ a:hover {
 	color: rgb(var(--sHeadingColour))
 	/* color: rgb(var(--sHeaderColor)) */
 }
-#eye {
+#eye,
+#rewind {
 /* #eye */
 	position: absolute;
 	top: 0;
@@ -377,7 +378,8 @@ a:hover {
 	-webkit-user-select: none;
 	user-select: none
 }
-#eye.scaled {
+#eye.scaled,
+#rewind.scaled {
 /* #eye.scale */
 	object-fit: contain
 }

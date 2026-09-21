@@ -207,6 +207,64 @@ function Clamp(nValue, nMin, nMax) {
   return Math.min(Math.max(nValue, nMin), nMax);
 }
 
+/*
+  Une liste de lecture qui grandit encore -- le VOD d'une diffusion en cours -- refermee pour que le
+  navigateur y voie une video finie.
+
+  Twitch la sert en type EVENT, sans #EXT-X-ENDLIST. Chrome la lit alors comme un direct : duree
+  infinie, aucune plage deplacable. Or elle porte deja tout depuis le debut de la diffusion ; il ne
+  lui manque que sa marque de fin. On la referme donc et on sert la copie par un blob.
+
+  Les adresses de segments deviennent absolues : un blob n'a plus de base pour resoudre « 1356.mp4 ».
+  Les balises qui portent une adresse, #EXT-X-MAP et #EXT-X-KEY, sont traitees de meme.
+
+  Rend l'adresse d'origine quand il n'y a rien a faire, ou quand quoi que ce soit echoue : au pire on
+  retombe sur le comportement d'avant, jamais sur une video qui ne part pas. Une adresse rendue
+  differente de celle qu'on a donnee est un blob, a liberer par l'appelant.
+*/
+const PLAYLIST_MEDIA_TYPE = "application/vnd.apple.mpegurl";
+
+function closePlaylist(sText, sBaseUrl) {
+  const asLines = sText.split("\n");
+  const asClosed = asLines.map((sLine) => {
+    const sTrimmed = sLine.trim();
+    if (sTrimmed === "") {
+      return sLine;
+    }
+    if (sTrimmed.startsWith("#EXT-X-PLAYLIST-TYPE:")) {
+      return "#EXT-X-PLAYLIST-TYPE:VOD";
+    }
+    if (sTrimmed.startsWith("#")) {
+      return sTrimmed.replace(/URI="([^"]*)"/g, (sAll, sUri) => `URI="${new URL(sUri, sBaseUrl).href}"`);
+    }
+    return new URL(sTrimmed, sBaseUrl).href;
+  });
+  if (!sText.includes("#EXT-X-PLAYLIST-TYPE:")) {
+    asClosed.splice(1, 0, "#EXT-X-PLAYLIST-TYPE:VOD");
+  }
+  asClosed.push("#EXT-X-ENDLIST", "");
+  return asClosed.join("\n");
+}
+
+function makeSeekablePlaylist(sUrl) {
+  if (!/\.m3u8(\?|$)/.test(sUrl)) {
+    return Promise.resolve(sUrl);
+  }
+  return fetch(sUrl, { cache: "no-store" })
+    .then((oResponse) => (oResponse.ok ? oResponse.text() : ""))
+    .then((sText) => {
+      if (!sText || !sText.includes("#EXTINF") || sText.includes("#EXT-X-ENDLIST")) {
+        return sUrl;
+      }
+      m_Log.Wow("[Player] Growing playlist closed so it can be seeked");
+      return URL.createObjectURL(new Blob([closePlaylist(sText, sUrl)], { type: PLAYLIST_MEDIA_TYPE }));
+    })
+    .catch((pReason) => {
+      m_Log.Oops(`[Player] Could not close the playlist. ${pReason}`);
+      return sUrl;
+    });
+}
+
 function chain(pObject, ...msProperties) {
   Check(msProperties.length !== 0);
   for (const sProperty of msProperties) {

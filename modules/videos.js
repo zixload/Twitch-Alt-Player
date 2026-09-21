@@ -331,80 +331,14 @@ const m_Videos = (() => {
     });
   }
 
-  const PLAYLIST_MEDIA_TYPE = "application/vnd.apple.mpegurl";
-
-  /*
-    Le VOD d'un direct en cours est servi comme une liste qui grandit : « EVENT », sans
-    #EXT-X-ENDLIST. Chrome la lit alors comme un direct -- duree infinie, aucune plage deplacable --
-    et la barre ne peut plus rien faire : elle affichait « Infinity:NaN:NaN » et le curseur restait
-    au depart.
-
-    Or cette liste porte deja TOUT depuis le debut de la diffusion : sequence 0, chaque segment
-    depuis le premier. Il ne lui manque que sa marque de fin. On la referme donc nous-memes et on
-    sert la copie au lecteur, qui y voit une video finie et la parcourt d'un bout a l'autre.
-
-    Les adresses de segments deviennent absolues : un blob n'a plus d'adresse de base pour resoudre
-    « 1356.mp4 ».
-
-    C'est un instantane. Il s'arrete ou la diffusion en etait ; rouvrir la rediffusion en prend un
-    nouveau, plus long.
-  */
-  function ClosePlaylist(sText, sBaseUrl) {
-    const asLines = sText.split("\n");
-    const asClosed = asLines.map((sLine) => {
-      const sTrimmed = sLine.trim();
-      if (sTrimmed === "") {
-        return sLine;
-      }
-      if (sTrimmed.startsWith("#EXT-X-PLAYLIST-TYPE:")) {
-        return "#EXT-X-PLAYLIST-TYPE:VOD";
-      }
-      if (sTrimmed.startsWith("#")) {
-        // Une balise peut porter une adresse : #EXT-X-MAP, #EXT-X-KEY.
-        return sTrimmed.replace(/URI="([^"]*)"/g, (sAll, sUri) => `URI="${new URL(sUri, sBaseUrl).href}"`);
-      }
-      return new URL(sTrimmed, sBaseUrl).href;
-    });
-    if (!sText.includes("#EXT-X-PLAYLIST-TYPE:")) {
-      asClosed.splice(1, 0, "#EXT-X-PLAYLIST-TYPE:VOD");
-    }
-    asClosed.push("#EXT-X-ENDLIST", "");
-    return asClosed.join("\n");
-  }
-
-  function ReleaseClosedPlaylists() {
-    for (const sUrl of _asClosedPlaylistUrls) {
-      URL.revokeObjectURL(sUrl);
-    }
-    _asClosedPlaylistUrls = [];
-  }
-
-  /*
-    L'adresse a donner a l'element video : la meme, ou celle d'une copie refermee quand la liste
-    grandit encore. Tout ce qui echoue rend l'adresse d'origine : au pire on retombe sur le
-    comportement d'avant, jamais sur une video qui ne part pas.
-  */
+  // Referme la liste si besoin, et retient l'adresse fabriquee pour la liberer plus tard.
   function ResolvePlayableUrl(sUrl) {
-    if (!/\.m3u8(\?|$)/.test(sUrl)) {
-      return Promise.resolve(sUrl);
-    }
-    return fetch(sUrl, { cache: "no-store" })
-      .then((oResponse) => (oResponse.ok ? oResponse.text() : ""))
-      .then((sText) => {
-        if (!sText || !sText.includes("#EXTINF") || sText.includes("#EXT-X-ENDLIST")) {
-          return sUrl;
-        }
-        const sClosed = URL.createObjectURL(
-          new Blob([ClosePlaylist(sText, sUrl)], { type: PLAYLIST_MEDIA_TYPE })
-        );
-        _asClosedPlaylistUrls.push(sClosed);
-        m_Log.Wow("[Videos] Growing playlist closed so the seek bar works");
-        return sClosed;
-      })
-      .catch((pReason) => {
-        m_Log.Oops(`[Videos] Could not close the playlist. ${pReason}`);
-        return sUrl;
-      });
+    return makeSeekablePlaylist(sUrl).then((sPlayable) => {
+      if (sPlayable !== sUrl) {
+        _asClosedPlaylistUrls.push(sPlayable);
+      }
+      return sPlayable;
+    });
   }
 
   function PlayAddress(sAddress) {

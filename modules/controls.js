@@ -142,7 +142,9 @@ const m_Controls = (() => {
   // Les actions
 
   function ApplyImageScaling() {
-    GetNode("eye").classList.toggle("scaled", m_Settings.Get("bScaleImage"));
+    const bScaled = m_Settings.Get("bScaleImage");
+    GetNode("eye").classList.toggle("scaled", bScaled);
+    GetNode("rewind").classList.toggle("scaled", bScaled);
   }
 
   function ApplyInterfaceAnimation() {
@@ -279,6 +281,7 @@ const m_Controls = (() => {
       m_Settings.Change("nVolume2", Math.round(nVolume));
     }
     m_Player.ApplyVolume();
+    m_Rewind.ApplyVolume();
     UpdateVolume();
     m_AutoHide.Show();
   }
@@ -339,6 +342,7 @@ const m_Controls = (() => {
 
     case "golive":
       if (_nState === STATE_PLAYING) {
+        m_Rewind.Stop();
         m_Player.JumpToLive();
       }
       break;
@@ -346,10 +350,9 @@ const m_Controls = (() => {
     case "watchfromstart": {
       // Rejouer le direct depuis son vrai debut : le VOD en cours, dans le lecteur Videos. Ouvrir la
       // vue ferme le menu.
-      const sRecordingId = m_Twitch.GetCurrentRecordingId();
-      if (IsNonEmptyString(sRecordingId)) {
-        m_Videos.PlayRecordingFromStart(sRecordingId, GetNode("broadcasttitle").textContent);
-      }
+      // Sur la page meme, pas dans la vue des videos : on reste devant la diffusion, et le
+      // direct continue derriere pour qu'y revenir soit immediat.
+      m_Rewind.PlayAt(0);
       break;
     }
 
@@ -878,6 +881,11 @@ const m_Controls = (() => {
     elGoLive.title = GetText(bFollowing ? "J0151" : "J0152");
   }
 
+  // Devant l'enregistrement, on n'est plus au bord : la pastille ne doit pas pretendre le contraire.
+  function HandleRewindChanged(bShown) {
+    HandleFollowingLive(!bShown && m_Player.IsFollowingLive());
+  }
+
   function HandleBufferingPresetChange() {
     UpdateSettingsWindow();
     m_Statistics.ClearHistory();
@@ -1041,6 +1049,7 @@ const m_Controls = (() => {
     m_Events.AddHandler("player-bufferoverflow", handleBufferOverflow);
     m_Events.AddHandler("player-paused", HandlePause);
     m_Events.AddHandler("player-followinglive", HandleFollowingLive);
+    m_Events.AddHandler("rewind-changed", HandleRewindChanged);
     m_Events.AddHandler("settings-presetchanged-buffering", HandleBufferingPresetChange);
     m_Events.AddHandler("twitch-channelmetadatareceived", ShowChannelMetadata);
     m_Events.AddHandler("twitch-viewermetadatareceived", ShowViewerMetadata);

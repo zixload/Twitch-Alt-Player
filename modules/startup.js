@@ -43,6 +43,7 @@ AddExceptionHandler(() => {
     }
     m_Statistics.Start();
     m_Videos.Start();
+    m_Rewind.Start();
   }
   if (window.top !== window) {
     return;
