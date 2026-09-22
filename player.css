@@ -628,6 +628,10 @@ body:not(.rewinding) .rewindonly {
 }
 /* La barre de lecture sert au direct (DVR) comme a la rediffusion ; hors de la, elle ne parait pas.
    La pastille du direct n'a de sens que pendant le direct. */
+/* Le bouton d'arret ne parait plus quand il n'y a rien a arreter. Sa face « arreter » portait le
+   meme dessin que la pause, juste a cote d'elle, pour un geste que la barre fait mieux sans se
+   debrancher ; sa face « reprendre » reste, la ou elle sert : le lecteur arrete. */
+body:not([data-state="7"]):not([data-state="8"]) .forstopped,
 body:not([data-state="6"]):not([data-state="8"]) .seekbar,
 body:not([data-state="6"]):not([data-state="8"]) .forpause,
 body:not([data-state="6"]) .fordvr {

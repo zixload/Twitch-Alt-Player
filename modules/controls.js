@@ -181,6 +181,15 @@ const m_Controls = (() => {
     m_Playlist.Start();
   }
 
+  // Ce qui est devant prend la commande : l'enregistrement s'il est la, le lecteur sinon.
+  function TogglePlayback() {
+    if (m_Rewind.IsShown()) {
+      m_Rewind.TogglePause();
+    } else if (_nState === STATE_REPEAT || _nState === STATE_PLAYING) {
+      m_Player.TogglePause();
+    }
+  }
+
   function ToggleStatisticsWindow() {
     if (m_Statistics.WindowOpened()) {
       m_Statistics.CloseWindow();
@@ -357,12 +366,7 @@ const m_Controls = (() => {
     }
 
     case "togglepause":
-      // Ce qui est devant prend la commande : l'enregistrement s'il est la, le lecteur sinon.
-      if (m_Rewind.IsShown()) {
-        m_Rewind.TogglePause();
-      } else if (_nState === STATE_REPEAT || _nState === STATE_PLAYING) {
-        m_Player.TogglePause();
-      }
+      TogglePlayback();
       break;
 
     case "togglemute":
@@ -629,10 +633,21 @@ const m_Controls = (() => {
       }
       break;
 
-    // --- La diffusion.
+    /*
+      --- La diffusion. Espace met en pause ce qu'on regarde.
+
+      Il coupait la reception pour rejouer le tampon : c'etait la seule facon de regarder en
+      arriere, et elle obligeait a se debrancher. La barre remonte maintenant toute la diffusion
+      sans rien couper. Il ne reste de l'ancien geste que la reprise, quand le lecteur s'est arrete
+      tout seul -- chaine reservee aux abonnes, adresse copiee, demarrage rate.
+    */
     case KEY_SPACE:
       if (bFirstPress) {
-        ToggleWatchingBroadcast();
+        if (m_Rewind.IsShown() || _nState === STATE_PLAYING) {
+          TogglePlayback();
+        } else {
+          ToggleWatchingBroadcast();
+        }
         m_AutoHide.Show();
       }
       break;
@@ -879,6 +894,16 @@ const m_Controls = (() => {
       GetNode("watchfromstart"),
       IsNonEmptyString(m_Twitch.GetCurrentRecordingId())
     );
+  }
+
+  /*
+    Les deux dessins d'un bouton a deux faces se superposent tant que personne n'a choisi lequel
+    montrer, et ChangeButton ne passait ici qu'a la premiere pause. La barre s'ouvrait donc avec la
+    pause et la lecture l'une sur l'autre -- ce qui se remarque d'autant plus que c'est maintenant
+    le seul bouton de ce genre a gauche de la barre.
+  */
+  function ShowNotPaused() {
+    ChangeButton("togglepause", false);
   }
 
   function HandlePause(bPause) {
@@ -1158,6 +1183,7 @@ const m_Controls = (() => {
     nodeVolume.min = MIN_VOLUME;
     nodeVolume.addEventListener("input", HandleVolumeChange);
     UpdateVolume();
+    ShowNotPaused();
     UpdateSettingsWindow();
     m_Settings.ConfigurePresetLists();
     m_AutoHide.Start();

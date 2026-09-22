@@ -215,12 +215,19 @@
 		// -------------------------------------------------------- Rediffusion ou direct.
 		m_Controls.ChangeState(STATE_PLAYING);
 		k = aAppels.length;
-		touche(75);
 		touche(37);
 		touche(49);
 		touche(187);
-		dire('en direct, les touches de rediffusion ne font rien',
-			!depuis(k).some((s) => /^(pause|deplacer|vitesse)/.test(s)), depuis(k).join(' '));
+		dire('en direct, deplacement et vitesse ne font rien',
+			!depuis(k).some((s) => /^(deplacer|vitesse)/.test(s)), depuis(k).join(' '));
+		k = aAppels.length;
+		touche(75);
+		dire('en direct, K met la diffusion en pause', depuis(k).includes('pause()'), depuis(k).join(' '));
+		k = aAppels.length;
+		touche(32);
+		dire('et Espace fait la meme chose, sans couper la reception',
+			depuis(k).includes('pause()') && !depuis(k).some((s) => s.startsWith('listestop')),
+			depuis(k).join(' '));
 
 		m_Controls.ChangeState(STATE_REPEAT);
 		k = aAppels.length;
@@ -262,7 +269,8 @@
 		m_Controls.ChangeState(STATE_PLAYING);
 		k = aAppels.length;
 		cliquer('togglepause');
-		dire('en direct, il ne fait rien', !depuis(k).includes('pause()'), depuis(k).join(' '));
+		dire('en direct, le bouton pause met le direct en pause', depuis(k).includes('pause()'),
+			depuis(k).join(' '));
 
 		// ------------------------------------------------------------------ Les clics.
 		k = aAppels.length;
@@ -365,7 +373,8 @@
 		dire('une diffusion en direct est marquee comme telle',
 			document.getElementById('broadcasttype').classList.contains('livebroadcast'));
 		dire('sans categorie, la categorie est cachee', document.getElementById('broadcastcategory').hidden);
-		dire('la duree de diffusion s\'affiche', document.getElementById('position').textContent === m_i18n.SecondsToString(3723, false),
+		dire('la duree de diffusion s\'affiche en HH:MM:SS',
+			document.getElementById('position').textContent === formatTimecode(3723),
 			document.getElementById('position').textContent);
 		m_Events.SendEvent('twitch-broadcastmetadatareceived', { kViewers: -1 });
 		dire('un compte de spectateurs invalide est cache', elSpect.hidden);
