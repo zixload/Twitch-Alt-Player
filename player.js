@@ -265,6 +265,25 @@ function makeSeekablePlaylist(sUrl) {
     });
 }
 
+/*
+  Un temps de barre de lecture : toujours HH:MM:SS, zeros compris.
+
+  Lire une barre demande des colonnes stables. Un chiffre qui apparait ou disparait -- « 9:07 » puis
+  « 1:09:07 » -- fait sauter le texte sous le curseur au moment ou l'oeil le suit. Au-dela de
+  vingt-quatre heures les heures debordent la colonne plutot que de repartir a zero : une diffusion
+  de trente heures se lit 30:00:00.
+
+  Un temps inconnu ne vaut pas zero, et ne doit pas s'ecrire comme lui.
+*/
+function formatTimecode(nSeconds) {
+  if (!Number.isFinite(nSeconds)) {
+    return "--:--:--";
+  }
+  const kTotal = Math.max(0, Math.floor(nSeconds));
+  const aiParts = [Math.floor(kTotal / 3600), Math.floor(kTotal / 60) % 60, kTotal % 60];
+  return aiParts.map((k) => String(k).padStart(2, "0")).join(":");
+}
+
 function chain(pObject, ...msProperties) {
   Check(msProperties.length !== 0);
   for (const sProperty of msProperties) {

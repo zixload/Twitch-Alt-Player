@@ -949,7 +949,7 @@ const m_Controls = (() => {
       ShowElement(elBubble, false);
       return;
     }
-    GetNode("scale-preview-time").textContent = m_i18n.SecondsToString(nPosition, false);
+    GetNode("scale-preview-time").textContent = formatTimecode(nPosition);
     elBubble.style.left = `${Math.round(nLeftPx)}px`;
     const elImage = GetNode("scale-preview-image");
     const sRecordingId = m_Twitch.GetCurrentRecordingId();
@@ -1452,7 +1452,7 @@ const m_Controls = (() => {
     if (oMetadata.nBroadcastDuration !== void 0) {
       GetNode("position").textContent =
         Number.isFinite(oMetadata.nBroadcastDuration) && oMetadata.nBroadcastDuration >= 0
-          ? m_i18n.SecondsToString(oMetadata.nBroadcastDuration / 1e3, false)
+          ? formatTimecode(oMetadata.nBroadcastDuration / 1e3)
           : "";
     }
   }

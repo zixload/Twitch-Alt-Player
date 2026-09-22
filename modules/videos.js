@@ -421,16 +421,6 @@ const m_Videos = (() => {
   // The controls -- the alternate player's own look, without the live-only parts
 
   // mm:ss, or h:mm:ss past an hour. Same shape as the thumbnails.
-  function FormatTime(nSeconds) {
-    const kTotal = Math.max(0, Math.floor(nSeconds || 0));
-    const kHours = Math.floor(kTotal / 3600);
-    const kMinutes = Math.floor(kTotal / 60) % 60;
-    const sSeconds = String(kTotal % 60).padStart(2, "0");
-    return kHours !== 0
-      ? `${kHours}:${String(kMinutes).padStart(2, "0")}:${sSeconds}`
-      : `${kMinutes}:${sSeconds}`;
-  }
-
   const TogglePlay = AddExceptionHandler(() => {
     if (_elVideo.paused || _elVideo.ended) {
       _elVideo.play().catch(() => {});
@@ -481,7 +471,7 @@ const m_Videos = (() => {
   }
 
   function UpdateTime() {
-    _elTime.textContent = `${FormatTime(_elVideo.currentTime)} / ${FormatTime(_elVideo.duration)}`;
+    _elTime.textContent = `${formatTimecode(_elVideo.currentTime)} / ${formatTimecode(_elVideo.duration)}`;
   }
 
   // --- The seek bar
@@ -641,7 +631,7 @@ const m_Videos = (() => {
     }
     const nSaved = ReadPositions()[_oNowPlaying.sId];
     if (Number.isFinite(nSaved) && nSaved >= RESUME_MIN && nSaved < _elVideo.duration - RESUME_TAIL) {
-      m_Log.Here(`[Videos] Resuming ${_oNowPlaying.sId} at ${FormatTime(nSaved)}`);
+      m_Log.Here(`[Videos] Resuming ${_oNowPlaying.sId} at ${formatTimecode(nSaved)}`);
       _elVideo.currentTime = nSaved;
     }
   }
@@ -672,7 +662,7 @@ const m_Videos = (() => {
     }
     const oRect = _elSeek.getBoundingClientRect();
     const nRatio = Clamp((oEvent.clientX - oRect.left) / oRect.width, 0, 1);
-    _elPreviewTime.textContent = FormatTime(nRatio * _elVideo.duration);
+    _elPreviewTime.textContent = formatTimecode(nRatio * _elVideo.duration);
     // Centre the preview on the cursor, kept inside the seek bar's width.
     const nLeft = Clamp(oEvent.clientX - oRect.left, 60, oRect.width - 60);
     _elPreview.style.left = `${nLeft}px`;
