@@ -1,4 +1,4 @@
-# Twitch-No-Ads — working notes
+# Twitch-Alt-Player — working notes
 
 Read this before changing anything. `REPARTITION.md` (in French) holds the history and the measurements
 behind the current layout; this file holds what is true now and how to work.
@@ -8,7 +8,7 @@ behind the current layout; this file holds what is true now and how to work.
 ## Rules that are not up for discussion
 
 - **This branch is the original now.** The phase-2 rewrite has shipped to `master` and been published
-  as `Twitch-No-Ads`; the pre-rewrite `master @ 6c6fc18` is abandoned and no longer used. Work
+  as `Twitch-Alt-Player`; the pre-rewrite `master @ 6c6fc18` is abandoned and no longer used. Work
   happens in the worktree `twitch-alt-v2-nettoyage` (branch `nettoyage`), which is fast-forwarded into
   `master` and pushed. The old rule against touching `twitch_alternate_player-v2` is retired.
 - **No tool attribution of any kind.** No `Co-Authored-By` trailer, and no mention of any assistant

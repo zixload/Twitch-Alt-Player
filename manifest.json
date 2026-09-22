@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
 	"minimum_chrome_version": "92",
-	"name": "Twitch No Ads",
-	"short_name": "Twitch No Ads",
+	"name": "Twitch Alt Player",
+	"short_name": "Twitch Alt Player",
 	"version": "2025.5.28",
 	"description": "__MSG_M0001__",
 	"icons": {

@@ -1,7 +1,7 @@
 {
 	"M0001":
 	{
-		"message": "An alternate Twitch.tv player that skips ads, plays subscriber-only videos, and shows live stream stats.",
+		"message": "An alternate Twitch.tv player with no ads, and a seek bar covering the whole broadcast: pause a live, rewind, jump back to now.",
 		"description": "Краткое описание расширения. Копия этой строки есть в AMO и Windows Store."
 	},
 	"M0010":
