@@ -45,9 +45,14 @@ const CASES = [
 	['panne documentee : prefixe du gabarit emetteur renomme seul',
 		{ 'sans-emetteur': ['window-opened-mainmenu'] },
 		[[SCRIPTS, /SendEvent\(`window-opened-\$\{/, 'SendEvent(`окно-открыто-${']]],
+	/*
+		PARTOUT depuis que deux modules emettent cet evenement : le lecteur du direct et celui de
+		l'enregistrement. Muter le seul premier fichier laissait un emetteur debout, l'evenement
+		gardait le sien, et le cas ne prouvait plus rien.
+	*/
 	['nom litteral renomme a l\'emission seulement',
 		{ 'sans-emetteur': ['player-paused'] },
-		[[SCRIPTS, /SendEvent\("player-paused"/g, 'SendEvent("player-pause"']]],
+		[[SCRIPTS, /SendEvent\("player-paused"/g, 'SendEvent("player-pause"', PARTOUT]]],
 	['nom litteral renomme a l\'ecoute seulement',
 		{ 'sans-auditeur': ['fullscreen-changed'], 'sans-emetteur': ['fullscreen-change'] },
 		[[SCRIPTS, /AddHandler\(\s*"fullscreen-changed"/, 'AddHandler("fullscreen-change"']]],

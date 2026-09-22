@@ -85,7 +85,11 @@ const m_Rewind = (() => {
     return true;
   }
 
-  function SeekTo(nPosition) {
+  /*
+    bResume distingue les deux gestes : viser un point sur la barre relance la lecture, se decaler de
+    cinq secondes avec les fleches ne doit pas sortir de la pause.
+  */
+  function SeekTo(nPosition, bResume = true) {
     if (!_bShown) {
       return;
     }
@@ -95,8 +99,34 @@ const m_Rewind = (() => {
       return;
     }
     _elVideo.currentTime = Math.max(Math.min(nPosition, _elVideo.duration || nPosition), 0);
+    if (bResume && _elVideo.paused) {
+      _elVideo.play().catch(STUB);
+    }
+  }
+
+  // Se decaler sans quitter l'etat ou l'on est : en pause on reste en pause.
+  function SeekBy(nSeconds) {
+    if (_bShown && _elVideo.readyState !== 0) {
+      SeekTo(_elVideo.currentTime + nSeconds, false);
+    }
+  }
+
+  function TogglePause() {
+    if (!_bShown) {
+      return;
+    }
     if (_elVideo.paused) {
       _elVideo.play().catch(STUB);
+    } else {
+      _elVideo.pause();
+    }
+    m_Events.SendEvent("player-paused", _elVideo.paused);
+  }
+
+  function SetSpeed(nSpeed) {
+    Check(nSpeed > 0);
+    if (_bShown) {
+      _elVideo.playbackRate = nSpeed;
     }
   }
 
@@ -161,7 +191,10 @@ const m_Rewind = (() => {
     _elVideo.volume = m_Settings.Get("nVolume2") / MAX_VOLUME;
     _elVideo.muted = m_Settings.Get("bMute");
     _elVideo.hidden = false;
+    // L'image dans l'image doit montrer ce qu'on regarde, pas le direct laisse derriere.
+    m_PictureInPicture.start(_elVideo);
     m_Events.SendEvent("rewind-changed", true);
+    m_Events.SendEvent("player-paused", false);
   }
 
   function Stop() {
@@ -180,8 +213,11 @@ const m_Rewind = (() => {
       return;
     }
     _bShown = false;
+    _elVideo.playbackRate = 1;
+    m_PictureInPicture.start(_elLive);
     m_Player.ApplyVolume();
     m_Events.SendEvent("rewind-changed", false);
+    m_Events.SendEvent("player-paused", _elLive.paused);
   }
 
   function ReleasePlaylist() {
@@ -204,6 +240,9 @@ const m_Rewind = (() => {
     Start,
     PlayAt,
     SeekTo,
+    SeekBy,
+    TogglePause,
+    SetSpeed,
     Stop,
     IsShown,
     GetPosition,

@@ -601,7 +601,7 @@ body:not(.colourcheck) .svg-settings,
 .colourcheck .spinner>use:not(.svg-settings),
 .colourcheckbackground #eye,
 body[data-state="8"] .notforreplay,
-body:not([data-state="8"]) .forreplay,
+body:not([data-state="8"]):not(.rewinding) .forreplay,
 .novideo #togglepictureinpicture,
 .noaudio #togglemute,
 .noaudio #volume {

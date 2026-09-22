@@ -357,7 +357,10 @@ const m_Controls = (() => {
     }
 
     case "togglepause":
-      if (_nState === STATE_REPEAT || _nState === STATE_PLAYING) {
+      // Ce qui est devant prend la commande : l'enregistrement s'il est la, le lecteur sinon.
+      if (m_Rewind.IsShown()) {
+        m_Rewind.TogglePause();
+      } else if (_nState === STATE_REPEAT || _nState === STATE_PLAYING) {
         m_Player.TogglePause();
       }
       break;
@@ -674,7 +677,10 @@ const m_Controls = (() => {
     case KEY_K:
     case KEY_CLEAR:
       // La pause vaut aussi pour le direct : elle y fige l'image sans couper le telechargement.
-      if (bFirstPress && (bReplay || _nState === STATE_PLAYING)) {
+      if (bFirstPress && m_Rewind.IsShown()) {
+        m_Rewind.TogglePause();
+        m_AutoHide.Show();
+      } else if (bFirstPress && (bReplay || _nState === STATE_PLAYING)) {
         m_Player.TogglePause();
         m_AutoHide.Show();
       }
@@ -682,7 +688,11 @@ const m_Controls = (() => {
 
     case KEY_J:
     case KEY_LEFT:
-      if (bPress && bReplay) {
+      if (bPress && m_Rewind.IsShown()) {
+        m_Log.Wow(`[Controls] Seeking the recording by -${SEEK_BY_ARROWS_BY}s`);
+        m_Rewind.SeekBy(-SEEK_BY_ARROWS_BY);
+        m_AutoHide.Show();
+      } else if (bPress && bReplay) {
         m_Log.Wow(`[Controls] Seeking by -${SEEK_BY_ARROWS_BY}s`);
         m_Player.SeekReplayBy(false, -SEEK_BY_ARROWS_BY);
         m_AutoHide.Show();
@@ -691,7 +701,11 @@ const m_Controls = (() => {
 
     case KEY_L:
     case KEY_RIGHT:
-      if (bPress && bReplay) {
+      if (bPress && m_Rewind.IsShown()) {
+        m_Log.Wow(`[Controls] Seeking the recording by +${SEEK_BY_ARROWS_BY}s`);
+        m_Rewind.SeekBy(SEEK_BY_ARROWS_BY);
+        m_AutoHide.Show();
+      } else if (bPress && bReplay) {
         m_Log.Wow(`[Controls] Seeking by +${SEEK_BY_ARROWS_BY}s`);
         m_Player.SeekReplayBy(false, SEEK_BY_ARROWS_BY);
         m_AutoHide.Show();
@@ -929,9 +943,22 @@ const m_Controls = (() => {
     elGoLive.title = GetText(bFollowing ? "J0151" : "J0152");
   }
 
-  // Devant l'enregistrement, on n'est plus au bord : la pastille ne doit pas pretendre le contraire.
+  /*
+    Devant l'enregistrement, on n'est plus au bord : la pastille ne doit pas pretendre le contraire.
+    La classe ouvre en meme temps les commandes de lecture -- vitesse, pause -- qui ne servaient
+    qu'en rediffusion.
+
+    Les statistiques se ferment : elles decrivent le flux du direct, que l'on ne regarde plus.
+  */
   function HandleRewindChanged(bShown) {
+    document.body.classList.toggle("rewinding", bShown);
     HandleFollowingLive(!bShown && m_Player.IsFollowingLive());
+    if (bShown) {
+      GetNode("speed").value = "1";
+      if (m_Statistics.WindowOpened()) {
+        m_Statistics.CloseWindow();
+      }
+    }
   }
 
   function HandleBufferingPresetChange() {
@@ -970,7 +997,9 @@ const m_Controls = (() => {
   }
 
   const HandlePlaybackSpeedChange = AddExceptionHandler((oEvent) => {
-    if (_nState === STATE_REPEAT) {
+    if (m_Rewind.IsShown()) {
+      m_Rewind.SetSpeed(getReplaySpeed());
+    } else if (_nState === STATE_REPEAT) {
       m_Player.SetReplaySpeed(getReplaySpeed());
     }
   });
