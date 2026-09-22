@@ -637,28 +637,25 @@ body:not([data-state="6"]):not([data-state="8"]) .forpause,
 body:not([data-state="6"]) .fordvr {
 	display: none
 }
+/* La pastille du direct ne porte plus de mot : le point seul le dit, allume ou eteint. Le bouton
+   garde autour de lui de quoi etre vise sans effort. */
 #golive {
-/* #golive */
 	flex: none;
 	display: flex;
 	align-items: center;
-	gap: .375rem;
+	justify-content: center;
+	width: 1.375rem;
 	height: 1.375rem;
-	margin: 0 .25rem;
+	margin: 0 .125rem;
 	border: 0;
-	border-radius: 999rem;
-	padding: 0 .625rem;
-	font: inherit;
-	font-size: .8125rem;
-	font-weight: 700;
-	letter-spacing: .02em;
-	line-height: 1;
+	border-radius: 50%;
+	padding: 0;
+	background: none;
 	cursor: pointer
 }
 .golive-dot {
-/* .golive-dot */
-	width: .5rem;
-	height: .5rem;
+	width: .5625rem;
+	height: .5625rem;
 	border-radius: 50%;
 	background: currentColor
 }

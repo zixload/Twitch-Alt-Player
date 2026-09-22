@@ -423,6 +423,13 @@ Possible causes of buffer overflow:
 				</button>
 			</div>
 			<div class="panel bottom">
+				<button id=togglepause class="button panelitem clickable forpause" type=button>
+				<!-- <button id=togglepause class="button panelelement clickable forrepeat" type=button> -->
+					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+						<use xlink:href=#svg-pause xlink:title=J0112 />
+						<use xlink:href=#svg-play xlink:title=J0113 />
+					</svg>
+				</button>
 				<button id=togglebroadcast class="button panelitem clickable forstopped" type=button>
 				<!-- <button id=togglestream class="button panelelement clickable" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
@@ -432,7 +439,6 @@ Possible causes of buffer overflow:
 				</button>
 				<button id=golive class="panelitem clickable golive golive-live fordvr" type=button data-i18n=^J0151>
 					<span class=golive-dot></span>
-					<span class=golive-text data-i18n=J0146></span>
 				</button>
 				<button id=togglemute class="button panelitem clickable" type=button>
 				<!-- <button id=togglemute class="button panelelement clickable" type=button> -->
@@ -463,13 +469,6 @@ Possible causes of buffer overflow:
 					<option value=0.1>
 				</select>
 				<select id=rewindquality class="panelitem clickable rewindonly"></select>
-				<button id=togglepause class="button panelitem clickable forpause" type=button>
-				<!-- <button id=togglepause class="button panelelement clickable forrepeat" type=button> -->
-					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
-						<use xlink:href=#svg-pause xlink:title=J0112 />
-						<use xlink:href=#svg-play xlink:title=J0113 />
-					</svg>
-				</button>
 				<div id=scale class="panelitem clickable seekbar" data-i18n=^A0535>
 					<!-- La meme bulle que dans la vue des videos, au-dessus du rail du direct. -->
 					<div id=scale-preview class=videos-preview hidden>
