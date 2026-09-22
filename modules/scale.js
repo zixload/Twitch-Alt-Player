@@ -46,23 +46,36 @@ const m_Scale = (() => {
     )})`;
   }
 
+  // Ou tombe le pointeur sur le rail : la fraction parcourue, et le pixel depuis le bord gauche.
+  // Le clic et le survol en ont besoin l'un comme l'autre.
+  function PointerAlong(oEvent) {
+    const elScale = oEvent.currentTarget;
+    const oBorder = elScale.getBoundingClientRect();
+    const oStyle = getComputedStyle(elScale);
+    const nBarStart = Math.round(oBorder.left + Number.parseFloat(oStyle.paddingLeft));
+    const nBarEnd = Math.round(oBorder.right - Number.parseFloat(oStyle.paddingRight));
+    return {
+      nAlong: (oEvent.clientX + POINTER_OFFSET - nBarStart) / (nBarEnd - nBarStart),
+      nLeft: oEvent.clientX - oBorder.left,
+    };
+  }
+
+  const HandleHover = AddExceptionHandler((oEvent) => {
+    if (m_Controls.GetState() !== STATE_PLAYING) {
+      return;
+    }
+    const { nAlong, nLeft } = PointerAlong(oEvent);
+    m_Controls.ShowBroadcastPreview(InsideWindow(nAlong * (_nEnd - _nStart) + _nStart), nLeft);
+  });
+
+  const HandleLeave = AddExceptionHandler(() => m_Controls.HideBroadcastPreview());
+
   const HandleClick = AddExceptionHandler((oEvent) => {
     const nState = m_Controls.GetState();
     if (nState !== STATE_REPEAT && nState !== STATE_PLAYING) {
       return;
     }
-    const elScale = oEvent.currentTarget;
-    const oBorder = elScale.getBoundingClientRect();
-    const oStyle = getComputedStyle(elScale);
-    const nBarStart = Math.round(
-      oBorder.left + Number.parseFloat(oStyle.paddingLeft)
-    );
-    const nBarEnd = Math.round(
-      oBorder.right - Number.parseFloat(oStyle.paddingRight)
-    );
-    const nAlong =
-      (oEvent.clientX + POINTER_OFFSET - nBarStart) / (nBarEnd - nBarStart);
-    const nSeekTo = InsideWindow(nAlong * (_nEnd - _nStart) + _nStart);
+    const nSeekTo = InsideWindow(PointerAlong(oEvent).nAlong * (_nEnd - _nStart) + _nStart);
     m_Log.Wow(`[Scale] Seeking to ${nSeekTo}`);
     // En rediffusion, on se deplace dans l'enregistrement fige ; en direct, on rembobine dans le
     // tampon sans couper le flux (DVR).
@@ -84,7 +97,30 @@ const m_Scale = (() => {
     Check(nStart <= nEnd);
     _nStart = nStart;
     _nEnd = nEnd;
-    GetNode("scale").addEventListener("click", HandleClick);
+    // Par defaut il n'y a pas de part « direct » : celui qui en a une la pose apres.
+    GetNode("scale-live").hidden = true;
+    const elScale = GetNode("scale");
+    elScale.addEventListener("click", HandleClick);
+    elScale.addEventListener("pointermove", HandleHover);
+    elScale.addEventListener("pointerleave", HandleLeave);
+  }
+
+  /*
+    Marque la part de la fenetre encore tenue par le tampon du direct, donnee en fraction depuis la
+    gauche. Hors de ce cas -- rediffusion, diffusion inconnue -- SetStartAndEnd l'efface de lui-meme.
+  */
+  function SetLiveWindow(nFromRatio) {
+    const elLive = GetNode("scale-live");
+    if (!(nFromRatio > 0) || nFromRatio >= 1) {
+      elLive.hidden = true;
+      return;
+    }
+    /*
+      Sur une longue diffusion le tampon ne pese que quelques dixiemes de pour cent : sans largeur
+      minimale la frontiere serait invisible. Elle est exacte des qu'elle depasse ce seuil.
+    */
+    elLive.style.width = `${Math.max((1 - nFromRatio) * 100, 0.6).toFixed(2)}%`;
+    elLive.hidden = false;
   }
 
   function SetWatched(nWatched) {
@@ -102,6 +138,7 @@ const m_Scale = (() => {
 
   return {
     SetStartAndEnd,
+    SetLiveWindow,
     SetWatched,
     GetStart,
     GetEnd,

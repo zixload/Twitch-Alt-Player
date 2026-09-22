@@ -912,6 +912,7 @@ const m_Controls = (() => {
       }
     }
     m_Scale.SetStartAndEnd(0, nElapsed);
+    m_Scale.SetLiveWindow((nElapsed - m_Player.GetLiveDepth()) / nElapsed);
     m_Scale.SetWatched(Math.max(nWatched, 0));
     return true;
   }
@@ -935,6 +936,51 @@ const m_Controls = (() => {
       return;
     }
     m_Rewind.PlayAt(nPosition);
+  }
+
+  /*
+    La bulle du rail du direct : l'heure visee dans la diffusion, et la vignette de ce moment-la
+    quand un enregistrement existe. La meme que dans la vue des videos, sur la meme echelle.
+  */
+  function ShowBroadcastPreview(nPosition, nLeftPx) {
+    const elBubble = GetNode("scale-preview");
+    const nElapsed = m_Twitch.GetBroadcastElapsed();
+    if (!Number.isFinite(nElapsed) || _nState !== STATE_PLAYING) {
+      ShowElement(elBubble, false);
+      return;
+    }
+    GetNode("scale-preview-time").textContent = m_i18n.SecondsToString(nPosition, false);
+    elBubble.style.left = `${Math.round(nLeftPx)}px`;
+    const elImage = GetNode("scale-preview-image");
+    const sRecordingId = m_Twitch.GetCurrentRecordingId();
+    if (IsNonEmptyString(sRecordingId)) {
+      m_Preview.Open(sRecordingId, nElapsed);
+      elImage.hidden = !m_Preview.Paint(elImage, nPosition);
+    } else {
+      elImage.hidden = true;
+    }
+    ShowElement(elBubble, true);
+  }
+
+  // Les qualites de l'enregistrement viennent d'etre resolues : la liste s'ouvre au spectateur.
+  function HandleRewindQualities(asNames) {
+    const nodeList = GetNode("rewindquality");
+    nodeList.length = 0;
+    for (const sName of asNames) {
+      nodeList.add(new Option(sName));
+    }
+    nodeList.selectedIndex = 0;
+    nodeList.disabled = nodeList.length < 2;
+  }
+
+  const HandleRewindQualityChange = AddExceptionHandler(({ target: { selectedIndex } }) => {
+    if (selectedIndex !== -1) {
+      m_Rewind.SetQuality(selectedIndex);
+    }
+  });
+
+  function HideBroadcastPreview() {
+    ShowElement(GetNode("scale-preview"), false);
   }
 
   function HandleFollowingLive(bFollowing) {
@@ -1127,6 +1173,7 @@ const m_Controls = (() => {
     m_Events.AddHandler("player-paused", HandlePause);
     m_Events.AddHandler("player-followinglive", HandleFollowingLive);
     m_Events.AddHandler("rewind-changed", HandleRewindChanged);
+    m_Events.AddHandler("rewind-qualitiesready", HandleRewindQualities);
     m_Events.AddHandler("settings-presetchanged-buffering", HandleBufferingPresetChange);
     m_Events.AddHandler("twitch-channelmetadatareceived", ShowChannelMetadata);
     m_Events.AddHandler("twitch-viewermetadatareceived", ShowViewerMetadata);
@@ -1136,6 +1183,7 @@ const m_Controls = (() => {
     document.addEventListener("keydown", HandleKeyDownAndUp);
     document.addEventListener("keyup", HandleKeyDownAndUp);
     GetNode("speed").addEventListener("change", HandlePlaybackSpeedChange);
+    GetNode("rewindquality").addEventListener("change", HandleRewindQualityChange);
     GetNode("broadcastvariant").addEventListener("change", HandleBroadcastVariantChange);
     GetNode("wheelvolume").addEventListener("change", HandleWheelVolumeChange);
     GetNode("chaturl").addEventListener("change", HandleChatUrlChange);
@@ -1414,6 +1462,8 @@ const m_Controls = (() => {
     GetState,
     UpdateBroadcastScale,
     SeekBroadcastTo,
+    ShowBroadcastPreview,
+    HideBroadcastPreview,
     ChangeState,
     getReplaySpeed,
     UpdateTrackCount,

@@ -35,20 +35,6 @@ const m_Videos = (() => {
   let _sQualityKey = "";
   // Les adresses de listes refermees qu'on a fabriquees, a liberer quand on change de video.
   let _asClosedPlaylistUrls = [];
-  // Le lecteur cache qui sert de vignette au survol, faute de planche chez Twitch.
-  let _elPreviewVideo = null;
-  let _nPreviewSeekTimer = 0;
-  let _nPreviewLastMove = 0;
-  let _nPreviewWanted = -1;
-  // Une image gardee toutes les deux minutes, et la marche de fond qui les ramasse.
-  let _elPreviewCanvas = null;
-  let _mPreviewFrames = new Map();
-  let _nPreviewWalkTimer = 0;
-  let _kPreviewWalk = 0;
-  let _bPreviewCanCapture = true;
-  // Tant qu'aucune image n'a ete atteinte, la bulle ne montre que l'heure : la premiere image du
-  // VOD ferait croire qu'on survole le debut.
-  let _bPreviewSeeked = false;
   // What is playing, so its position can be remembered under its id.
   let _oNowPlaying = null;
   let _bResumePending = false;
@@ -291,7 +277,6 @@ const m_Videos = (() => {
             _aoQualities = aoQualities;
             BuildQualityMenu();
             PlayQuality(aoQualities[0].sKey);
-            WarmPreview();
           } else {
             PlayThroughUsher(oItem, nGeneration);
           }
@@ -420,7 +405,7 @@ const m_Videos = (() => {
       // Without load(), the element keeps the last stream open and keeps downloading it.
       _elVideo.load();
     }
-    ReleasePreviewVideo();
+    m_Preview.Close();
     ReleaseClosedPlaylists();
     _aoQualities = [];
     _sQualityKey = "";
@@ -681,200 +666,6 @@ const m_Videos = (() => {
     );
   }
 
-  /*
-    Twitch ne fabrique la planche de vignettes qu'une fois la diffusion terminee : pour le VOD d'un
-    direct en cours, elle repond 403, et la barre ne montrait que l'heure. On fournit donc l'image
-    nous-memes, avec un second lecteur cache pose dans la bulle et deplace a l'heure survolee.
-
-    Il joue la qualite la PLUS BASSE de la liste -- 160p, des segments de quelques dizaines de
-    kilo-octets : une vignette ne merite pas de telecharger la source. L'element video sert
-    d'image tel quel, sans canevas, ce qui evite d'avoir a teindre un canevas avec une video servie
-    par un autre domaine.
-
-    Il n'est cree qu'au premier survol : celui qui ne survole jamais la barre ne telecharge rien.
-  */
-  function EnsurePreviewVideo() {
-    if (_elPreviewVideo !== null || _aoQualities.length === 0) {
-      return _elPreviewVideo;
-    }
-    const oLowest = _aoQualities[_aoQualities.length - 1];
-    _elPreviewVideo = document.createElement("video");
-    _elPreviewVideo.className = "videos-preview-image";
-    _elPreviewVideo.muted = true;
-    _elPreviewVideo.crossOrigin = "anonymous";
-    _elPreviewVideo.playsInline = true;
-    _elPreviewVideo.preload = "auto";
-    _elPreviewVideo.hidden = true;
-    _elPreviewVideo.addEventListener(
-      "seeked",
-      AddExceptionHandler(() => {
-        _bPreviewSeeked = true;
-        CapturePreviewFrame();
-        ScheduleWalk(PREVIEW_WALK_PAUSE);
-      })
-    );
-    _elPreview.insertBefore(_elPreviewVideo, _elPreviewTime);
-    const nGeneration = _nVideoGeneration;
-    ResolvePlayableUrl(oLowest.sUrl).then(
-      AddExceptionHandler((sPlayable) => {
-        if (nGeneration === _nVideoGeneration && _elPreviewVideo !== null) {
-          m_Log.Here(`[Videos] Preview thumbnails from ${oLowest.sName}`);
-          _elPreviewVideo.src = sPlayable;
-        }
-      })
-    );
-    ScheduleWalk(PREVIEW_WALK_PAUSE);
-    return _elPreviewVideo;
-  }
-
-  /*
-    A cadence, pas a l'arret du curseur : le premier mouvement deplace tout de suite, les suivants
-    au plus une fois par PREVIEW_MIN_INTERVAL. Attendre que le curseur se pose donnait une vignette
-    qui arrivait toujours apres coup ; balayer sans limite demanderait un segment par pixel.
-
-    L'image precedente reste affichee pendant la recherche : mieux vaut une image en retard qu'un
-    trou noir.
-  */
-  // Mesure : une recherche dans la vignette coute 65 a 100 ms. La cadence peut donc etre serree.
-  const PREVIEW_MIN_INTERVAL = 60;
-
-  function SeekPreview() {
-    _nPreviewSeekTimer = 0;
-    _nPreviewLastMove = performance.now();
-    // Un ecart d'une seconde ne changerait pas l'image : la recherche couterait un segment pour rien.
-    if (_elPreviewVideo !== null && _elPreviewVideo.readyState !== 0
-      && Math.abs(_elPreviewVideo.currentTime - _nPreviewWanted) > 1) {
-      _elPreviewVideo.currentTime = _nPreviewWanted;
-    }
-  }
-
-  function MovePreviewTo(nTime) {
-    const elVideo = EnsurePreviewVideo();
-    if (elVideo === null) {
-      return false;
-    }
-    _nPreviewWanted = nTime;
-    if (_nPreviewSeekTimer === 0) {
-      const nSince = performance.now() - _nPreviewLastMove;
-      if (nSince >= PREVIEW_MIN_INTERVAL) {
-        SeekPreview();
-      } else {
-        _nPreviewSeekTimer = setTimeout(AddExceptionHandler(SeekPreview), PREVIEW_MIN_INTERVAL - nSince);
-      }
-    }
-    const bExact = _bPreviewSeeked && elVideo.readyState >= 2 && Math.abs(elVideo.currentTime - nTime) <= 1;
-    elVideo.hidden = !bExact;
-    _elPreviewImg.hidden = bExact || !ShowKeptFrame(nTime);
-    return bExact || !_elPreviewImg.hidden;
-  }
-
-  /*
-    Sans planche de vignettes, le lecteur qui les rend est monte des l'ouverture : la premiere
-    vignette demandait sinon plus de deux secondes -- charger la liste, ouvrir le flux, chercher --
-    et arrivait toujours apres le curseur.
-  */
-  function WarmPreview() {
-    if (!_oStoryboard) {
-      EnsurePreviewVideo();
-    }
-  }
-
-  /*
-    Une image toutes les deux minutes, gardee de cote.
-
-    Une recherche coute une centaine de millisecondes : assez peu pour suivre le curseur, assez
-    pour qu'on voie l'image arriver. La bulle montre donc d'abord la vignette gardee la plus
-    proche -- au pire a une minute de la position visee, ce qui suffit a se reperer -- et l'image
-    exacte la remplace des qu'elle est la.
-
-    Les images sont ramassees par une marche de fond qui parcourt la diffusion de deux minutes en
-    deux minutes. Le spectateur passe devant : tant qu'il survole la barre, la marche attend.
-  */
-  const PREVIEW_CACHE_STEP = 120;
-  const PREVIEW_WALK_PAUSE = 250;
-
-  const PreviewSlice = (nTime) => Math.round(nTime / PREVIEW_CACHE_STEP);
-
-  function CapturePreviewFrame() {
-    if (!_bPreviewCanCapture || _elPreviewVideo === null || _elPreviewVideo.readyState < 2) {
-      return;
-    }
-    if (_elPreviewCanvas === null) {
-      _elPreviewCanvas = document.createElement("canvas");
-    }
-    _elPreviewCanvas.width = _elPreviewVideo.videoWidth;
-    _elPreviewCanvas.height = _elPreviewVideo.videoHeight;
-    try {
-      _elPreviewCanvas.getContext("2d").drawImage(_elPreviewVideo, 0, 0);
-      _mPreviewFrames.set(
-        PreviewSlice(_elPreviewVideo.currentTime),
-        _elPreviewCanvas.toDataURL("image/jpeg", 0.6)
-      );
-    } catch (pException) {
-      // Video servie sans en-tete d'autorisation : le canevas est teint, on s'en passe.
-      _bPreviewCanCapture = false;
-      m_Log.Oops(`[Videos] Preview frames cannot be kept. ${pException}`);
-    }
-  }
-
-  function ScheduleWalk(nDelay) {
-    if (_nPreviewWalkTimer === 0 && _bPreviewCanCapture) {
-      _nPreviewWalkTimer = setTimeout(AddExceptionHandler(WalkPreview), nDelay);
-    }
-  }
-
-  function WalkPreview() {
-    _nPreviewWalkTimer = 0;
-    if (_elPreviewVideo === null || !_bPreviewCanCapture || !Number.isFinite(_elVideo.duration)) {
-      return;
-    }
-    if (performance.now() - _nPreviewLastMove < 500) {
-      ScheduleWalk(500);
-      return;
-    }
-    const kLast = Math.floor(_elVideo.duration / PREVIEW_CACHE_STEP);
-    while (_kPreviewWalk <= kLast && _mPreviewFrames.has(_kPreviewWalk)) {
-      _kPreviewWalk++;
-    }
-    if (_kPreviewWalk > kLast) {
-      return;
-    }
-    _nPreviewWanted = Math.min(_kPreviewWalk * PREVIEW_CACHE_STEP, _elVideo.duration - 1);
-    SeekPreview();
-  }
-
-  // L'image gardee la plus proche, quand elle n'est pas trop loin de ce qui est survole.
-  function ShowKeptFrame(nTime) {
-    const sImage = _mPreviewFrames.get(PreviewSlice(nTime));
-    if (sImage === void 0) {
-      return false;
-    }
-    _elPreviewImg.style.backgroundImage = `url("${sImage}")`;
-    _elPreviewImg.style.backgroundSize = "cover";
-    _elPreviewImg.style.backgroundPosition = "0 0";
-    _elPreviewImg.hidden = false;
-    return true;
-  }
-
-  function ReleasePreviewVideo() {
-    clearTimeout(_nPreviewSeekTimer);
-    _nPreviewSeekTimer = 0;
-    _nPreviewLastMove = 0;
-    _nPreviewWanted = -1;
-    _bPreviewSeeked = false;
-    clearTimeout(_nPreviewWalkTimer);
-    _nPreviewWalkTimer = 0;
-    _kPreviewWalk = 0;
-    _bPreviewCanCapture = true;
-    _mPreviewFrames = new Map();
-    if (_elPreviewVideo !== null) {
-      _elPreviewVideo.removeAttribute("src");
-      _elPreviewVideo.load();
-      _elPreviewVideo.remove();
-      _elPreviewVideo = null;
-    }
-  }
-
   function ShowPreview(oEvent) {
     if (!Number.isFinite(_elVideo.duration)) {
       return;
@@ -901,19 +692,13 @@ const m_Videos = (() => {
       } else {
         _elPreviewImg.hidden = true;
       }
-      HidePreviewVideo();
     } else {
-      MovePreviewTo(nRatio * _elVideo.duration);
+      // Sans planche chez Twitch, les vignettes viennent de m_Preview, partage avec la barre du
+      // direct : le meme enregistrement, la meme echelle.
+      m_Preview.Open(_oNowPlaying.sId, _elVideo.duration);
+      _elPreviewImg.hidden = !m_Preview.Paint(_elPreviewImg, nRatio * _elVideo.duration);
     }
     ShowElement(_elPreview, true);
-  }
-
-  function HidePreviewVideo() {
-    clearTimeout(_nPreviewSeekTimer);
-    _nPreviewSeekTimer = 0;
-    if (_elPreviewVideo !== null) {
-      _elPreviewVideo.hidden = true;
-    }
   }
 
   function HidePreview() {
@@ -1084,8 +869,8 @@ const m_Videos = (() => {
     _elSeek.addEventListener(
       "pointerenter",
       AddExceptionHandler(() => {
-        if (!_oStoryboard) {
-          EnsurePreviewVideo();
+        if (!_oStoryboard && _oNowPlaying && _oNowPlaying.sKind === "video") {
+          m_Preview.Open(_oNowPlaying.sId, _elVideo.duration);
         }
       })
     );

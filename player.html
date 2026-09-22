@@ -32,6 +32,7 @@
 <script src=player.js defer></script>
 <script src=modules/controls.js defer></script>
 <script src=videos-twitchnosub.js defer></script>
+<script src=modules/preview.js defer></script>
 <script src=modules/videos.js defer></script>
 <script src=modules/rewind.js defer></script>
 <script src=modules/playlist.js defer></script>
@@ -461,6 +462,7 @@ Possible causes of buffer overflow:
 					<option value=0.25>
 					<option value=0.1>
 				</select>
+				<select id=rewindquality class="panelitem clickable rewindonly"></select>
 				<button id=togglepause class="button panelitem clickable forpause" type=button>
 				<!-- <button id=togglepause class="button panelelement clickable forrepeat" type=button> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
@@ -469,8 +471,15 @@ Possible causes of buffer overflow:
 					</svg>
 				</button>
 				<div id=scale class="panelitem clickable seekbar" data-i18n=^A0535>
+					<!-- La meme bulle que dans la vue des videos, au-dessus du rail du direct. -->
+					<div id=scale-preview class=videos-preview hidden>
+						<div id=scale-preview-image class=videos-preview-image></div>
+						<span id=scale-preview-time class=videos-preview-time></span>
+					</div>
 				<!-- <div id=scale class="panelelement clickable forrepeat" data-i18n=^A0535> -->
 					<div class=scale-background>
+						<!-- La part que le tampon du direct tient encore ; au-dela c'est l'enregistrement. -->
+						<div id=scale-live hidden></div>
 						<div id=scale-watched></div>
 						<!-- <div id=scale-viewed></div> -->
 					</div>

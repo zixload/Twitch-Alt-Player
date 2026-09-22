@@ -27,6 +27,9 @@ const m_Rewind = (() => {
   let _nWantedPosition = -1;
   let _nGeneration = 0;
   let _bShown = false;
+  // Les qualites de l'enregistrement, et celle qui joue.
+  let _aoQualities = [];
+  let _kQuality = 0;
 
   function Start() {
     _elVideo = GetNode("rewind");
@@ -169,12 +172,53 @@ const m_Rewind = (() => {
       );
   }
 
+  /*
+    TwitchNoSub rend toutes les qualites de l'enregistrement, celles reservees aux abonnes comprises.
+    A defaut, l'adresse signee de Twitch, seule et sans choix.
+  */
   function ResolveSource(sId) {
     if (typeof TwitchNoSub === "undefined") {
       return m_Twitch.GetVideoPlaybackUrl(sId);
     }
-    return TwitchNoSub.resolveVodQualities(sId).then((aoQualities) =>
-      aoQualities.length === 0 ? m_Twitch.GetVideoPlaybackUrl(sId) : aoQualities[0].sUrl
+    return TwitchNoSub.resolveVodQualities(sId).then((aoQualities) => {
+      _aoQualities = aoQualities;
+      _kQuality = 0;
+      if (aoQualities.length === 0) {
+        return m_Twitch.GetVideoPlaybackUrl(sId);
+      }
+      m_Events.SendEvent("rewind-qualitiesready", aoQualities.map((o) => o.sName));
+      return aoQualities[0].sUrl;
+    });
+  }
+
+  /*
+    Changer de qualite, c'est rouvrir une autre liste au meme endroit : on garde la position et
+    l'etat de lecture, sans quoi le changement ramenerait au debut.
+  */
+  function SetQuality(kIndex) {
+    if (!_bShown || kIndex === _kQuality || !_aoQualities[kIndex]) {
+      return;
+    }
+    const nPosition = _elVideo.currentTime;
+    const bWasPaused = _elVideo.paused;
+    _kQuality = kIndex;
+    const nGeneration = ++_nGeneration;
+    m_Log.Wow(`[Rewind] Quality changed to ${_aoQualities[kIndex].sName}`);
+    ReleasePlaylist();
+    makeSeekablePlaylist(_aoQualities[kIndex].sUrl).then(
+      AddExceptionHandler((sPlayable) => {
+        if (nGeneration !== _nGeneration) {
+          return;
+        }
+        if (sPlayable !== _aoQualities[kIndex].sUrl) {
+          _sPlaylistUrl = sPlayable;
+        }
+        _nWantedPosition = nPosition;
+        _elVideo.src = sPlayable;
+        if (!bWasPaused) {
+          _elVideo.play().catch(STUB);
+        }
+      })
     );
   }
 
@@ -209,6 +253,8 @@ const m_Rewind = (() => {
     }
     ReleasePlaylist();
     _sRecordingId = "";
+    _aoQualities = [];
+    _kQuality = 0;
     if (!_bShown) {
       return;
     }
@@ -243,6 +289,7 @@ const m_Rewind = (() => {
     SeekBy,
     TogglePause,
     SetSpeed,
+    SetQuality,
     Stop,
     IsShown,
     GetPosition,
