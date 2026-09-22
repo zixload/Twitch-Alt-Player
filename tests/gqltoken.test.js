@@ -116,6 +116,69 @@ ok(sLu === JETON && nLu === EXPIRE,
 const [sVide, nVide] = ctx.parse(encodeURIComponent(JSON.stringify({ tokenSurUnAutreNom: JETON, autre: EXPIRE })));
 ok(sVide === '' && nVide === 0, 'des champs qu il ne connait pas ne donnent aucun jeton');
 
-console.log('');
-console.log(nEchecs ? `${nEchecs} cas en echec.` : 'OK : tous les cas');
-process.exit(nEchecs ? 1 : 0);
+// --- Les deux facons d'appeler fetch, l'injection executee pour de vrai ---
+
+/*
+	PANNE REELLE, la deuxieme. On peut appeler fetch avec une adresse et des options, ou avec un seul
+	objet Request qui porte tout. L'injection ne reconnaissait que la premiere, et Twitch est passe a
+	la seconde : plus rien n'etait capte, sur aucun compte, et le symptome etait le meme que celui du
+	haut de ce fichier -- trente secondes d'attente puis ACCESS_DENIED.
+
+	Ici l'injection tourne pour de bon, dans une page de theatre : une fausse fetch, une fausse
+	reponse, un faux document dont on relit le cookie. Les deux formes doivent donner le meme cookie.
+*/
+
+function jouerInjection(aoArguments) {
+	let sCookie = '';
+	const oReponse = {
+		ok: true,
+		status: 200,
+		clone: () => ({ json: () => Promise.resolve({ token: JETON, expiration: EXPIRE }) }),
+	};
+	let bAppelee = false;
+	const oScene = {
+		Date, Math, Number, JSON, Promise, String, encodeURIComponent,
+		document: { set cookie(s) { sCookie = s; }, get cookie() { return sCookie; } },
+		window: { fetch: () => { bAppelee = true; return Promise.resolve(oReponse); } },
+	};
+	vm.createContext(oScene);
+	vm.runInContext(sInjection, oScene);
+	const oPromise = oScene.window.fetch(...aoArguments);
+	// Le cookie s'ecrit apres la reponse : laisser passer les micro-taches de la chaine then.
+	return Promise.resolve(oPromise)
+		.then(() => new Promise(fResolve => setImmediate(fResolve)))
+		.then(() => new Promise(fResolve => setImmediate(fResolve)))
+		.then(() => ({ sCookie, bAppelee }));
+}
+
+const ADRESSE = 'https://gql.twitch.tv/integrity';
+
+(async () => {
+	const aoFormes = [
+		['adresse et options', [ADRESSE, { method: 'POST', headers: { Authorization: 'OAuth un-jeton' } }]],
+		['un objet Request seul', [{ url: ADRESSE, method: 'POST', headers: new Map() }]],
+		['une adresse avec une requete', [ADRESSE + '?variant=1', { method: 'post' }]],
+	];
+	for (const [sNom, aoArguments] of aoFormes) {
+		const { sCookie, bAppelee } = await jouerInjection(aoArguments);
+		ok(bAppelee, `${sNom} : la demande passe quand meme jusqu a Twitch`);
+		ok(sCookie.startsWith(`${sWrittenCookie}=`), `${sNom} : le jeton est capte (${sCookie.slice(0, 34)})`);
+		ok(sCookie.includes('path=/tw5~storage/'), `${sNom} : depose la ou le lecteur le lit`);
+	}
+
+	// Et ce qui n'est pas une demande de jeton ne doit rien ecrire, sinon les cas ci-dessus ne
+	// prouveraient rien : il suffirait d'ecrire le cookie a chaque appel.
+	const aoAutres = [
+		['une autre adresse', ['https://gql.twitch.tv/gql', { method: 'POST' }]],
+		['la bonne adresse en GET', [ADRESSE, { method: 'GET' }]],
+		['une adresse qui commence pareil', [ADRESSE + 'checker', { method: 'POST' }]],
+	];
+	for (const [sNom, aoArguments] of aoAutres) {
+		const { sCookie } = await jouerInjection(aoArguments);
+		ok(sCookie === '', `${sNom} : aucun cookie ecrit`);
+	}
+
+	console.log('');
+	console.log(nEchecs ? `${nEchecs} cas en echec.` : 'OK : tous les cas');
+	process.exit(nEchecs ? 1 : 0);
+})();
