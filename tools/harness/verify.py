@@ -10,6 +10,7 @@ de message.
   1. syntaxe          node --check sur chaque script charge ; JSON du manifeste, des regles,
                       des traductions.
   2. controle croise  crosscheck.js, compare NOM PAR NOM a une reference acceptee.
+     noms appeles    refcheck.js, tout nom appele est-il declare dans le meme monde.
   3. auto-test        crosscheck-selftest.js : le controle sait encore echouer.
   4. evenements       eventcheck.js : chaque SendEvent a son AddHandler et reciproquement, zero
                       defaut et zero angle mort. Pas de reference : l'arbre est a zero.
@@ -227,6 +228,21 @@ def etape_evenements():
     return u'zero defaut, zero angle mort' + (u' — ' + u' ; '.join(envois) if envois else u'')
 
 
+def etape_references():
+    """Un nom appele existe-t-il quelque part ?
+
+    La syntaxe ne dit rien d'un nom qui a disparu : le fichier se charge, et le lecteur s'arrete a
+    l'appel. C'est arrive -- ReleaseClosedPlaylists retiree d'un bloc, son appelant laisse en place,
+    le lecteur mort des qu'on jouait une video, et les neuf etapes vertes.
+    """
+    code, out = run(['node', 'refcheck.js'], 120, cwd=RENAME)
+    last = out.strip().splitlines()[-1] if out.strip() else u''
+    if code != 0 or not last.startswith(u'TOTAL NOMS SANS DECLARATION : '):
+        raise Echec(u'un nom est appele sans que personne ne le declare\n' + tail(out, 20))
+    mondes = [l.strip() for l in out.splitlines() if u' scripts, ' in l]
+    return u'zero nom sans declaration — %d mondes' % len(mondes)
+
+
 def etape_autotest_evenements():
     code, out = run(['node', 'eventcheck-selftest.js'], 600, cwd=RENAME)
     if code != 0:
@@ -426,6 +442,7 @@ def main():
         (u'auto-test du controle', lambda: etape_autotest()),
         (u'evenements internes', lambda: etape_evenements()),
         (u'auto-test des evenements', lambda: etape_autotest_evenements()),
+        (u'noms appeles', lambda: etape_references()),
         (u'ordre de construction', lambda: etape_construction()),
         (u'auto-test de l\'extraction', lambda: etape_autotest_extraction()),
         (u'tests unitaires', lambda: etape_tests()),

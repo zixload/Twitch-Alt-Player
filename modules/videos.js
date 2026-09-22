@@ -316,6 +316,17 @@ const m_Videos = (() => {
     });
   }
 
+  /*
+    Les adresses fabriquees pour cette video sont a nous : personne d'autre ne les libere, et le
+    navigateur les garde tant qu'on ne le lui dit pas.
+  */
+  function ReleaseClosedPlaylists() {
+    for (const sUrl of _asClosedPlaylistUrls) {
+      URL.revokeObjectURL(sUrl);
+    }
+    _asClosedPlaylistUrls = [];
+  }
+
   // Referme la liste si besoin, et retient l'adresse fabriquee pour la liberer plus tard.
   function ResolvePlayableUrl(sUrl) {
     return makeSeekablePlaylist(sUrl).then((sPlayable) => {
