@@ -12,18 +12,22 @@
 	of #playerandchat rather than guessing. That is also what lets a drag notice that the panel
 	changed side underneath it and give up rather than resize the wrong axis.
 
-	**Fullscreen borrows the panel and gives it back.** Entering hides a visible panel and remembers
-	what it was; leaving restores it. The borrowed state is never written to storage — otherwise
-	leaving fullscreen once would leave the chat closed for good.
+	**The panel gets borrowed, and given back.** Fullscreen borrows it; so does the videos view,
+	where a chat scrolling beside an old video is noise. Whoever borrows first remembers what the
+	panel was, and it only comes back once everyone has given it back -- otherwise leaving fullscreen
+	from inside the videos view would drop the chat back over the video being watched. The borrowed
+	state is never written to storage, or leaving fullscreen once would close the chat for good.
 
 	**The size is stored when the drag ends, never during.** A drag sends dozens of steps; writing
 	each one would hammer chrome.storage with values the viewer has not settled on yet.
 */
 const m_Chat = (() => {
-  const NOT_IN_FULLSCREEN = -1;
+  const NOT_BORROWED = -1;
 
   let _elChat = null;
-  let _nStateBeforeFullscreen = NOT_IN_FULLSCREEN;
+  // Qui tient le panneau emprunte, et ce qu'il etait avant le premier emprunt.
+  const _msBorrowers = new Set();
+  let _nStateBeforeBorrow = NOT_BORROWED;
 
   // Le cote reellement en vigueur, tel que la mise en page l'applique.
   function CurrentSide() {
@@ -264,40 +268,45 @@ const m_Chat = (() => {
     m_Dragger.CancelDrag("chatsize");
   }
 
-  function HandleFullscreenChange(bEnabled) {
-    if (bEnabled) {
-      if (_nStateBeforeFullscreen !== NOT_IN_FULLSCREEN) {
-        return;
+  function BorrowPanel(sWho, bBorrow) {
+    if (bBorrow) {
+      if (_msBorrowers.size === 0) {
+        _nStateBeforeBorrow = m_Settings.Get("nChatState");
+        if (_nStateBeforeBorrow === CHAT_PANEL) {
+          m_Settings.Change("nChatState", CHAT_HIDDEN, true);
+          ApplyPanelState();
+        }
       }
-      _nStateBeforeFullscreen = m_Settings.Get("nChatState");
-      if (_nStateBeforeFullscreen === CHAT_PANEL) {
-        m_Settings.Change("nChatState", CHAT_HIDDEN, true);
-        ApplyPanelState();
-      }
+      _msBorrowers.add(sWho);
       return;
     }
-    if (_nStateBeforeFullscreen === NOT_IN_FULLSCREEN) {
+    // Rendu par un seul : le panneau attend les autres.
+    if (!_msBorrowers.delete(sWho) || _msBorrowers.size !== 0) {
       return;
     }
-    if (_nStateBeforeFullscreen === CHAT_PANEL) {
+    if (_nStateBeforeBorrow === CHAT_PANEL) {
       m_Settings.Change("nChatState", CHAT_PANEL);
       ApplyPanelState();
     } else if (
       m_Settings.Get("nChatState") === CHAT_HIDDEN &&
       m_Settings.Get("nClosedChatState") === CHAT_UNLOADED
     ) {
-      // Le chat a ete ouvert puis referme pendant le plein ecran : on rend le choix du spectateur.
+      // Le chat a ete ouvert puis referme pendant l'emprunt : on rend le choix du spectateur.
       m_Settings.Change("nChatState", CHAT_UNLOADED);
       ApplyPanelState();
     }
-    _nStateBeforeFullscreen = NOT_IN_FULLSCREEN;
+    _nStateBeforeBorrow = NOT_BORROWED;
   }
+
+  const HandleFullscreenChange = (bEnabled) => BorrowPanel("fullscreen", bEnabled);
+  const HandleVideosChange = (bOpen) => BorrowPanel("videos", bOpen);
 
   function Restore() {
     ApplyPanelState();
     ApplyPanelPosition();
     m_Events.AddHandler("dragger-drag-chatsize", HandlePanelDrag);
     m_Events.AddHandler("fullscreen-changed", HandleFullscreenChange);
+    m_Events.AddHandler("videos-opened", HandleVideosChange);
   }
 
   return {

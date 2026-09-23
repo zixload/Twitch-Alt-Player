@@ -10,8 +10,10 @@
 	  - le cote reellement en vigueur se lit dans la mise en page calculee de #playerandchat, pas
 	    dans le reglage. En mode automatique, c'est la feuille de style qui decide, et le module lui
 	    demande plutot que de deviner ;
-	  - le plein ecran cache le panneau et se souvient de ce qu'il etait pour le rendre en sortant --
-	    sans enregistrer ce passage, sinon quitter le plein ecran laisserait le chat ferme pour de bon ;
+	  - le panneau s'emprunte : le plein ecran le cache, la vue des videos aussi, et il ne revient
+	    qu'une fois rendu par tous -- sortir du plein ecran depuis la vue des videos ne doit pas le
+	    laisser retomber sur la rediffusion. L'emprunt ne s'enregistre jamais, sinon quitter le plein
+	    ecran laisserait le chat ferme pour de bon ;
 	  - la taille se retient a la fin du glisser seulement, jamais pendant : cent enregistrements par
 	    glisser pour une valeur que l'utilisateur n'a pas encore choisie.
 */
@@ -169,6 +171,30 @@
 	m_Events.SendEvent('fullscreen-changed', false);
 	await dormir(300);
 	dire('en sortir le rend', etat() === CHAT_PANEL && !cache(), `etat=${etat()}`);
+
+	// --- La vue des videos emprunte le meme panneau.
+	m_Events.SendEvent('videos-opened', true);
+	await dormir(300);
+	dire('la vue des videos cache le panneau', etat() === CHAT_HIDDEN && cache(), `etat=${etat()}`);
+	m_Events.SendEvent('videos-opened', false);
+	await dormir(300);
+	dire('la refermer le rend', etat() === CHAT_PANEL && !cache(), `etat=${etat()}`);
+
+	/*
+		Les deux ensemble. Un seul souvenir pour deux emprunteurs rendrait le chat des la sortie du
+		plein ecran, c'est-a-dire par-dessus la video qu'on regarde.
+	*/
+	m_Events.SendEvent('videos-opened', true);
+	m_Events.SendEvent('fullscreen-changed', true);
+	await dormir(300);
+	dire('les deux a la fois le cachent', etat() === CHAT_HIDDEN && cache(), `etat=${etat()}`);
+	m_Events.SendEvent('fullscreen-changed', false);
+	await dormir(300);
+	dire('sortir du plein ecran ne le rend pas tant que la vue est ouverte',
+		etat() === CHAT_HIDDEN && cache(), `etat=${etat()}`);
+	m_Events.SendEvent('videos-opened', false);
+	await dormir(300);
+	dire('le dernier qui rend ramene le panneau', etat() === CHAT_PANEL && !cache(), `etat=${etat()}`);
 
 	// Tout rendre.
 	for (const [sNom, pValeur] of Object.entries(oDorigine)) {

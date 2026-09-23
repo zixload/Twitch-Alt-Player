@@ -10,6 +10,11 @@
 	playlists natively and clips are plain MP4 files, so there is no second pipeline to run. While it
 	plays, the live broadcast is muted; closing the view restores the viewer's own volume setting.
 
+	**The chat panel steps aside too.** It belongs to the live broadcast, which is now a thumbnail in
+	the corner; a chat scrolling beside a two-year-old video is noise, and it takes width the list
+	needs. The view borrows the panel on the way in and gives it back on the way out, the same way
+	fullscreen does -- and the viewer's own setting is never written over.
+
 	**While the view is open, the live shortcuts step aside.** m_Controls asks IsOpen() and lets every
 	key but Escape through, and leaves the wheel alone: space belongs to the video being watched, not
 	to the live broadcast in the corner. The view takes only the two it needs, the left and right
@@ -94,6 +99,7 @@ const m_Videos = (() => {
     if (!_bLoaded) {
       SelectTab(_sTab);
     }
+    m_Events.SendEvent("videos-opened", true);
   }
 
   function Close() {
@@ -106,6 +112,7 @@ const m_Videos = (() => {
     ShowElement(_elView, false);
     ShowElement(_elMini, false);
     document.body.classList.remove("videosopen", "videos-mini-closed");
+    m_Events.SendEvent("videos-opened", false);
   }
 
   function Toggle() {
