@@ -50,3 +50,6 @@ debug\console\9457-7d5ad8140bbef7f3f5f3  message handler took violation.js
 # Segments captures pour tools/worker/workercheck.js : flux de streameurs, a recapturer plutot qu a versionner
 tools/worker/fixtures/
 tools/worker/capture-profile/
+
+# Profils de navigateur jetables du harnais : recrees a chaque passage
+tools/harness/*-profile/

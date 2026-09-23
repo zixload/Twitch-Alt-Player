@@ -31,6 +31,7 @@ de message.
  11. console          errors.py : zero exception, zero console.error.
  12. lecture          probe2.py : des images decodees et un temps de lecture qui avance.
  13. plein ecran      fscheck.py : la barre laterale n'a plus de boite.
+     plein ecran vod vodfscheck.py : depuis la vue des videos, l'image couvre l'ecran.
  14. reglages         settingscheck.py, compare controle par controle a une reference acceptee.
 
 **Des references, pas des seuils.** Le controle croise et les reglages portent aujourd'hui des
@@ -376,6 +377,22 @@ def etape_plein_ecran(etat):
     return u'barre sans boite en plein ecran'
 
 
+def etape_plein_ecran_videos(etat):
+    """Le plein ecran depuis la vue des videos : l'image couvre-t-elle l'ecran ?
+
+    Une regle qui ne s'applique qu'en plein ecran ne se lit dans aucun controle statique, et une
+    sonde de module ne peut pas l'ouvrir -- le geste de l'utilisateur a expire bien avant. Celle-ci
+    a laisse le titre de la video prendre sa part de largeur dans la rangee : l'image debordait de
+    223 pixels a gauche, le titre pendait a droite.
+    """
+    code, out = run(['py', '-3.14', 'vodfscheck.py', etat['chaine']], 240, cwd=HERE)
+    out_file = os.path.join(HERE, 'vodfscheck-out.txt')
+    text = io.open(out_file, encoding='utf-8').read() if os.path.exists(out_file) else out
+    if code != 0 or u'\nOK :' not in text:
+        raise Echec(u'plein ecran depuis la vue des videos\n' + tail(text))
+    return u"l'image couvre l'ecran, rien a cote"
+
+
 def cles_reglages(controles):
     """Cle stable d'un controle en defaut : son nom, et son rang parmi les homonymes (les « − »)."""
     vus, cles = {}, {}
@@ -454,6 +471,7 @@ def main():
             (u'console', lambda: etape_console(etat)),
             (u'lecture', lambda: etape_lecture(etat)),
             (u'plein ecran', lambda: etape_plein_ecran(etat)),
+            (u'plein ecran, vue des videos', lambda: etape_plein_ecran_videos(etat)),
             (u'reglages', lambda: etape_reglages(etat)),
         ]
     say(u'VERIFICATION — %s%s' % (time.strftime('%Y-%m-%d %H:%M'), u' (statique)' if STATIQUE else u''))

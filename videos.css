@@ -514,6 +514,18 @@
 	border-radius: 0;
 }
 
+/*
+	The title below the video is the video element's sibling, and fullscreen turns the stage into a
+	centred row: the title took its share of the width and pushed the picture off the screen. It was
+	measured 223 pixels past the left edge, with the title hanging off the right one, cut short.
+
+	Fullscreen is for the picture, so the title simply goes: you chose the video a moment ago in the
+	list, where its name is written under it, and nothing needs to repeat it over the image.
+*/
+#videos-stage:fullscreen .videos-nowplaying {
+	display: none;
+}
+
 /* ------------------------------------------------------------------------------ the grid */
 
 .videos-status {
