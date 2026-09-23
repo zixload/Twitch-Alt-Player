@@ -12,7 +12,8 @@
 
 	**While the view is open, the live shortcuts step aside.** m_Controls asks IsOpen() and lets every
 	key but Escape through, and leaves the wheel alone: space belongs to the video being watched, not
-	to the live broadcast in the corner.
+	to the live broadcast in the corner. The view takes only the two it needs, the left and right
+	arrows, which move the video being watched by five seconds.
 
 	Four tabs, four lists: past broadcasts, highlights, uploads and clips. Pages come from m_Twitch in
 	one shape; a response that arrives after the viewer changed tab is dropped.
@@ -567,6 +568,55 @@ const m_Videos = (() => {
     }
   });
 
+/*
+    Les fleches deplacent la lecture de cinq secondes, comme dans la rediffusion du direct, et la
+    repetition compte : tenir la touche fait defiler. La barre se montre au passage, sans quoi on
+    avancerait a l'aveugle.
+
+    Une frappe dans un champ ou un menu lui appartient -- le curseur du son, le choix de qualite,
+    celui de la vitesse sont tous dans cette barre, et une fleche y change la valeur.
+  */
+  const SEEK_STEP = 5;
+  const KEY_LEFT = 37;
+  const KEY_RIGHT = 39;
+
+  function IsFieldEvent(pTarget) {
+    return (
+      pTarget instanceof HTMLElement &&
+      (/^(INPUT|SELECT|TEXTAREA)$/.test(pTarget.tagName) || pTarget.isContentEditable)
+    );
+  }
+
+  function SeekBy(nSeconds) {
+    const nDuration = _elVideo.duration;
+    const nWanted = _elVideo.currentTime + nSeconds;
+    _elVideo.currentTime = Number.isFinite(nDuration)
+      ? Clamp(nWanted, 0, nDuration)
+      : Math.max(0, nWanted);
+    ShowControls();
+  }
+
+  const HandleKeyDown = AddExceptionHandler((oEvent) => {
+    if (
+      !_bOpen ||
+      _elStage.hidden ||
+      oEvent.shiftKey ||
+      oEvent.ctrlKey ||
+      oEvent.altKey ||
+      oEvent.metaKey ||
+      IsFieldEvent(oEvent.target)
+    ) {
+      return;
+    }
+    const nDirection =
+      oEvent.keyCode === KEY_LEFT ? -1 : oEvent.keyCode === KEY_RIGHT ? 1 : 0;
+    if (nDirection === 0) {
+      return;
+    }
+    oEvent.preventDefault();
+    SeekBy(nDirection * SEEK_STEP);
+  });
+
   const HandlePip = AddExceptionHandler(() => {
     if (document.pictureInPictureElement === _elVideo) {
       document.exitPictureInPicture();
@@ -883,6 +933,7 @@ const m_Videos = (() => {
     GetNode("videos-fullscreen").addEventListener("click", HandleFullscreen);
     GetNode("videos-pip").addEventListener("click", HandlePip);
     _elStage.addEventListener("pointermove", HandleStageMove);
+    document.addEventListener("keydown", HandleKeyDown);
   }
 
   /*

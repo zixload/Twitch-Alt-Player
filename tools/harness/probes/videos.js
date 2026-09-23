@@ -30,10 +30,10 @@
 	const $ = (s) => document.querySelector(s);
 	const eye = document.getElementById('eye');
 	const rect = (el) => el.getBoundingClientRect();
-	const touche = (nCode) => {
+	const touche = (nCode, elCible) => {
 		const e = new KeyboardEvent('keydown', { bubbles: true, cancelable: true });
 		Object.defineProperty(e, 'keyCode', { get: () => nCode });
-		document.dispatchEvent(e);
+		(elCible || document).dispatchEvent(e);
 		return e;
 	};
 	const cartes = () => [...document.querySelectorAll('#videos-grid .videos-card')];
@@ -196,6 +196,37 @@
 		m_Settings.Change('nVolume2', 50);
 		elVideo.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 100, clientX: rect(elVideo).left + 10, clientY: rect(elVideo).top + 10 }));
 		dire('la molette ne touche pas au volume du direct', m_Settings.Get('nVolume2') === 50);
+
+		/*
+			Les fleches deplacent la video regardee. Rien ne les prenait : m_Controls s'efface des que la
+			vue est ouverte, et un element video sans attribut controls n'ecoute pas le clavier.
+		*/
+		const nAvant = elVideo.currentTime;
+		const eDroite = touche(39);
+		await dormir(200);
+		dire('la fleche droite avance de cinq secondes',
+			Math.abs(elVideo.currentTime - (nAvant + 5)) < 1.5 && eDroite.defaultPrevented,
+			`${nAvant.toFixed(1)} -> ${elVideo.currentTime.toFixed(1)}`);
+		const nApres = elVideo.currentTime;
+		touche(37);
+		await dormir(200);
+		dire('et la gauche recule de cinq secondes aussi',
+			Math.abs(elVideo.currentTime - (nApres - 5)) < 1.5,
+			`${nApres.toFixed(1)} -> ${elVideo.currentTime.toFixed(1)}`);
+
+		elVideo.currentTime = 1;
+		await dormir(200);
+		touche(37);
+		await dormir(200);
+		dire('elle ne passe pas avant le debut', elVideo.currentTime >= 0 && elVideo.currentTime < 2,
+			elVideo.currentTime.toFixed(1));
+
+		const nGarde = elVideo.currentTime;
+		const eMenu = touche(39, $('#videos-speed'));
+		await dormir(200);
+		dire('une fleche dans un menu lui appartient',
+			!eMenu.defaultPrevented && Math.abs(elVideo.currentTime - nGarde) < 1.5,
+			`${nGarde.toFixed(1)} -> ${elVideo.currentTime.toFixed(1)}`);
 
 		// ------------------------------------------------------------ Deplacer la miniature.
 		const rAvant = rect(eye);
