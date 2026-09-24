@@ -34,6 +34,21 @@
 	border-radius: .625rem;
 }
 
+/*
+	Pendant qu'une video joue, la miniature passe en haut a droite. En bas a droite elle couvrait le
+	bout de la barre de lecture -- engrenage, incrustation, plein ecran -- et comme elle est posee
+	au-dessus de toute la vue (la liste est opaque, il faut bien qu'elle soit dessus), ces boutons
+	n'etaient meme pas cliquables : mesure a l'appui, elementFromPoint rendait la miniature aux
+	trois. En haut, elle ne recouvre que de l'image, et rien qui se clique.
+
+	Hors lecture elle reste en bas : le haut appartient aux onglets et au bouton de retour au direct.
+*/
+.videosplaying #eye,
+.videosplaying .videos-mini {
+	top: 1rem;
+	bottom: auto;
+}
+
 .videosopen #eye {
 	z-index: 21;
 	object-fit: cover;
@@ -270,12 +285,19 @@
 	video, without the live-only controls. It rides in from below on movement and slides away again
 	once the video plays untouched, exactly as the live panel does.
 */
+/*
+	La barre passe devant la miniature du direct, qui vaut 22. Posee dans le coin, la miniature
+	recouvrait le bas de la scene : le bout droit de la barre -- engrenage, incrustation, plein ecran
+	-- tombait dessous, et le panneau des reglages avec lui, aux trois quarts. Une barre de commandes
+	qu'on ne peut pas cliquer ne sert a rien ; la miniature, elle, se deplace d'un glisser. Elle est
+	donc dessous, et seulement le temps ou la barre se montre.
+*/
 .videos-controls {
 	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 0;
-	z-index: 3;
+	z-index: 23;
 	display: flex;
 	flex-direction: column;
 	gap: .875rem;
@@ -382,18 +404,64 @@
 	accent-color: rgb(var(--vd-accent));
 }
 
-.videos-speed,
-#videos .videos-quality {
+/*
+	La qualite et la vitesse tenaient deux menus deroulants dans la barre, en toutes lettres. Ce sont
+	deux reglages qu'on touche rarement : ils passent derriere un engrenage, et la barre garde les
+	gestes frequents.
+*/
+.videos-settings-slot {
 	flex: none;
-	height: 2rem;
-	padding: 0 .5rem;
-	font: inherit;
-	font-weight: 600;
-	cursor: pointer;
+	position: relative;
+	display: flex;
+	align-items: center;
 }
 
-#videos .videos-quality[hidden] {
-	display: none !important;
+.videos-menu {
+	position: absolute;
+	right: 0;
+	bottom: calc(100% + .5rem);
+	z-index: 4;
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
+	min-width: 12rem;
+	padding: .75rem;
+	border-radius: .5rem;
+	background: rgba(0, 0, 0, .92);
+	box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .5);
+}
+
+.videos-menu[hidden] {
+	display: none;
+}
+
+.videos-menu-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .75rem;
+}
+
+.videos-menu-row[hidden] {
+	display: none;
+}
+
+.videos-menu-label {
+	font-size: .8125rem;
+	font-weight: 600;
+	color: #fff;
+}
+
+.videos-menu .videos-speed,
+.videos-menu .videos-quality {
+	flex: 0 1 auto;
+	min-width: 6rem;
+	height: 1.875rem;
+	padding: 0 .5rem;
+	font: inherit;
+	font-size: .8125rem;
+	font-weight: 600;
+	cursor: pointer;
 }
 
 /* The seek bar: buffered under played under the head, all on one track. */

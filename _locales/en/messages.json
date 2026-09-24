@@ -1586,5 +1586,17 @@
 	"A0925":
 	{
 		"message": "Video quality"
+	},
+	"A0926":
+	{
+		"message": "Quality and playback speed"
+	},
+	"F1932":
+	{
+		"message": "Quality"
+	},
+	"F1933":
+	{
+		"message": "Speed"
 	}
 }

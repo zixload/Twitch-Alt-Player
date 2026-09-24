@@ -75,6 +75,8 @@ const m_Videos = (() => {
   let _elVolume = null;
   let _elMute = null;
   let _elSpeed = null;
+  let _elMenu = null;
+  let _elQualityRow = null;
   let _elPreview = null;
   let _elPreviewImg = null;
   let _elPreviewTime = null;
@@ -113,6 +115,15 @@ const m_Videos = (() => {
     ShowElement(_elMini, false);
     document.body.classList.remove("videosopen", "videos-mini-closed");
     m_Events.SendEvent("videos-opened", false);
+  }
+
+  // Echap referme d'abord ce qui est pose par-dessus : le panneau des reglages, puis la vue.
+  function CloseTopmost() {
+    if (MenuIsOpen()) {
+      CloseMenu();
+      return;
+    }
+    Close();
   }
 
   function Toggle() {
@@ -260,6 +271,9 @@ const m_Videos = (() => {
     _bResumePending = oItem.sKind === "video" && !oItem.bFromStart;
     ShowElement(_elStage, true);
     ShowElement(_elNowPlaying, true);
+    // La miniature change de coin : son decalage de glisser se mesurait depuis l'autre.
+    document.body.classList.add("videosplaying");
+    SetMiniOffset(0, 0);
     _elNowPlaying.textContent = oItem.sTitle;
     _elNowPlaying.classList.remove("videos-error");
     _elView.scrollTop = 0;
@@ -375,7 +389,7 @@ const m_Videos = (() => {
     }
     _elQuality.value = _aoQualities[0].sKey;
     // Nothing to choose between one quality: no menu.
-    ShowElement(_elQuality, _aoQualities.length > 1);
+    ShowElement(_elQualityRow, _aoQualities.length > 1);
   }
 
   // Switching quality keeps the position: the new playlist is a different encode of the same video.
@@ -431,7 +445,10 @@ const m_Videos = (() => {
     _sQualityKey = "";
     _oNowPlaying = null;
     HidePreview();
-    ShowElement(_elQuality, false);
+    ShowElement(_elQualityRow, false);
+    CloseMenu();
+    document.body.classList.remove("videosplaying");
+    SetMiniOffset(0, 0);
     ShowElement(_elStage, false);
     ShowElement(_elNowPlaying, false);
     _elNowPlaying.textContent = "";
@@ -626,6 +643,38 @@ const m_Videos = (() => {
     SeekBy(nDirection * SEEK_STEP);
   });
 
+  /*
+    L'engrenage et son panneau. Tant qu'il est ouvert la barre ne s'efface pas : elle emporterait le
+    panneau avec elle au milieu d'un choix. Un clic ailleurs le referme, comme tout menu.
+  */
+  function MenuIsOpen() {
+    return !_elMenu.hidden;
+  }
+
+  function CloseMenu() {
+    if (MenuIsOpen()) {
+      ShowElement(_elMenu, false);
+      ShowControls();
+    }
+  }
+
+  const HandleSettings = AddExceptionHandler((oEvent) => {
+    oEvent.stopPropagation();
+    if (MenuIsOpen()) {
+      CloseMenu();
+      return;
+    }
+    ShowElement(_elMenu, true);
+    ShowControls(true);
+  });
+
+  // Un clic hors du panneau le referme ; a l'interieur, il appartient au choix en cours.
+  const HandleClickAway = AddExceptionHandler((oEvent) => {
+    if (MenuIsOpen() && !_elMenu.contains(oEvent.target)) {
+      CloseMenu();
+    }
+  });
+
   const HandlePip = AddExceptionHandler(() => {
     if (document.pictureInPictureElement === _elVideo) {
       document.exitPictureInPicture();
@@ -797,19 +846,27 @@ const m_Videos = (() => {
         nMiniWidth: _elMini.offsetWidth,
         nMiniHeight: _elMini.offsetHeight,
         // offsetLeft and offsetTop ignore the transform: this is where the miniature rests.
+        nLeft: _elMini.offsetLeft,
+        nTop: _elMini.offsetTop,
         nRight: _elPlayer.clientWidth - _elMini.offsetLeft - _elMini.offsetWidth,
         nBottom: _elPlayer.clientHeight - _elMini.offsetTop - _elMini.offsetHeight,
       };
       break;
     case 2: {
       const b = oParameters._oBounds;
-      // At rest the miniature sits b.nRight / b.nBottom from the corner; it may travel left and up
-      // until it reaches the opposite edge, and not past its resting place.
-      const nMinX = -(b.nPlayerWidth - b.nMiniWidth - b.nRight - MINI_MARGIN);
-      const nMinY = -(b.nPlayerHeight - b.nMiniHeight - b.nBottom - MINI_MARGIN);
+      /*
+        La miniature part de sa place au repos et va jusqu'au bord oppose, dans les deux sens : elle
+        se repose en bas a droite devant la liste, en haut a droite pendant qu'une video joue, et le
+        meme calcul vaut pour les deux -- ce qu'elle a devant elle d'un cote, ce qu'elle a derriere
+        de l'autre.
+      */
+      const nMinX = -Math.max(0, b.nLeft - MINI_MARGIN);
+      const nMaxX = Math.max(0, b.nRight - MINI_MARGIN);
+      const nMinY = -Math.max(0, b.nTop - MINI_MARGIN);
+      const nMaxY = Math.max(0, b.nBottom - MINI_MARGIN);
       SetMiniOffset(
-        Clamp(oParameters._nInitialX + oParameters.nDeltaX, Math.min(nMinX, 0), 0),
-        Clamp(oParameters._nInitialY + oParameters.nDeltaY, Math.min(nMinY, 0), 0)
+        Clamp(oParameters._nInitialX + oParameters.nDeltaX, nMinX, nMaxX),
+        Clamp(oParameters._nInitialY + oParameters.nDeltaY, nMinY, nMaxY)
       );
       break;
     }
@@ -886,6 +943,8 @@ const m_Videos = (() => {
     _elVideo = GetNode("videos-video");
     _elNowPlaying = GetNode("videos-nowplaying");
     _elQuality = GetNode("videos-quality");
+    _elMenu = GetNode("videos-menu");
+    _elQualityRow = GetNode("videos-menu-quality");
     _elMini = GetNode("videos-mini");
     _elControls = GetNode("videos-controls");
     _elSeek = GetNode("videos-seek");
@@ -940,6 +999,8 @@ const m_Videos = (() => {
     _elMute.addEventListener("click", HandleMute);
     _elSpeed.addEventListener("change", HandleSpeed);
     GetNode("videos-fullscreen").addEventListener("click", HandleFullscreen);
+    GetNode("videos-settings").addEventListener("click", HandleSettings);
+    document.addEventListener("click", HandleClickAway);
     GetNode("videos-pip").addEventListener("click", HandlePip);
     _elStage.addEventListener("pointermove", HandleStageMove);
     document.addEventListener("keydown", HandleKeyDown);
@@ -961,6 +1022,7 @@ const m_Videos = (() => {
     IsOpen,
     Open,
     Close,
+    CloseTopmost,
     Toggle,
     PlayRecordingFromStart,
   };

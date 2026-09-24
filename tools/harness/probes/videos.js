@@ -188,7 +188,8 @@
 
 		// ------------------------------------------------------------- La qualite (port TwitchNoSub).
 		const elQualite = $('#videos-quality');
-		dire('un menu de qualite propose plusieurs qualites', !elQualite.hidden && elQualite.options.length > 1,
+		dire('un menu de qualite propose plusieurs qualites',
+			!$('#videos-menu-quality').hidden && elQualite.options.length > 1,
 			`${elQualite.options.length} qualite(s)`);
 		dire('la source est proposee', [...elQualite.options].some((o) => o.value === 'chunked'),
 			[...elQualite.options].map((o) => o.value).join(','));
@@ -208,7 +209,49 @@
 		cartes()[0].click();
 		dire('cliquer un clip le lit aussi', await attendre(() => elVideo.currentTime > 2 && /\.mp4/.test(elVideo.getAttribute('src') || ''), 20000),
 			`err=${elVideo.error && elVideo.error.code}`);
-		dire('et un clip n\'a pas de menu de qualite', elQualite.hidden, `${elQualite.options.length} option(s)`);
+		dire('et un clip n\'a pas de menu de qualite', $('#videos-menu-quality').hidden,
+			`${elQualite.options.length} option(s)`);
+
+		/*
+			La qualite et la vitesse sont passees derriere un engrenage : deux reglages rares qui
+			tenaient la barre en toutes lettres.
+		*/
+		const elEngrenage = $('#videos-settings');
+		const elPanneau = $('#videos-menu');
+		dire('le panneau des reglages est ferme au depart', elPanneau.hidden);
+		elEngrenage.click();
+		await dormir(150);
+		dire('l\'engrenage ouvre la qualite et la vitesse',
+			!elPanneau.hidden && elPanneau.contains($('#videos-quality')) && elPanneau.contains($('#videos-speed')));
+		dire('et la barre reste pendant ce temps', $('#videos-stage').classList.contains('videos-controls-shown'));
+		document.body.click();
+		await dormir(150);
+		dire('un clic ailleurs le referme', elPanneau.hidden);
+		elEngrenage.click();
+		await dormir(150);
+		touche(27);
+		await dormir(150);
+		dire('Echap referme le panneau avant la vue', elPanneau.hidden && vueOuverte(),
+			`panneau=${elPanneau.hidden} vue=${vueOuverte()}`);
+
+		/*
+			Rien ne doit se poser sur la barre. La miniature du direct se reposait en bas a droite, par
+			dessus son bout droit, et comme elle flotte au-dessus de toute la vue, engrenage, incrustation
+			et plein ecran n'etaient pas cliquables du tout : elementFromPoint rendait la miniature.
+		*/
+		const auPoint = (sId) => {
+			const r = rect($('#' + sId));
+			const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+			const elBouton = el && el.closest ? el.closest('button') : null;
+			return (elBouton && elBouton.id) || (el && (el.id || el.className)) || 'rien';
+		};
+		const asCouverts = ['videos-playpause', 'videos-mute', 'videos-settings', 'videos-pip', 'videos-fullscreen']
+			.filter((sId) => auPoint(sId) !== sId);
+		dire('tous les boutons de la barre se cliquent', asCouverts.length === 0,
+			asCouverts.map((s) => `${s} sous ${auPoint(s)}`).join(', '));
+		dire('et la miniature reste cliquable, en haut', auPoint('videos-mini') === 'videos-mini'
+			&& rect($('#videos-mini')).top < rect(elVideo).top + 40,
+			`${auPoint('videos-mini')} a ${Math.round(rect($('#videos-mini')).top)}`);
 
 		// ------------------------------------------------------- Raccourcis et molette.
 		const nEtat = m_Controls.GetState();
@@ -255,15 +298,34 @@
 		const oParams = { nodePressed: $('#videos-mini'), nodeDragging: $('#videos-mini'), nStep: 1, bCancel: false, nDeltaX: 0, nDeltaY: 0 };
 		m_Events.SendEvent('dragger-drag-videos-mini', oParams);
 		oParams.nStep = 2;
+		// Vers la gauche et vers le bas : la miniature se repose en haut a droite pendant qu'une
+		// video joue, et c'est de ce cote-la qu'elle a de la place.
 		oParams.nDeltaX = -120;
-		oParams.nDeltaY = -60;
+		oParams.nDeltaY = 60;
 		m_Events.SendEvent('dragger-drag-videos-mini', oParams);
 		oParams.nStep = 3;
 		m_Events.SendEvent('dragger-drag-videos-mini', oParams);
 		await dormir(100);
 		const rApres = rect(eye);
-		dire('la miniature se deplace', Math.abs(rApres.left - (rAvant.left - 120)) < 3 && Math.abs(rApres.top - (rAvant.top - 60)) < 3);
+		dire('la miniature se deplace', Math.abs(rApres.left - (rAvant.left - 120)) < 3
+			&& Math.abs(rApres.top - (rAvant.top + 60)) < 3,
+			`${Math.round(rAvant.left)},${Math.round(rAvant.top)} -> ${Math.round(rApres.left)},${Math.round(rApres.top)}`);
 		dire('et sa zone cliquable la suit', Math.abs(rect($('#videos-mini')).left - rApres.left) < 2);
+
+		// Et elle ne sort pas du lecteur : le glisser est borne des deux cotes.
+		const rJoueur = rect($('#player'));
+		const oParams2 = { nodePressed: $('#videos-mini'), nodeDragging: $('#videos-mini'), nStep: 1, bCancel: false, nDeltaX: 0, nDeltaY: 0 };
+		m_Events.SendEvent('dragger-drag-videos-mini', oParams2);
+		oParams2.nStep = 2;
+		oParams2.nDeltaX = 4000;
+		oParams2.nDeltaY = 4000;
+		m_Events.SendEvent('dragger-drag-videos-mini', oParams2);
+		oParams2.nStep = 3;
+		m_Events.SendEvent('dragger-drag-videos-mini', oParams2);
+		await dormir(100);
+		const rLoin = rect(eye);
+		dire('et ne sort pas du lecteur', rLoin.right <= rJoueur.right + 1 && rLoin.bottom <= rJoueur.bottom + 1,
+			`${Math.round(rLoin.right)}/${Math.round(rJoueur.right)} ${Math.round(rLoin.bottom)}/${Math.round(rJoueur.bottom)}`);
 
 		// ------------------------------------------------------- Retour au direct.
 		$('#videos-mini').click();

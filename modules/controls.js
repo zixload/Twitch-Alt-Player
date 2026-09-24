@@ -523,7 +523,8 @@ const m_Controls = (() => {
       if (oEvent.keyCode === KEY_ESCAPE && !HasModifier(oEvent)) {
         oEvent.preventDefault();
         if (bFirstPress) {
-          m_Videos.Close();
+          // La vue referme d'abord ce qu'elle a ouvert par-dessus, son panneau de reglages.
+          m_Videos.CloseTopmost();
         }
       }
       return;
