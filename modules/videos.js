@@ -259,6 +259,7 @@ const m_Videos = (() => {
     // the whole point is to begin at the beginning, not where a past visit left off.
     _bResumePending = oItem.sKind === "video" && !oItem.bFromStart;
     ShowElement(_elStage, true);
+    ShowElement(_elNowPlaying, true);
     _elNowPlaying.textContent = oItem.sTitle;
     _elNowPlaying.classList.remove("videos-error");
     _elView.scrollTop = 0;
@@ -432,6 +433,7 @@ const m_Videos = (() => {
     HidePreview();
     ShowElement(_elQuality, false);
     ShowElement(_elStage, false);
+    ShowElement(_elNowPlaying, false);
     _elNowPlaying.textContent = "";
     m_Player.ApplyVolume();
   }

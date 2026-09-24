@@ -161,6 +161,19 @@
 		dire('cliquer une rediffusion la lit en haut de la vue', await attendre(() => !$('#videos-stage').hidden && elVideo.currentTime > 2, 30000),
 			`t=${elVideo.currentTime > 2 ? 'avance' : elVideo.currentTime} err=${elVideo.error && elVideo.error.code}`);
 		dire('avec son titre', $('#videos-nowplaying').textContent.includes(sTitre));
+
+		/*
+			La barre se pose sur l'image, pas sur ce qui suit. Le titre etait dans la scene, sous l'image,
+			et la barre -- posee a bottom: 0 -- s'arretait au bas de la scene : elle recouvrait le titre
+			entierement et debordait de 28 pixels sous l'image.
+		*/
+		const rImage = rect(elVideo);
+		const rBarre = rect($('#videos-controls'));
+		const rTitre = rect($('#videos-nowplaying'));
+		dire('la barre finit au bas de l image', Math.abs(rBarre.bottom - rImage.bottom) < 2,
+			`barre ${Math.round(rBarre.bottom)} / image ${Math.round(rImage.bottom)}`);
+		dire('et ne mord pas sur le titre', rBarre.bottom <= rTitre.top + 1,
+			`barre ${Math.round(rBarre.bottom)} / titre ${Math.round(rTitre.top)}`);
 		dire('le direct se tait pendant ce temps', eye.muted === true);
 		dire('et continue de jouer', !eye.paused);
 

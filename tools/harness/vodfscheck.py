@@ -13,8 +13,9 @@ l'utilisateur, qui a expire bien avant qu'une sonde longue n'y arrive. D'ou ce s
 le plein ecran sur une evaluation fraiche et juge sur la geometrie, puis sur ce qui est reellement
 peint a droite de l'image : elementFromPoint dit ce qui est la, pas ce que le CSS pretend.
 
-Le titre, lui, ne parait plus du tout en plein ecran : la video vient d'etre choisie dans la liste,
-ou son nom est ecrit sous elle, et rien n'a besoin de le repeter par-dessus l'image.
+Le titre, lui, a quitte la scene : il vit desormais sous elle, en frere de la scene et non de
+l'image. C'est ce qui le met hors du plein ecran, et ce que ce controle verifie -- car la meme
+erreur, refaite, rendrait les 223 pixels.
 
 Tourne sans affichage : rien n'apparait sur l'ecran de l'utilisateur pendant qu'il regarde.
 
@@ -94,6 +95,11 @@ MESURE = u'''
     barre: boite('videos-controls'),
     titre: boite('videos-nowplaying'),
     titreTexte: (document.getElementById('videos-nowplaying') || {}).textContent || '',
+    titreDansLaScene: (() => {
+      const el = document.getElementById('videos-nowplaying');
+      const elPlein = document.fullscreenElement;
+      return !!(el && elPlein && elPlein.contains(el));
+    })(),
     peintA: {
       centre: nom(Math.round(W / 2), Math.round(H / 2)),
       droite: nom(W - 20, Math.round(H / 2)),
@@ -243,10 +249,9 @@ async def main():
         if not mesure['imageEstLa']:
             defauts.append(u"a droite de l'ecran, c'est %s qui est peint, pas l'image"
                            % mesure['peintA']['droite'])
-        # Le titre ne doit rien occuper : en plein ecran il n'y a que l'image.
-        if titre is not None and (titre.get('l', 0) > 0 or titre.get('h', 0) > 0):
-            defauts.append(u"le titre occupe encore %sx%s a cote de l'image"
-                           % (titre.get('l'), titre.get('h')))
+        # Le titre est hors de la scene : rien ne peut lui reprendre de la largeur.
+        if mesure['titreDansLaScene']:
+            defauts.append(u"le titre est revenu dans la scene, ou il prend sa part de largeur")
 
         out.write(u"\n")
         if defauts:

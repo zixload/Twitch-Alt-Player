@@ -227,9 +227,15 @@
 
 /* ----------------------------------------------------------------------- what is playing */
 
+/*
+	La scene ne contient que l'image et sa barre. Le titre etait dedans, sous l'image, et la barre
+	-- posee a bottom: 0 -- s'arretait donc au bas de la scene, titre compris : elle le recouvrait
+	entierement et debordait de 28 pixels sous l'image. Mis dehors, le titre a sa place et bottom: 0
+	veut enfin dire le bas de l'image.
+*/
 .videos-stage {
 	position: relative;
-	margin-bottom: 1.25rem;
+	margin-bottom: .5rem;
 }
 
 .videos-stage[hidden] {
@@ -246,9 +252,13 @@
 }
 
 .videos-nowplaying {
-	margin-top: .5rem;
+	margin: 0 0 1.25rem;
 	font-size: .9375rem;
 	font-weight: 600;
+}
+
+.videos-nowplaying[hidden] {
+	display: none;
 }
 
 .videos-nowplaying.videos-error {
@@ -512,18 +522,6 @@
 
 #videos-stage:fullscreen .videos-controls {
 	border-radius: 0;
-}
-
-/*
-	The title below the video is the video element's sibling, and fullscreen turns the stage into a
-	centred row: the title took its share of the width and pushed the picture off the screen. It was
-	measured 223 pixels past the left edge, with the title hanging off the right one, cut short.
-
-	Fullscreen is for the picture, so the title simply goes: you chose the video a moment ago in the
-	list, where its name is written under it, and nothing needs to repeat it over the image.
-*/
-#videos-stage:fullscreen .videos-nowplaying {
-	display: none;
 }
 
 /* ------------------------------------------------------------------------------ the grid */
