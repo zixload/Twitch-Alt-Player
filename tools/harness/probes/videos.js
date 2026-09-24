@@ -174,6 +174,15 @@
 			`barre ${Math.round(rBarre.bottom)} / image ${Math.round(rImage.bottom)}`);
 		dire('et ne mord pas sur le titre', rBarre.bottom <= rTitre.top + 1,
 			`barre ${Math.round(rBarre.bottom)} / titre ${Math.round(rTitre.top)}`);
+
+		/*
+			Deux regles de player.css visaient .svg-mute-false sans rien autour. Ecrites pour la mire du
+			centre, elles attrapaient le haut-parleur de cette barre, qui porte la meme classe : le bouton
+			etait la, de la bonne taille, et ne dessinait rien.
+		*/
+		const elHautParleur = $('#videos-mute .svg-mute-false');
+		dire('le haut-parleur se dessine', elHautParleur !== null && rect(elHautParleur).width > 0,
+			elHautParleur ? `${Math.round(rect(elHautParleur).width)} px` : 'absent');
 		dire('le direct se tait pendant ce temps', eye.muted === true);
 		dire('et continue de jouer', !eye.paused);
 

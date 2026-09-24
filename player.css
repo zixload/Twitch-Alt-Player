@@ -590,13 +590,19 @@ body[data-state="5"] .spinner {
 /* .backgroundcolorcheck #player */
 	background: repeating-linear-gradient(to right, #fff, #fff 5px, transparent 5px, transparent 10px), repeating-linear-gradient(to bottom, #fff, #fff 5px, transparent 5px, transparent 10px), #000
 }
+/*
+	Ce bloc cache les dessins qui ne valent pas pour l'etat du moment. Deux d'entre eux visaient
+	.svg-mute-false sans rien autour : ecrits pour la mire posee au centre de l'image, ils
+	attrapaient aussi le haut-parleur de la barre des videos, qui porte la meme classe. Le bouton
+	etait donc la, de la bonne taille, et ne dessinait rien. D'ou .spinner> devant les deux.
+*/
 body[data-state="6"]:not(.novideo):not(.colourcheck) .spinner,
 body[data-state="8"]:not(.novideo):not(.colourcheck) .spinner,
 body:not([data-state="1"]):not([data-state="2"]):not([data-state="4"]):not([data-state="5"]) .svg-busy,
 body:not([data-state="3"]) .svg-end,
 body:not([data-state="7"]) .svg-stop,
-body:not([data-state="6"]):not([data-state="8"]) .svg-mute-false,
-body:not(.novideo) .svg-mute-false,
+body:not([data-state="6"]):not([data-state="8"]) .spinner>.svg-mute-false,
+body:not(.novideo) .spinner>.svg-mute-false,
 body:not(.colourcheck) .svg-settings,
 .colourcheck .spinner>use:not(.svg-settings),
 .colourcheckbackground #eye,
