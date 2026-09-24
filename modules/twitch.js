@@ -1247,6 +1247,82 @@ const m_Twitch = (() => {
       });
   }
 
+  /*
+    Les messages du chat d'une rediffusion, autour d'une position.
+
+    Twitch garde le chat d'un VOD et le rend par tranches : on demande une position en secondes
+    depuis le debut, et il rend la cinquantaine de messages qui l'entourent, tries. Mesure sur un
+    direct de huit heures : demander 3600 s rend 57 messages de 3588 a 3639 s, pour 26 ko et
+    350 ms. Une tranche couvre donc quelques dizaines de secondes de lecture.
+
+    LA SUITE SE DEMANDE PAR POSITION, JAMAIS PAR CURSEUR. Chaque message porte un curseur, et la
+    requete accepte un « after » -- mais cette forme-la est refusee sans jeton d'integrite, alors
+    que la position ne l'est pas. Redemander une position, c'est le meme resultat sans la dette.
+
+    Rend les messages deja mis en forme : le temps, l'auteur, sa couleur, et le texte decoupe en
+    morceaux dont certains sont des emotes.
+  */
+  function GetVideoComments(sVideoId, nOffsetSeconds) {
+    Check(IsNonEmptyString(sVideoId));
+    return sendGqlRequest(null, `query($id: ID!, $offset: Int!) {
+        video(id: $id) {
+          comments(contentOffsetSeconds: $offset) {
+            edges {
+              node {
+                id
+                contentOffsetSeconds
+                commenter {
+                  displayName
+                  login
+                }
+                message {
+                  userColor
+                  fragments {
+                    text
+                    emote {
+                      emoteID
+                    }
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+            }
+          }
+        }
+      }`, { id: String(sVideoId), offset: Math.max(0, Math.floor(nOffsetSeconds)) },
+    false, false, true, `video comments ${sVideoId}`)
+      .then((oResult) => {
+        const aoEdges = chain(oResult, "data", "video", "comments", "edges") || [];
+        const aoMessages = [];
+        for (const oEdge of aoEdges) {
+          const oNode = oEdge && oEdge.node;
+          const aoFragments = chain(oNode, "message", "fragments") || [];
+          if (!oNode || !Number.isFinite(Number(oNode.contentOffsetSeconds))) {
+            continue;
+          }
+          aoMessages.push({
+            sId: String(oNode.id || `${oNode.contentOffsetSeconds}-${aoMessages.length}`),
+            nOffset: Number(oNode.contentOffsetSeconds),
+            sAuthor: chain(oNode, "commenter", "displayName")
+              || chain(oNode, "commenter", "login") || "",
+            sColour: chain(oNode, "message", "userColor") || "",
+            aoParts: aoFragments.map((oFragment) => ({
+              sText: oFragment.text || "",
+              sEmoteId: chain(oFragment, "emote", "emoteID") || "",
+            })),
+          });
+        }
+        // Tries : la tranche arrive dans l'ordre, mais rien ne le promet.
+        aoMessages.sort((oLeft, oRight) => oLeft.nOffset - oRight.nOffset);
+        return {
+          aoMessages,
+          bMore: Boolean(chain(oResult, "data", "video", "comments", "pageInfo", "hasNextPage")),
+        };
+      });
+  }
+
   // A clip is a plain MP4 file; the best quality comes first.
   function GetClipPlaybackUrl(sSlug) {
     Check(IsNonEmptyString(sSlug));
@@ -1385,6 +1461,7 @@ const m_Twitch = (() => {
     GetChannelVideos,
     GetChannelClips,
     GetVideoPlaybackUrl,
+    GetVideoComments,
     GetClipPlaybackUrl,
     GetVideoStoryboards,
     sortVariantList,

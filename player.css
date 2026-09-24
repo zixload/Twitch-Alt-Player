@@ -261,13 +261,17 @@ body {
 	flex-direction: column-reverse
 }
 .chatright:not(.autochatposition) #chat,
-.chatleft:not(.autochatposition) #chat {
+.chatleft:not(.autochatposition) #chat,
+.chatright:not(.autochatposition) #chatreplay,
+.chatleft:not(.autochatposition) #chatreplay {
 /* .chatright:not(.autopositionchat) #chat, */
 /* .chatleft:not(.autopositionchat) #chat */
 	height: 100%
 }
 .chatbottom:not(.autochatposition) #chat,
-.chattop:not(.autochatposition) #chat {
+.chattop:not(.autochatposition) #chat,
+.chatbottom:not(.autochatposition) #chatreplay,
+.chattop:not(.autochatposition) #chatreplay {
 /* .chatbottom:not(.autopositionchat) #chat, */
 /* .chattop:not(.autopositionchat) #chat */
 	width: 100%
@@ -291,7 +295,8 @@ body {
 	/* .autopositionchat.chatleft #playerandchat */
 		flex-direction: row-reverse
 	}
-	.autochatposition #chat {
+	.autochatposition #chat,
+	.autochatposition #chatreplay {
 	/* .autopositionchat #chat */
 		height: 100%
 	}
@@ -305,7 +310,8 @@ body {
 	/* .autopositionchat.chattop #playerandchat */
 		flex-direction: column-reverse
 	}
-	.autochatposition #chat {
+	.autochatposition #chat,
+	.autochatposition #chatreplay {
 	/* .autopositionchat #chat */
 		width: 100%
 	}

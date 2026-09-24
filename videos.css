@@ -717,3 +717,109 @@
 		transition: none;
 	}
 }
+
+/* ---------------------------------------------------------------- the chat of a past broadcast */
+
+/*
+	The replay chat takes the live chat's slot -- the live one has nothing to say about yesterday --
+	so it carries the same sizing as #chat, set from the same two settings. Its look follows the
+	videos view: dim timestamps, a coloured name, then the message.
+*/
+/*
+	La taille passe par deux proprietes plutot que par le style en ligne : le panneau du direct est
+	un cadre, qui porte sa taille en attributs, et la feuille de style ramene a 100 % le cote qui
+	touche le bord. Un style en ligne, lui, gagne sur la feuille -- le panneau restait haut de
+	250 pixels contre le bord d'une fenetre de 900.
+*/
+.chatreplay {
+	flex: none;
+	width: var(--chatreplay-width, 340px);
+	height: var(--chatreplay-height, 250px);
+	display: flex;
+	flex-direction: column;
+	min-width: 160px;
+	min-height: 188px;
+	overflow: hidden;
+	font: 400 .8125rem/1.4 "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+	color: rgb(var(--vd-ink));
+	background: rgb(var(--sBackgroundColour, 16, 16, 21));
+}
+
+.chatreplay[hidden] {
+	display: none !important;
+}
+
+.chatreplay-header {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .5rem;
+	padding: .5rem .75rem;
+	box-shadow: inset 0 -.0625rem 0 rgba(var(--vd-line), .12);
+}
+
+.chatreplay-title {
+	font-size: .75rem;
+	font-weight: 700;
+	letter-spacing: .03em;
+	text-transform: uppercase;
+	color: rgb(var(--vd-ink-dim));
+}
+
+.chatreplay-close {
+	flex: none;
+	width: 1.5rem;
+	height: 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: .25rem;
+	padding: 0;
+	cursor: pointer;
+	color: rgb(var(--vd-ink-dim));
+	background: none;
+}
+
+.chatreplay-close:hover {
+	color: rgb(var(--vd-ink));
+	background: rgba(var(--vd-line), .12);
+}
+
+.chatreplay-close>svg {
+	width: .875rem;
+	height: .875rem;
+	fill: currentColor;
+}
+
+/* The messages scroll on their own; the panel's head stays put. */
+.chatreplay-lines {
+	flex: 1;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: .5rem .75rem 1rem;
+	word-wrap: break-word;
+}
+
+.chatreplay-line {
+	padding: .1875rem 0;
+}
+
+/* The time is there to be glanced past, not read: it says where in the broadcast the line fell. */
+.chatreplay-time {
+	margin-right: .375rem;
+	font-variant-numeric: tabular-nums;
+	font-size: .6875rem;
+	color: rgb(var(--vd-ink-dim));
+}
+
+.chatreplay-author {
+	font-weight: 700;
+	color: rgb(var(--vd-accent, 168, 128, 255));
+}
+
+.chatreplay-emote {
+	height: 1.75rem;
+	vertical-align: middle;
+}

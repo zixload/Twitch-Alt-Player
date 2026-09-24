@@ -298,6 +298,16 @@ const m_Chat = (() => {
     _nStateBeforeBorrow = NOT_BORROWED;
   }
 
+  /*
+    Le spectateur veut-il un panneau ? Pendant un emprunt, la reponse est ce qu'il etait avant : le
+    chat de la rediffusion se pose a la place du chat du direct, et il ne doit pas paraitre chez qui
+    regarde sans panneau.
+  */
+  function PanelWanted() {
+    const nState = _msBorrowers.size === 0 ? m_Settings.Get("nChatState") : _nStateBeforeBorrow;
+    return nState === CHAT_PANEL;
+  }
+
   const HandleFullscreenChange = (bEnabled) => BorrowPanel("fullscreen", bEnabled);
   const HandleVideosChange = (bOpen) => BorrowPanel("videos", bOpen);
 
@@ -311,6 +321,7 @@ const m_Chat = (() => {
 
   return {
     Restore,
+    PanelWanted,
     ApplyPanelPosition,
     ApplyUrl,
     SaveAndApplyClosedPanelState,

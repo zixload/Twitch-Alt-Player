@@ -271,6 +271,10 @@ const m_Videos = (() => {
     _bResumePending = oItem.sKind === "video" && !oItem.bFromStart;
     ShowElement(_elStage, true);
     ShowElement(_elNowPlaying, true);
+    // Une rediffusion a son chat d'epoque ; un clip, morceau d'une autre, n'en a pas.
+    if (oItem.sKind === "video") {
+      m_VodChat.Open(oItem.sId);
+    }
     // La miniature change de coin : son decalage de glisser se mesurait depuis l'autre.
     document.body.classList.add("videosplaying");
     SetMiniOffset(0, 0);
@@ -446,6 +450,7 @@ const m_Videos = (() => {
     _oNowPlaying = null;
     HidePreview();
     ShowElement(_elQualityRow, false);
+    m_VodChat.Close();
     CloseMenu();
     document.body.classList.remove("videosplaying");
     SetMiniOffset(0, 0);

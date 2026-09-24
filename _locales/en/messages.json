@@ -1598,5 +1598,13 @@
 	"F1933":
 	{
 		"message": "Speed"
+	},
+	"F1934":
+	{
+		"message": "Chat replay"
+	},
+	"A0927":
+	{
+		"message": "Close the chat replay"
 	}
 }

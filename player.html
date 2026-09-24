@@ -34,6 +34,7 @@
 <script src=videos-twitchnosub.js defer></script>
 <script src=modules/preview.js defer></script>
 <script src=modules/videos.js defer></script>
+<script src=modules/vodchat.js defer></script>
 <script src=modules/rewind.js defer></script>
 <script src=modules/playlist.js defer></script>
 <script src=modules/dragger.js defer></script>
@@ -1016,6 +1017,18 @@ Possible causes of buffer overflow:
 		</div>
 		</div>
 		<div id=chatsize data-dragger=chatsize data-i18n=^A0532></div>
+		<!-- Le chat de la rediffusion prend la place du chat du direct, qui n'a rien a dire d'hier. -->
+		<div id=chatreplay class=chatreplay hidden>
+			<div class=chatreplay-header>
+				<span class=chatreplay-title data-i18n=F1934></span>
+				<button id=chatreplay-close type=button class="button chatreplay-close" data-i18n=^A0927>
+					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
+						<use xlink:href=#svg-close />
+					</svg>
+				</button>
+			</div>
+			<div id=chatreplay-lines class=chatreplay-lines></div>
+		</div>
 	</div>
 	<input id=settingsimportfile type=file accept=application/json,.json hidden>
 	<!-- <input id=filechooserforimportingsettings type=file accept=application/json,.json hidden> -->
