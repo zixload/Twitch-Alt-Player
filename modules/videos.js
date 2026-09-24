@@ -680,6 +680,12 @@ const m_Videos = (() => {
     }
   });
 
+  // Le mode studio enveloppe le lecteur ET le chat : la feuille de style donne le reste de la
+  // hauteur a l'image, et la liste s'efface le temps qu'il dure.
+  const HandleStudio = AddExceptionHandler(() => {
+    m_FullscreenMode.ToggleStudio();
+  });
+
   const HandlePip = AddExceptionHandler(() => {
     if (document.pictureInPictureElement === _elVideo) {
       document.exitPictureInPicture();
@@ -1006,6 +1012,7 @@ const m_Videos = (() => {
     GetNode("videos-fullscreen").addEventListener("click", HandleFullscreen);
     GetNode("videos-settings").addEventListener("click", HandleSettings);
     document.addEventListener("click", HandleClickAway);
+    GetNode("videos-studio").addEventListener("click", HandleStudio);
     GetNode("videos-pip").addEventListener("click", HandlePip);
     _elStage.addEventListener("pointermove", HandleStageMove);
     document.addEventListener("keydown", HandleKeyDown);

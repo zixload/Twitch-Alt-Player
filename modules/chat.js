@@ -308,7 +308,8 @@ const m_Chat = (() => {
     return nState === CHAT_PANEL;
   }
 
-  const HandleFullscreenChange = (bEnabled) => BorrowPanel("fullscreen", bEnabled);
+  const HandleFullscreenChange = (bEnabled) =>
+    BorrowPanel("fullscreen", bEnabled && !m_FullscreenMode.IsStudio());
   const HandleVideosChange = (bOpen) => BorrowPanel("videos", bOpen);
 
   function Restore() {

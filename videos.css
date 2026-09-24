@@ -823,3 +823,45 @@
 	height: 1.75rem;
 	vertical-align: middle;
 }
+
+/* -------------------------------------------------------------------------------- studio mode */
+
+/*
+	Studio mode is the player's own fullscreen -- which already wraps the chat -- with the list out
+	of the way: the picture takes the whole height beside the chat, and the video's own fullscreen
+	button is not what does it, since that one wraps the stage alone and leaves the chat outside.
+*/
+.alt-studio #videos {
+	padding: 0;
+	overflow: hidden;
+}
+
+.alt-studio .videos-header,
+.alt-studio #videos-grid,
+.alt-studio #videos-status,
+.alt-studio .videos-more,
+.alt-studio .videos-nowplaying {
+	display: none !important;
+}
+
+.alt-studio .videos-stage {
+	height: 100%;
+	margin: 0;
+}
+
+.alt-studio #videos-video {
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	border-radius: 0;
+}
+
+.alt-studio .videos-controls {
+	border-radius: 0;
+}
+
+/* The button says which mode is on, since the two fullscreens look alike from outside. */
+.alt-studio #videos-studio,
+.alt-studio #togglestudio {
+	color: rgb(var(--sAccentColour, 168, 128, 255));
+}

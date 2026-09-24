@@ -21,6 +21,8 @@ the moment it started to right now.
   coming back is immediate — no reload, no re-buffering.
 - Pause, skip, speed and quality all address **what you are actually watching**, not the live
   stream you left behind.
+- **Studio mode** — one button, and the picture takes the whole screen with the chat still beside
+  it, on a live stream or a past one.
 
 This needs the channel to keep its broadcasts (most do). When a channel does not, the bar falls
 back to what the browser holds — a few minutes.
@@ -30,7 +32,10 @@ back to what the browser holds — a few minutes.
 - **Skips ads** — plays the stream through a second playlist Twitch serves without the stitched-in
   ads.
 - **Videos tab** — browse a channel's past broadcasts, highlights, uploads and clips while the live
-  stream keeps playing in a corner. Pick the quality; subscriber-only videos play too.
+  stream keeps playing in a corner. Pick the quality; subscriber-only videos play too. Arrow keys
+  move five seconds either way.
+- **The chat of a past broadcast, replayed on time** — watching yesterday's stream at 12:00 shows
+  what chat said at 12:00, scrolling as you watch, emotes included. Seek and it follows.
 - **Claims channel points** — the bonus chest is collected on its own while you watch.
 - **Diagnostics overlay** — press `S` for live stream stats.
 - Chat panel, followed/live sidebar, follow and clip buttons.

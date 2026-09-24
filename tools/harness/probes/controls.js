@@ -44,6 +44,7 @@
 
 	let bStatsOuvert = false;
 	remplacer(m_FullscreenMode, 'Toggle', 'pleinecran');
+	remplacer(m_FullscreenMode, 'ToggleStudio', 'studio');
 	remplacer(m_PictureInPicture, 'toggle', 'pip');
 	remplacer(m_Window, 'toggle', 'fenetre');
 	remplacer(m_Window, 'close', 'fermerfenetre');
@@ -275,16 +276,19 @@
 		// ------------------------------------------------------------------ Les clics.
 		k = aAppels.length;
 		cliquer('togglefullscreen');
+		cliquer('togglestudio');
 		cliquer('togglepictureinpicture');
 		cliquer('togglechat');
 		cliquer('createclip');
 		cliquer('openhelp');
 		cliquer('opennews2');
 		dire('les boutons atteignent leur destinataire',
-			depuis(k).join(' ') === 'pleinecran() pip() chat() clip() aide() nouvelles()', depuis(k).join(' '));
+			depuis(k).join(' ') === 'pleinecran() studio() pip() chat() clip() aide() nouvelles()',
+			depuis(k).join(' '));
 		dire('et chaque clic est annonce avec son nom',
-			aClics.slice(-6).join(' ') === 'togglefullscreen togglepictureinpicture togglechat createclip openhelp opennews2',
-			aClics.slice(-6).join(' '));
+			aClics.slice(-7).join(' ')
+			=== 'togglefullscreen togglestudio togglepictureinpicture togglechat createclip openhelp opennews2',
+			aClics.slice(-7).join(' '));
 
 		k = aAppels.length;
 		cliquer('togglefullscreen', { bEnfant: true });

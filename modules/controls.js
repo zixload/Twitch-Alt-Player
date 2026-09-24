@@ -385,6 +385,10 @@ const m_Controls = (() => {
       m_PictureInPicture.toggle();
       break;
 
+    case "togglestudio":
+      m_FullscreenMode.ToggleStudio();
+      break;
+
     case "togglefullscreen":
       m_FullscreenMode.Toggle();
       break;

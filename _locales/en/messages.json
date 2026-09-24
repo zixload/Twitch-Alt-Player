@@ -1606,5 +1606,9 @@
 	"A0927":
 	{
 		"message": "Close the chat replay"
+	},
+	"A0928":
+	{
+		"message": "Studio mode: the video fills the screen and the chat stays beside it.\nESCAPE leaves it."
 	}
 }

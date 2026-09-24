@@ -16,6 +16,12 @@
 	place that knows the real state, so it also covers entering fullscreen first and showing the chat
 	afterwards.
 
+	**Studio mode is this same fullscreen, with the chat left in place.** What goes fullscreen already
+	holds the chat, so the difference is one thing not happening: the panel is not borrowed. The body
+	then wears `alt-studio` as well, which is what lets the videos view drop its list and give the
+	whole height to the picture. Leaving fullscreen, whichever way, forgets it -- the flag is read
+	from the measurement, never from what was asked.
+
 	Fullscreen and picture-in-picture cannot both hold, so entering here ends the other one. Entering
 	also hides the interface without animation: the layout is about to move, and an animation across
 	that move looks like a fault.
@@ -46,17 +52,29 @@ const m_FullscreenMode = (() => {
 
   function Update() {
     const bEnabled = Enabled();
-    m_Log.Wow(`[Fullscreen] Mode enabled: ${bEnabled}`);
+    if (!bEnabled) {
+      _bStudio = false;
+    }
+    m_Log.Wow(`[Fullscreen] Mode enabled: ${bEnabled}${_bStudio ? " (studio)" : ""}`);
     ChangeButton("togglefullscreen", bEnabled);
     document.body.classList.toggle("alt-fullscreen", bEnabled);
+    document.body.classList.toggle("alt-studio", _bStudio);
     return bEnabled;
   }
 
-  function Enable() {
+  // Vrai entre la demande de mode studio et la sortie du plein ecran, quelle qu'en soit la facon.
+  let _bStudio = false;
+
+  function IsStudio() {
+    return _bStudio && Enabled();
+  }
+
+  function Enable(bStudio) {
     if (Enabled()) {
       return false;
     }
-    m_Log.Here("[Fullscreen] Enabling mode");
+    _bStudio = Boolean(bStudio);
+    m_Log.Here(`[Fullscreen] Enabling mode${_bStudio ? " (studio)" : ""}`);
     m_AutoHide.Hide(false);
     m_PictureInPicture.disable();
     GetElement()[REQUEST]();
@@ -74,7 +92,25 @@ const m_FullscreenMode = (() => {
   }
 
   function Toggle() {
-    Enable() || Disable();
+    Enable(false) || Disable();
+  }
+
+  /*
+    Le mode studio. Depuis le plein ecran ordinaire on y passe sans repasser par la fenetre : sortir
+    puis rentrer ferait clignoter l'ecran, et la demande de rentrer, faite hors d'un geste, serait
+    refusee.
+  */
+  function ToggleStudio() {
+    if (IsStudio()) {
+      Disable();
+      return;
+    }
+    if (Enabled()) {
+      _bStudio = true;
+      m_Events.SendEvent("fullscreen-changed", Update());
+      return;
+    }
+    Enable(true);
   }
 
   const HandleModeChange = AddExceptionHandler(() => {
@@ -96,6 +132,8 @@ const m_FullscreenMode = (() => {
     Enabled,
     Disable,
     Toggle,
+    ToggleStudio,
+    IsStudio,
     GetElement,
   };
 })();

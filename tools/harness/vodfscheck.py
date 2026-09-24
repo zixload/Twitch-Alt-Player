@@ -19,6 +19,10 @@ erreur, refaite, rendrait les 223 pixels.
 
 Tourne sans affichage : rien n'apparait sur l'ecran de l'utilisateur pendant qu'il regarde.
 
+Le mode studio se mesure ici aussi : c'est le meme plein ecran, mais celui du lecteur entier --
+image ET chat -- avec la liste effacee. Le chat doit rester a cote de l'image, pas dessus, et les
+deux doivent se partager la largeur de l'ecran sans trou.
+
 Usage: py -3.14 tools/harness/vodfscheck.py [chaine] [--voir]
   sortie 0 quand l'image couvre l'ecran et que rien ne la pousse sur le cote.
 """
@@ -51,6 +55,12 @@ ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
 CHANNEL = ARGS[0] if ARGS else 'zerator'
 
 OUVRIR = u"(() => { m_Videos.Open(); return 'ouverte'; })()"
+
+# Le chat en panneau : sans lui, le mode studio n'aurait rien a poser a cote de l'image.
+PANNEAU = u"(() => { m_Settings.Change('nChatState', CHAT_PANEL); m_Chat.Restore(); return 'panneau'; })()"
+
+STUDIO = (u"(() => { const e = document.getElementById('videos-studio');"
+          u" if (!e) return 'bouton absent'; e.click(); return 'clique'; })()")
 
 # Une carte de la liste, cliquee comme le ferait un spectateur.
 JOUER = (u"(() => { const a = [...document.querySelectorAll('#videos *')].filter((e) => e.offsetWidth"
@@ -105,7 +115,11 @@ MESURE = u'''
       droite: nom(W - 20, Math.round(H / 2)),
       gauche: nom(20, Math.round(H / 2))
     },
-    imageEstLa: elVideo === document.elementFromPoint(W - 20, Math.round(H / 2))
+    imageEstLa: elVideo === document.elementFromPoint(W - 20, Math.round(H / 2)),
+    studio: document.body.classList.contains('alt-studio'),
+    chat: boite('chatreplay') || boite('chat'),
+    chatCache: (document.getElementById('chatreplay') || {}).hidden,
+    listeVisible: Boolean((document.getElementById('videos-grid') || {}).offsetParent)
   }, null, 1);
 })()
 '''
@@ -202,6 +216,8 @@ async def main():
                                 {'expression': expr, 'returnByValue': True, 'userGesture': geste})
                 return got.get('result', {}).get('result', {}).get('value')
 
+            out.write(u"  chat en panneau -> %s\n" % await dire(PANNEAU, True))
+            await asyncio.sleep(2)
             out.write(u"  ouvrir la vue -> %s\n" % await dire(OUVRIR, True))
             await asyncio.sleep(5)
             out.write(u"  jouer une video -> %s\n" % await dire(JOUER, True))
@@ -232,6 +248,16 @@ async def main():
                     f.write(base64.b64decode(got['result']['data']))
                 out.write(u"\n  capture : %s\n" % SHOT)
             await dire(SORTIR, True)
+            await asyncio.sleep(2)
+
+            # --- Le mode studio : le lecteur entier, chat compris, la liste effacee.
+            out.write(u"\n  demande de mode studio -> %s\n" % await dire(STUDIO, True))
+            await asyncio.sleep(3)
+            await dire(MONTRER)
+            await asyncio.sleep(1)
+            studio = json.loads(await dire(MESURE))
+            out.write(json.dumps(studio, indent=1, ensure_ascii=False) + u"\n")
+            await dire(SORTIR, True)
 
         W, H = mesure['fenetre']
         image = mesure['image'] or {}
@@ -253,13 +279,34 @@ async def main():
         if mesure['titreDansLaScene']:
             defauts.append(u"le titre est revenu dans la scene, ou il prend sa part de largeur")
 
+        # --- Le mode studio.
+        sPlein = studio['pleinEcran']
+        oImage = studio['image'] or {}
+        oChat = studio['chat'] or {}
+        if not studio['studio'] or sPlein != 'playerandchat':
+            defauts.append(u"le mode studio ne s'est pas ouvert (%s, studio=%s)"
+                           % (sPlein, studio['studio']))
+        if studio['listeVisible']:
+            defauts.append(u"la liste des videos occupe encore la place")
+        if abs(oImage.get('h', 0) - H) > 2:
+            defauts.append(u"en studio, l'image ne prend pas la hauteur : %s pour %s"
+                           % (oImage.get('h'), H))
+        if studio['chatCache'] or oChat.get('l', 0) <= 0:
+            defauts.append(u"en studio, le chat n'est pas la")
+        elif oChat.get('x', 0) < oImage.get('x', 0) + oImage.get('l', 0) - 2:
+            defauts.append(u"en studio, le chat chevauche l'image (chat a %s, image jusqu'a %s)"
+                           % (oChat.get('x'), oImage.get('x', 0) + oImage.get('l', 0)))
+        elif abs(oImage.get('l', 0) + oChat.get('l', 0) - W) > 4:
+            defauts.append(u"en studio, l'image et le chat ne remplissent pas la largeur : %s + %s pour %s"
+                           % (oImage.get('l'), oChat.get('l'), W))
+
         out.write(u"\n")
         if defauts:
             for d in defauts:
                 out.write(u"  DEFAUT : %s\n" % d)
             out.write(u"\n%d defaut(s).\n" % len(defauts))
             return 1
-        out.write(u"OK : l'image couvre l'ecran, rien a cote.\n")
+        out.write(u"OK : l'image couvre l'ecran, et le studio la partage avec le chat.\n")
         return 0
     finally:
         out.close()
