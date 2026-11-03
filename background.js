@@ -40,33 +40,42 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 /*
 	Le lecteur de Twitch se tait pendant que le notre joue a sa place.
 
-	Une regle de session par onglet bloque le direct que demande la page twitch.tv elle-meme : la
-	playlist d'usher, les playlists de video-weaver, les segments. Elle ne vise que les requetes dont
-	l'initiateur est twitch.tv, donc jamais celles de notre lecteur, qui partent de l'extension. Les
-	VOD de Twitch (usher /vod/, cloudfront) ne sont pas touchees.
+	Des regles de session, par onglet, bloquent ce que la page twitch.tv demande elle-meme : sur un
+	direct, la playlist d'usher, les playlists de video-weaver et les segments ; sur une VOD, ses
+	listes et ses segments (usher /vod/, cloudfront), pas ses vignettes. Elles ne visent que les
+	requetes dont l'initiateur est twitch.tv, donc jamais celles de notre lecteur, qui partent de
+	l'extension.
+
+	**Une expression par regle.** Reunies en une seule, elles depassent la memoire que Chrome accorde
+	a une expression (isRegexSupported : memoryLimitExceeded) : la regle est refusee, et plus rien
+	n'est coupe.
 */
-const TWITCH_LIVE_REGEX =
-	'^https://(usher\\.ttvnw\\.net/api/(v[0-9]+/)?channel/hls/|[^/]*\\.hls\\.ttvnw\\.net/|[^/]*\\.live-video\\.net/)';
+const TWITCH_PLAYER_REGEXES = [
+	'^https://(usher\\.ttvnw\\.net/api/(v[0-9]+/)?channel/hls/|[^/]*\\.hls\\.ttvnw\\.net/|[^/]*\\.live-video\\.net/)',
+	'^https://(usher\\.ttvnw\\.net/vod/|vod-[a-z0-9-]+\\.twitch\\.tv/)',
+	'^https://[^/]*\\.cloudfront\\.net/[^/]+/[^/]+/[^/?]+\\.(m3u8|ts|mp4)',
+];
 
 // Un identifiant de regle tient sur 32 bits signes ; Edge numerote ses onglets pres du milliard.
-function twitchPlayerRuleId(nTabId) {
-	return (nTabId % 2147483000) + 1;
+function twitchPlayerRuleIds(nTabId) {
+	const nBase = (nTabId % 700000000) * TWITCH_PLAYER_REGEXES.length + 1;
+	return TWITCH_PLAYER_REGEXES.map((_, k) => nBase + k);
 }
 
 function blockTwitchPlayer(nTabId, bBlock) {
-	const nRuleId = twitchPlayerRuleId(nTabId);
+	const anRuleIds = twitchPlayerRuleIds(nTabId);
 	return chrome.declarativeNetRequest.updateSessionRules({
-		removeRuleIds: [nRuleId],
-		addRules: bBlock ? [{
-			id: nRuleId,
+		removeRuleIds: anRuleIds,
+		addRules: bBlock ? TWITCH_PLAYER_REGEXES.map((sRegex, k) => ({
+			id: anRuleIds[k],
 			priority: 2,
 			action: { type: 'block' },
 			condition: {
-				regexFilter: TWITCH_LIVE_REGEX,
+				regexFilter: sRegex,
 				initiatorDomains: ['twitch.tv'],
 				tabIds: [nTabId]
 			}
-		}] : []
+		})) : []
 	});
 }
 

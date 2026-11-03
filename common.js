@@ -164,6 +164,12 @@ function GetOurPlayerAddress(sChannelCode) {
 	return chrome.runtime.getURL('player.html') + sParameters;
 }
 
+// Le lecteur sur une VOD seule, a partir de nStart secondes (le ?t= de Twitch).
+function GetOurVideoPlayerAddress(sVideoId, nStart) {
+	const sParameters = '?video=' + encodeURIComponent(sVideoId) + (nStart > 0 ? '&t=' + Math.floor(nStart) : '');
+	return chrome.runtime.getURL('player.html') + sParameters;
+}
+
 /*
 	The in-memory log that ends up in a bug report.
 

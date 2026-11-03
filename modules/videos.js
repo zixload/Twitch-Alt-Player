@@ -44,6 +44,10 @@ const m_Videos = (() => {
   // What is playing, so its position can be remembered under its id.
   let _oNowPlaying = null;
   let _bResumePending = false;
+  // Une VOD seule dans la page de Twitch : pas de liste, pas de fermeture, l'image en plein cadre.
+  let _bSolo = false;
+  // Ou commencer, quand l'adresse de Twitch le dit (?t=) ; zero sinon.
+  let _nStartAt = 0;
   let _nLastSaved = 0;
   let _bScrubbing = false;
   let _nHideTimer = 0;
@@ -105,7 +109,7 @@ const m_Videos = (() => {
   }
 
   function Close() {
-    if (!_bOpen) {
+    if (!_bOpen || _bSolo) {
       return;
     }
     m_Log.Wow("[Videos] Closing");
@@ -489,6 +493,9 @@ const m_Videos = (() => {
     if (_bResumePending) {
       _bResumePending = false;
       RestorePosition();
+    } else if (_nStartAt > 0 && Number.isFinite(_elVideo.duration)) {
+      _elVideo.currentTime = Math.min(_nStartAt, _elVideo.duration - 1);
+      _nStartAt = 0;
     } else {
       SavePositionThrottled();
     }
@@ -683,7 +690,11 @@ const m_Videos = (() => {
   // Le mode studio enveloppe le lecteur ET le chat : la feuille de style donne le reste de la
   // hauteur a l'image, et la liste s'efface le temps qu'il dure.
   const HandleStudio = AddExceptionHandler(() => {
-    m_FullscreenMode.ToggleStudio();
+    if (m_Embed.IsEmbedded()) {
+      m_Embed.ToggleTheatre();
+    } else {
+      m_FullscreenMode.ToggleStudio();
+    }
   });
 
   const HandlePip = AddExceptionHandler(() => {
@@ -1023,6 +1034,28 @@ const m_Videos = (() => {
     en cours -- le meme lecteur que les autres videos, avec la barre complete -- pendant que le direct se
     reduit dans le coin. Sans enregistrement (la chaine ne garde pas ses VODs), il n'y a rien a jouer.
   */
+  /*
+    La page d'une VOD sur twitch.tv : la vue s'ouvre sur elle seule, sans liste a charger. Un ?t= de
+    Twitch l'emporte sur la position retenue de la derniere visite.
+  */
+  function PlayVideoAlone(sId, nStart) {
+    Check(IsNonEmptyString(sId));
+    _bSolo = true;
+    _bLoaded = true;
+    _nStartAt = nStart > 0 ? nStart : 0;
+    document.body.classList.add("videosolo");
+    Open();
+    PlayItem({ sKind: "video", sId, sTitle: "", bFromStart: _nStartAt > 0 });
+  }
+
+  function IsSolo() {
+    return _bSolo;
+  }
+
+  function GetVideoId() {
+    return _oNowPlaying && _oNowPlaying.sKind === "video" ? _oNowPlaying.sId : "";
+  }
+
   function PlayRecordingFromStart(sId, sTitle) {
     Check(IsNonEmptyString(sId));
     Open();
@@ -1037,5 +1070,8 @@ const m_Videos = (() => {
     CloseTopmost,
     Toggle,
     PlayRecordingFromStart,
+    PlayVideoAlone,
+    IsSolo,
+    GetVideoId,
   };
 })();

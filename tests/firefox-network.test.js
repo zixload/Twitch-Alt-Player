@@ -39,15 +39,25 @@ test('The live stream Twitch requests for itself is cut only in tabs where our p
   const hooks = load();
   const usher = 'https://usher.ttvnw.net/api/channel/hls/test.m3u8?sig=x';
   const segment = 'https://video-edge-1.abs.hls.ttvnw.net/v1/segment/abc.ts';
-  const vod = 'https://usher.ttvnw.net/vod/123.m3u8';
+  const thumbnail = 'https://dgeft87wbj63p.cloudfront.net/abc_x_1_2/storyboards/123-low-0.jpg';
   const twitch = { tabId: 7, originUrl: 'https://www.twitch.tv/test' };
   assert.equal(hooks.onBeforeRequest({ ...twitch, url: usher }), undefined);
   hooks.network.blockTwitchPlayer(7, true);
   assert.equal(hooks.onBeforeRequest({ ...twitch, url: usher }).cancel, true);
   assert.equal(hooks.onBeforeRequest({ ...twitch, url: segment }).cancel, true);
-  assert.equal(hooks.onBeforeRequest({ ...twitch, url: vod }), undefined);
+  assert.equal(hooks.onBeforeRequest({ ...twitch, url: thumbnail }), undefined);
   assert.equal(hooks.onBeforeRequest({ tabId: 7, originUrl: 'moz-extension://local-uuid/player.html', url: usher }), undefined);
   assert.equal(hooks.onBeforeRequest({ tabId: 8, originUrl: 'https://www.twitch.tv/test', url: usher }), undefined);
   hooks.tabRemoved(7);
   assert.equal(hooks.onBeforeRequest({ ...twitch, url: usher }), undefined);
+});
+test('A Twitch VOD is cut too while our player plays it; its thumbnails are not', () => {
+  const hooks = load();
+  const twitch = { tabId: 3, originUrl: 'https://www.twitch.tv/videos/123' };
+  hooks.network.blockTwitchPlayer(3, true);
+  assert.equal(hooks.onBeforeRequest({ ...twitch, url: 'https://dgeft87wbj63p.cloudfront.net/abc_strogo_1_2/1080p60/index-dvr.m3u8' }).cancel, true);
+  assert.equal(hooks.onBeforeRequest({ ...twitch, url: 'https://dgeft87wbj63p.cloudfront.net/abc_strogo_1_2/1080p60/0.mp4' }).cancel, true);
+  assert.equal(hooks.onBeforeRequest({ ...twitch, url: 'https://usher.ttvnw.net/vod/123.m3u8?sig=x' }).cancel, true);
+  assert.equal(hooks.onBeforeRequest({ ...twitch, url: 'https://dgeft87wbj63p.cloudfront.net/abc_strogo_1_2/storyboards/123-info.json' }), undefined);
+  assert.equal(hooks.onBeforeRequest({ tabId: 3, originUrl: 'moz-extension://local-uuid/player.html', url: 'https://dgeft87wbj63p.cloudfront.net/abc_strogo_1_2/1080p60/0.mp4' }), undefined);
 });

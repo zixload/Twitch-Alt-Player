@@ -34,6 +34,11 @@ page stays native: its chat, sidebar and channel info are used, so the player hi
 is framed (`modules/embed.js`, `window.top !== window`). Opened on its own, `player.html` is still the
 full page the harness drives. The full-page redirect is gone.
 
+On a video page (`twitch.tv/videos/<id>`) the frame address is `player.html?video=<id>&t=<s>`: the
+player starts without the live pipeline and `m_Videos.PlayVideoAlone` plays the video full-frame
+(`body.videosolo`). Twitch's own player is cut by three session rules per tab, one regex each:
+merged, the regex exceeds Chrome's memory limit and the whole rule is refused silently.
+
 Forked from Alexander Choporov's original (BSD licence — keep his copyright line in `LICENSE`).
 Phase 1 translated every identifier from Russian to English. Phase 2 extracted every module into
 its own file and rewrote it; it is complete as of 2026-09-14.

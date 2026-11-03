@@ -54,9 +54,10 @@ function transformScript(file, source) {
   if (file === 'embedhost.js') {
     // Firefox does not tell the background which tab a framed extension page lives in: the page,
     // whose content script it does know, passes its tab id to the player in the frame address.
-    source = replaceRequired(source, '\tfunction playerAddress(sChannel) {\n\t\treturn GetOurPlayerAddress(sChannel);\n\t}\n',
+    source = replaceRequired(source, '\tfunction playerAddress(sKey) {\n',
       "\tlet _nTabId = NaN;\n\tbrowser.runtime.sendMessage({ sQuery: 'FirefoxWhoAmI' }).then((n) => { _nTabId = n; }, () => {});\n\n" +
-      "\tfunction playerAddress(sChannel) {\n\t\treturn GetOurPlayerAddress(sChannel) + (Number.isSafeInteger(_nTabId) ? `&tab=${_nTabId}` : '');\n\t}\n");
+      "\tfunction playerAddress(sKey) {\n\t\treturn playerAddressInTab(sKey) + (Number.isSafeInteger(_nTabId) ? `&tab=${_nTabId}` : '');\n\t}\n\n" +
+      "\tfunction playerAddressInTab(sKey) {\n");
   }
   if (file === 'modules/audio-device.js') {
     source = replaceRequired(source, '    m_Log.Wow("[AudioDevices] Requesting contentSettings permission");',

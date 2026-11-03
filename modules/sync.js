@@ -27,6 +27,11 @@
 
 	**Inside the live buffer or in the recording.** A target the live buffer still holds is played
 	there; earlier than that, from the recording, which counts from the start of the broadcast too.
+
+	**A video page is a room of its own.** On twitch.tv/videos/<id> the player plays that video alone
+	(m_Videos.PlayVideoAlone); its room key is "video:<id>" and positions are the video's own time.
+	No live playlist means no Twitch clock there, so the relay lends its own: a few pings on arrival,
+	and the round trip that came back fastest sets the offset, the way NTP does.
 */
 const m_Sync = (() => {
   // The deployed relay (sync-relay/, Cloudflare free plan). chrome.storage.local "tw5SyncRelay"
@@ -39,6 +44,10 @@ const m_Sync = (() => {
   const SETTLE = 0.7;
   const SETTLE_LIMIT = 10;
   const JUMP = 1.5;
+  // Dans une VOD, sauter dans ce qui est deja charge ne coute rien : on rattrape d'un coup.
+  const JUMP_VOD = 0.5;
+  const PING_COUNT = 5;
+  const PING_SPACING = 300;
   const CLOSE_ENOUGH = 0.06;
   const MAX_NUDGE = 0.08;
   const EDGE_MARGIN = 1;
@@ -62,11 +71,34 @@ const m_Sync = (() => {
   let _sStatus = "";
   let _nGap = NaN;
   let _nBehindSince = NaN;
+  // L'heure du relais moins performance.now(), en millisecondes, et l'aller-retour qui l'a donnee.
+  let _nRelayOffset = NaN;
+  let _nBestRoundTrip = Infinity;
   // Le geste local en cours : ce qu'on voyait avant, et quand regarder ce qu'il a change.
   let _oGesture = null;
 
   function serverNow() {
+    if (m_Videos.IsSolo() && Number.isFinite(_nRelayOffset)) {
+      return (performance.now() + _nRelayOffset) / 1e3;
+    }
     return (Number.isNaN(g_nExactTime) ? Date.now() : performance.now() + g_nExactTime) / 1e3;
+  }
+
+  function sendPings() {
+    for (let k = 0; k < PING_COUNT; k++) {
+      setTimeout(() => send({ t: "ping", c: performance.now() }), k * PING_SPACING);
+    }
+  }
+
+  function takePong(oMessage) {
+    if (!Number.isFinite(oMessage.c) || !Number.isFinite(oMessage.ts)) {
+      return;
+    }
+    const nRoundTrip = performance.now() - oMessage.c;
+    if (nRoundTrip >= 0 && nRoundTrip < _nBestRoundTrip) {
+      _nBestRoundTrip = nRoundTrip;
+      _nRelayOffset = oMessage.ts - (oMessage.c + nRoundTrip / 2);
+    }
   }
 
   // Le debut de la diffusion sur la meme horloge, NaN tant que ses metadonnees ne sont pas la.
@@ -97,11 +129,21 @@ const m_Sync = (() => {
   // Ce qui est a l'ecran
 
   function nominalRate() {
+    if (m_Videos.IsSolo()) {
+      return Number.parseFloat(GetNode("videos-speed").value) || 1;
+    }
     return m_Rewind.IsShown() ? Number.parseFloat(GetNode("speed").value) || 1 : 1;
   }
 
   // Ou l'on en est, dans l'une ou l'autre source ; null tant qu'on ne peut pas le dire.
   function readLocal() {
+    if (m_Videos.IsSolo()) {
+      const elVideo = GetNode("videos-video");
+      if (elVideo.readyState === 0) {
+        return null;
+      }
+      return { sSource: "vod", nPosition: elVideo.currentTime, bPaused: elVideo.paused, nRate: nominalRate() };
+    }
     if (m_Controls.GetState() !== STATE_PLAYING) {
       return null;
     }
@@ -204,10 +246,10 @@ const m_Sync = (() => {
   }
 
   // Un petit ecart se rattrape en vitesse, un grand en sautant.
-  function steer(nCurrent, nTarget, fSeek, fRate, nRate, bPaused) {
+  function steer(nCurrent, nTarget, fSeek, fRate, nRate, bPaused, nJump = JUMP) {
     const nGap = nCurrent - nTarget;
     _nGap = nGap;
-    if (Math.abs(nGap) > JUMP || (bPaused && Math.abs(nGap) > 0.25)) {
+    if (Math.abs(nGap) > nJump || (bPaused && Math.abs(nGap) > 0.25)) {
       fSeek(nTarget);
       fRate(nRate);
       return;
@@ -271,6 +313,24 @@ const m_Sync = (() => {
   function followPosition(oLocal) {
     const a = _oAnchor;
     const nTarget = a.p + (a.z ? 0 : (serverNow() - a.s) * a.r);
+    if (oLocal.sSource === "vod") {
+      const elVideo = GetNode("videos-video");
+      if (a.z !== elVideo.paused) {
+        if (a.z) {
+          elVideo.pause();
+        } else {
+          elVideo.play().catch(STUB);
+        }
+      }
+      steer(
+        elVideo.currentTime, nTarget,
+        (n) => { elVideo.currentTime = n; },
+        (n) => { elVideo.playbackRate = n; },
+        a.r, a.z, JUMP_VOD
+      );
+      setStatus(Math.abs(_nGap) < 0.3 ? "synced" : "adjusting");
+      return;
+    }
     if (oLocal.sSource === "live") {
       const oPositions = livePositions(oLocal.oClocks);
       if (oPositions === null) {
@@ -365,8 +425,13 @@ const m_Sync = (() => {
     if (Number.isSafeInteger(oMessage.n) && oMessage.n > 0) {
       _nMembers = oMessage.n;
     }
+    if (oMessage.t === "pong") {
+      takePong(oMessage);
+      return;
+    }
     if (oMessage.t === "welcome") {
       _nReconnectDelay = 1e3;
+      sendPings();
       if (validAnchor(oMessage.a)) {
         acceptAnchor(oMessage.a);
       } else {
@@ -415,7 +480,9 @@ const m_Sync = (() => {
   }
 
   function resetRates() {
-    if (m_Controls.GetState() === STATE_PLAYING) {
+    if (m_Videos.IsSolo()) {
+      GetNode("videos-video").playbackRate = nominalRate();
+    } else if (m_Controls.GetState() === STATE_PLAYING) {
       m_Player.SetLiveRate(1);
       m_Rewind.SetSpeed(nominalRate());
     }
@@ -433,6 +500,8 @@ const m_Sync = (() => {
     Leave();
     _sRoom = sCode;
     _oAnchor = null;
+    _nRelayOffset = NaN;
+    _nBestRoundTrip = Infinity;
     _nMembers = 1;
     connect();
     if (_nTimer === 0) {

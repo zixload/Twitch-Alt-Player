@@ -49,12 +49,17 @@ const m_Embed = (() => {
   // ------------------------------------------------------------------------------------------
   // Vitesse
 
+  // Sur une VOD seule, la vitesse est celle de la vue des videos, et elle vaut toujours.
+  function speedNode() {
+    return GetNode(m_Videos.IsSolo() ? "videos-speed" : "speed");
+  }
+
   function speedApplies() {
-    return m_Rewind.IsShown() || m_Controls.GetState() === STATE_REPEAT;
+    return m_Videos.IsSolo() || m_Rewind.IsShown() || m_Controls.GetState() === STATE_REPEAT;
   }
 
   function setSpeed(nSpeed) {
-    const nodeSpeed = GetNode("speed");
+    const nodeSpeed = speedNode();
     const nodeOption = [...nodeSpeed.options].find((node) => Number.parseFloat(node.value) === nSpeed);
     if (!nodeOption || !speedApplies()) {
       return;
@@ -89,6 +94,7 @@ const m_Embed = (() => {
       _oGain.connect(_oAudio.destination);
       connect(GetNode("eye"));
       connect(GetNode("rewind"));
+      connect(GetNode("videos-video"));
     }
     m_Log.Wow(`[Embed] Boost ${nBoost}`);
     _oGain.gain.value = nBoost;
@@ -108,7 +114,7 @@ const m_Embed = (() => {
   const ReportState = AddExceptionHandler(() => {
     const oState = {
       bSpeedApplies: speedApplies(),
-      nSpeed: Number.parseFloat(GetNode("speed").value),
+      nSpeed: Number.parseFloat(speedNode().value),
       oSync: m_Sync.GetState(),
     };
     const sState = JSON.stringify(oState);

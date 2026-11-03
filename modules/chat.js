@@ -305,6 +305,10 @@ const m_Chat = (() => {
     regarde sans panneau.
   */
   function PanelWanted() {
+    // Dans la page de Twitch, son chat (et son chat rejoue sur une VOD) est deja a cote.
+    if (m_Embed.IsEmbedded()) {
+      return false;
+    }
     const nState = _msBorrowers.size === 0 ? m_Settings.Get("nChatState") : _nStateBeforeBorrow;
     return nState === CHAT_PANEL;
   }

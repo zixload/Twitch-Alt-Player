@@ -43,6 +43,9 @@ Round buttons in Twitch's own Follow / Subscribe row:
 
 - **Skips ads** — plays the stream through a second playlist Twitch serves without the stitched-in
   ads.
+- **Past broadcasts on twitch.tv/videos/…** play in this player too, inside Twitch's page: no ads,
+  subscriber-only videos included, Twitch's `?t=` respected, and the same buttons under the picture.
+  Watch together works on a video as well.
 - **Videos tab** — browse a channel's past broadcasts, highlights, uploads and clips while the live
   stream keeps playing in a corner. Pick the quality; subscriber-only videos play too. Arrow keys
   move five seconds either way.

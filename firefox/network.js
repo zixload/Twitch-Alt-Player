@@ -22,11 +22,11 @@
   // its place (background.js). The Chrome build does this with a declarativeNetRequest session
   // rule; our own requests come from the extension and are never cut.
   const blockedTabs = new Set();
-  const live = /^https:\/\/(usher\.ttvnw\.net\/api\/(v[0-9]+\/)?channel\/hls\/|[^/]*\.hls\.ttvnw\.net\/|[^/]*\.live-video\.net\/)/;
+  const live = /^https:\/\/(usher\.ttvnw\.net\/(api\/(v[0-9]+\/)?channel\/hls\/|vod\/)|[^/]*\.hls\.ttvnw\.net\/|[^/]*\.live-video\.net\/|[^/]*\.cloudfront\.net\/[^/]+\/[^/]+\/[^/?]+\.(m3u8|ts|mp4)|vod-[a-z0-9-]+\.twitch\.tv\/)/;
   browser.webRequest.onBeforeRequest.addListener(details => {
     if (!blockedTabs.has(details.tabId) || isOwnRequest(details) || !live.test(details.url)) return undefined;
     return { cancel: true };
-  }, { urls: ['*://*.ttvnw.net/*', '*://*.live-video.net/*'] }, ['blocking']);
+  }, { urls: ['*://*.ttvnw.net/*', '*://*.live-video.net/*', '*://*.cloudfront.net/*', '*://*.twitch.tv/*'] }, ['blocking']);
   browser.tabs.onRemoved.addListener(tabId => blockedTabs.delete(tabId));
   globalThis.FirefoxNetwork = {
     blockTwitchPlayer(tabId, block) {

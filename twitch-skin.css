@@ -478,3 +478,129 @@ body[data-state="6"] .golive-text {
 	border-color: #a970ff;
 	background: radial-gradient(circle, #a970ff 0 40%, transparent 45%);
 }
+
+/* ================================================================== une VOD seule */
+
+/*
+	Sur twitch.tv/videos/<id>, la vue des videos joue la VOD en plein cadre (modules/videos.js,
+	PlayVideoAlone) : ni liste, ni onglets, ni miniature du direct, qui ne tourne pas. Sa barre prend
+	la meme allure que celle du direct.
+*/
+.videosolo #videos {
+	padding: 0;
+	overflow: hidden;
+	background: #000;
+	font-family: var(--tw-font);
+}
+
+.videosolo #eye,
+.videosolo .videos-header,
+.videosolo #videos-grid,
+.videosolo #videos-status,
+.videosolo #videos-more,
+.videosolo #videos-mini {
+	display: none !important;
+}
+
+.videosolo .videos-stage {
+	height: 100%;
+	margin: 0;
+}
+
+.videosolo #videos-video {
+	height: 100%;
+	max-height: none;
+	aspect-ratio: auto;
+	border-radius: 0;
+	object-fit: contain;
+}
+
+/* Le titre est sous l'image, chez Twitch : seul un refus (VOD reservee, introuvable) s'affiche. */
+.videosolo #videos-nowplaying:not(.videos-error) {
+	display: none;
+}
+
+.videosolo #videos-nowplaying.videos-error {
+	position: absolute;
+	inset: 40% 1rem auto;
+	text-align: center;
+}
+
+.videosolo .videos-controls {
+	gap: .25rem;
+	padding: 2.25rem .5rem .3125rem;
+	border-radius: 0;
+	background: linear-gradient(to top, rgba(0, 0, 0, .8) 0%, rgba(0, 0, 0, .5) 50%, rgba(0, 0, 0, 0) 100%);
+}
+
+.videosolo .videos-controls-row {
+	gap: .125rem;
+}
+
+.videosolo #videos .videos-control {
+	width: 1.875rem;
+	height: 1.875rem;
+	border-radius: .25rem;
+}
+
+.videosolo #videos .videos-control:enabled:hover {
+	background: rgba(255, 255, 255, .15);
+}
+
+.videosolo #videos .videos-control>svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	filter: none;
+	transition: none;
+}
+
+.videosolo #videos .videos-control:enabled:hover>svg,
+.videosolo #videos .videos-control:enabled:active>svg {
+	transform: none;
+}
+
+.videosolo .videos-seek::before,
+.videosolo .videos-buffered,
+.videosolo .videos-played {
+	height: .1875rem;
+	border-radius: 0;
+}
+
+.videosolo .videos-seek:hover::before,
+.videosolo .videos-seek:hover .videos-buffered,
+.videosolo .videos-seek:hover .videos-played {
+	height: .3125rem;
+}
+
+.videosolo .videos-buffered {
+	background: rgba(255, 255, 255, .35);
+}
+
+.videosolo .videos-played {
+	background: rgb(var(--tw-purple));
+}
+
+.videosolo .videos-head {
+	width: .75rem;
+	height: .75rem;
+	background: rgb(var(--tw-purple));
+	box-shadow: none;
+}
+
+.videosolo .videos-time {
+	padding: 0 .375rem;
+	font: 600 .8125rem var(--tw-font);
+	text-shadow: none;
+}
+
+.videosolo .videos-volume {
+	width: 5.5rem;
+	accent-color: #fff;
+}
+
+.videosolo .videos-menu {
+	border-radius: .375rem;
+	background: #18181b;
+	box-shadow: 0 .25rem .5rem rgba(0, 0, 0, .4), 0 0 .25rem rgba(0, 0, 0, .4);
+	font-family: var(--tw-font);
+}

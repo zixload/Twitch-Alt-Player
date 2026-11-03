@@ -69,8 +69,10 @@ const m_EmbedHost = (() => {
 	// ------------------------------------------------------------------------------------------
 	// L'iframe
 
-	function playerAddress(sChannel) {
-		return GetOurPlayerAddress(sChannel);
+	// Ce que l'iframe montre : une chaine en direct, ou une VOD sous la cle « video:<id>:<debut> ».
+	function playerAddress(sKey) {
+		const msVideo = /^video:(\d+):(\d+)$/.exec(sKey);
+		return msVideo ? GetOurVideoPlayerAddress(msVideo[1], Number(msVideo[2])) : GetOurPlayerAddress(sKey);
 	}
 
 	function createFrame(elTwitchPlayer) {
@@ -221,9 +223,13 @@ const m_EmbedHost = (() => {
 					elAction.title = m_i18n.GetMessage('F2027');
 				}, STUB);
 				break;
-			case 'goto':
-				location.assign(`https://www.twitch.tv/${encodeURIComponent(_oSync.sRoomChannel)}`);
+			case 'goto': {
+				const msVideo = /^video:(\d+)$/.exec(_oSync.sRoomChannel);
+				location.assign(msVideo
+					? `https://www.twitch.tv/videos/${msVideo[1]}`
+					: `https://www.twitch.tv/${encodeURIComponent(_oSync.sRoomChannel)}`);
 				break;
+			}
 			case 'leave':
 				sessionStorage.removeItem(SYNC_STORE);
 				postToPlayer({ sCommand: 'sync-leave' });
@@ -264,7 +270,8 @@ const m_EmbedHost = (() => {
 		case 'adjusting':
 		case 'behind': return m_i18n.GetMessage('F2018');
 		case 'loading': return m_i18n.GetMessage('F2020');
-		case 'channel': return m_i18n.GetMessage('F2021', oSync.sRoomChannel);
+		case 'channel':
+			return oSync.sRoomChannel.startsWith('video:') ? m_i18n.GetMessage('F2031') : m_i18n.GetMessage('F2021', oSync.sRoomChannel);
 		case 'imprecise': return m_i18n.GetMessage('F2023');
 		case 'offline': return m_i18n.GetMessage('F2024');
 		case 'norecording': return m_i18n.GetMessage('F2028');
@@ -568,6 +575,11 @@ const m_EmbedHost = (() => {
 		startTicking();
 	}
 
+	// Une VOD : meme montage, meme rangee de boutons, le lecteur la joue seule.
+	function MountVideo(sVideoId, nStart) {
+		Mount(`video:${sVideoId}:${Math.max(0, Math.floor(nStart))}`);
+	}
+
 	// Une page qui n'est pas une chaine : Twitch y reduit son lecteur, le notre le suit.
 	function Away() {
 		_bOnChannelPage = false;
@@ -615,5 +627,5 @@ const m_EmbedHost = (() => {
 		}
 	});
 
-	return { Prepare, Mount, Away, Unmount, IsMounted };
+	return { Prepare, Mount, MountVideo, Away, Unmount, IsMounted };
 })();

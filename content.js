@@ -48,9 +48,23 @@ function thisAddressCanBeRedirected(oAddress) {
   return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
 }
 
-// Une VOD ou un clip : Twitch y joue autre chose que le direct, notre lecteur s'efface.
+// Un clip : Twitch le joue lui-meme, notre lecteur s'efface.
 function isTwitchVideoPage(oAddress) {
-  return /^\/(videos\/\d|[^/]+\/(clip|video)\/)/.test(oAddress.pathname);
+  return /^\/[^/]+\/(clip|video)\//.test(oAddress.pathname);
+}
+
+/*
+  Une VOD, twitch.tv/videos/<id> : notre lecteur la joue a la place de celui de Twitch. Le ?t= de
+  Twitch (1h2m3s) dit ou commencer. Null sur toute autre page.
+*/
+function parseVideoPage(oAddress) {
+  const msPath = /^\/videos\/(\d+)\/?$/.exec(oAddress.pathname);
+  if (!msPath) {
+    return null;
+  }
+  const msTime = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(new URLSearchParams(oAddress.search).get("t") || "");
+  const nStart = msTime ? (Number(msTime[1] || 0) * 3600 + Number(msTime[2] || 0) * 60 + Number(msTime[3] || 0)) : 0;
+  return { sVideoId: msPath[1], nStart };
 }
 
 parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([
@@ -152,6 +166,11 @@ function requestChannelState(oParsedAddress) {
 function pageAddressChanged(sMethod) {
   g_oParsedAddress = parseAddress(location);
   g_sAddressSettingMethod = sMethod;
+  const oVideo = parseVideoPage(location);
+  if (oVideo !== null && m_Settings.Get("bAutoRedirectAllowed")) {
+    m_EmbedHost.MountVideo(oVideo.sVideoId, oVideo.nStart);
+    return;
+  }
   if (
     !g_oParsedAddress.bCanRedirect ||
     !m_Settings.Get("bAutoRedirectAllowed")

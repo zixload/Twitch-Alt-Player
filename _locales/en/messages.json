@@ -1702,5 +1702,9 @@
 	"F2030":
 	{
 		"message": "$1 watching"
+	},
+	"F2031":
+	{
+		"message": "The room is watching another video"
 	}
 }
