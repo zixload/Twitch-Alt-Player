@@ -1,0 +1,41 @@
+{
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:158.0) Gecko/20100101 Firefox/158.0",
+  "browser_version": "1.23.4b",
+  "work_directory": "C:\\Users\\ingam\\AppData\\Local\\hermes\\cache\\scratch\\twitch-zen-lif4_awe",
+  "live": {
+    "error": null,
+    "frames": 148,
+    "hidden": false,
+    "paused": false,
+    "time": 19703.163791,
+    "width": 1920
+  },
+  "rewind": {
+    "error": null,
+    "frames": 171,
+    "hidden": false,
+    "paused": false,
+    "time": 62.861416,
+    "width": 1920
+  },
+  "video_cards": 24,
+  "vod": {
+    "error": null,
+    "frames": 194,
+    "hidden": false,
+    "paused": false,
+    "time": 3.355166,
+    "width": 1920
+  },
+  "twitch_entry_url": "moz-extension://7a2be9c4-9eea-4c04-89dc-47e29f757a58/player.html?channel=caedrel",
+  "twitch_entry_playback": {
+    "error": null,
+    "frames": 112,
+    "hidden": false,
+    "paused": false,
+    "time": 19722.571562,
+    "width": 1920
+  },
+  "extension_errors": [],
+  "passed": true
+}
