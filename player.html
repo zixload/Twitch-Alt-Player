@@ -37,6 +37,8 @@
 <script src=modules/vodchat.js defer></script>
 <script src=modules/unfreeze.js defer></script>
 <script src=modules/rewind.js defer></script>
+<script src=modules/sync.js defer></script>
+<script src=modules/embed.js defer></script>
 <script src=modules/playlist.js defer></script>
 <script src=modules/dragger.js defer></script>
 <script src=modules/fullscreen-mode.js defer></script>
@@ -51,6 +53,7 @@
 <link rel=stylesheet href=channelbar.css>
 <link rel=stylesheet href=videos.css>
 <link rel=stylesheet href=glass.css>
+<link rel=stylesheet href=twitch-skin.css>
 <body hidden>
 	<aside id=alt-sidebar hidden>
 		<div class=alt-sb-top>
@@ -461,6 +464,7 @@ Possible causes of buffer overflow:
 				</button>
 				<button id=golive class="panelitem clickable golive golive-live fordvr" type=button data-i18n=^J0151>
 					<span class=golive-dot></span>
+					<span class=golive-text data-i18n=F2005></span>
 				</button>
 				<button id=togglemute class="button panelitem clickable" type=button>
 				<!-- <button id=togglemute class="button panelelement clickable" type=button> -->
@@ -507,6 +511,7 @@ Possible causes of buffer overflow:
 				</div>
 				<div class="filler forreplay"></div>
 				<!-- <div class="filler forrepeat"></div> -->
+				<button id=qualitybadge class="panelitem clickable qualitybadge" type=button data-window-toggle=settings hidden></button>
 				<button id=togglemainmenu class="button panelitem clickable" type=button data-window-toggle=mainmenu data-i18n=^A0660>
 				<!-- <button id=togglemainmenu class="button panelelement clickable" type=button data-window-toggle=mainmenu data-i18n=^A0660> -->
 					<svg>
@@ -528,8 +533,9 @@ Possible causes of buffer overflow:
 				<button id=createclip class="button panelitem clickable" type=button data-i18n=^A0504>
 				<!-- <button id=createclip class="button panelelement clickable" type=button data-i18n=^A0504> -->
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
-						<use xlink:href=#svg-cut />
+						<use xlink:href=#svg-clip />
 					</svg>
+					<span class=clip-text data-i18n=F2004></span>
 				</button>
 				<button id=togglestudio class="button panelitem clickable" type=button data-i18n=^A0928>
 					<svg xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink>
@@ -1058,23 +1064,20 @@ Possible causes of buffer overflow:
 			<path d="M16.94 6.91l-1.41 1.45c.9.94 1.46 2.22 1.46 3.64s-.56 2.71-1.46 3.64l1.41 1.45c1.27-1.31 2.05-3.11 2.05-5.09s-.78-3.79-2.05-5.09zM19.77 4l-1.41 1.45C19.98 7.13 21 9.44 21 12.01c0 2.57-1.01 4.88-2.64 6.54l1.4 1.45c2.01-2.04 3.24-4.87 3.24-7.99 0-3.13-1.23-5.96-3.23-8.01zM7.06 6.91c-1.27 1.3-2.05 3.1-2.05 5.09s.78 3.79 2.05 5.09l1.41-1.45c-.9-.94-1.46-2.22-1.46-3.64s.56-2.71 1.46-3.64L7.06 6.91zM5.64 5.45L4.24 4C2.23 6.04 1 8.87 1 11.99c0 3.13 1.23 5.96 3.23 8.01l1.41-1.45C4.02 16.87 3 14.56 3 11.99s1.01-4.88 2.64-6.54z"/>
 			<circle cx=12 cy=12 r=3 />
 		</symbol>
-		<symbol id=svg-studio viewBox="0 0 24 24">
-			<path d="M1.5 4.5c0-0.55 0.45-1 1-1h12c0.55 0 1 0.45 1 1v15c0 0.55-0.45 1-1 1h-12c-0.55 0-1-0.45-1-1v-15z"/>
-			<path d="M18 4.5c0-0.55 0.45-1 1-1h2.5c0.55 0 1 0.45 1 1v15c0 0.55-0.45 1-1 1h-2.5c-0.55 0-1-0.45-1-1v-15z"/>
+		<symbol id=svg-studio viewBox="0 0 20 20">
+			<rect x=2.5 y=4.5 width=15 height=11 rx=1.5 fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round /><path d="M12 4.5h4a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-4z"/>
 		</symbol>
-		<symbol id=svg-pause viewBox="0 0 24 24">
-			<path d="M21.1 22.5c0.6 0 1-0.5 1-1v-19c0-0.6-0.5-1-1-1h-6.1c-0.6 0-1 0.5-1 1v19c0 0.6 0.5 1 1 1h6.1zM8.9 22.5c0.6 0 1-0.5 1-1v-19c0-0.6-0.5-1-1-1h-6.1c-0.6 0-1 0.5-1 1v19c0 0.6 0.5 1 1 1h6.1z"/>
+		<symbol id=svg-pause viewBox="0 0 20 20">
+			<path d="M5 3.5h3v13H5zM12 3.5h3v13h-3z"/>
 		</symbol>
-		<symbol id=svg-play viewBox="0 0 24 24">
-			<path d="M21 11.1l-17-9.8c-0.7-0.4-1.6 0.1-1.6 0.9v19.7c0 0.8 0.9 1.3 1.6 0.9l17-9.8c0.7-0.4 0.7-1.4 0-1.8z"/>
+		<symbol id=svg-play viewBox="0 0 20 20">
+			<path d="M5.5 3.2v13.6a.6.6 0 0 0 .92.5l10.2-6.8a.6.6 0 0 0 0-1L6.42 2.7a.6.6 0 0 0-.92.5z"/>
 		</symbol>
-		<symbol id=svg-mute-false viewBox="0 0 24 24">
-			<path id=svg-speaker d="M10.34 23.25c-0.21 0-0.41-0.08-0.57-0.23l-6.19-6.19h-2.88c-0.44 0-0.8-0.36-0.8-0.8v-8.04c0-0.44 0.36-0.8 0.8-0.8h2.88l6.19-6.19c0.23-0.23 0.57-0.3 0.88-0.17s0.5 0.42 0.5 0.74v20.89c0 0.33-0.2 0.62-0.5 0.74-0.1 0.04-0.2 0.06-0.31 0.06z"/>
-			<path d="M17.96 20.02c-0.31 0-0.62-0.12-0.85-0.35-0.47-0.47-0.47-1.23 0-1.7 3.29-3.29 3.29-8.64 0-11.93-0.47-0.47-0.47-1.23 0-1.7s1.23-0.47 1.71 0c2.05 2.05 3.18 4.77 3.18 7.67s-1.13 5.62-3.18 7.67c-0.23 0.24-0.54 0.35-0.85 0.35v0zM13.68 17.75c-0.31 0-0.62-0.12-0.85-0.35-0.47-0.47-0.47-1.23 0-1.7 2.04-2.04 2.04-5.35 0-7.39-0.47-0.47-0.47-1.23 0-1.7s1.23-0.47 1.71 0c2.98 2.98 2.98 7.82 0 10.8-0.23 0.24-0.54 0.35-0.85 0.35z"/>
+		<symbol id=svg-mute-false viewBox="0 0 20 20">
+			<path id=svg-speaker d="M2.5 7.5v5h3l4.3 3.6a.4.4 0 0 0 .7-.3V4.2a.4.4 0 0 0-.7-.3L5.5 7.5z"/><path d="M13.3 7.2a4 4 0 0 1 0 5.6M15.6 4.9a7.2 7.2 0 0 1 0 10.2" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round />
 		</symbol>
-		<symbol id=svg-mute-true viewBox="0 0 24 24">
-			<use xlink:href=#svg-speaker />
-			<path d="M24 14.69v2.13h-2.13l-2.69-2.69-2.69 2.69h-2.13v-2.13l2.69-2.69-2.69-2.69v-2.13h2.13l2.69 2.69 2.69-2.69h2.13v2.13l-2.69 2.69 2.69 2.69z"/>
+		<symbol id=svg-mute-true viewBox="0 0 20 20">
+			<use xlink:href=#svg-speaker /><path d="M13.5 7.5l5 5M18.5 7.5l-5 5" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round />
 		</symbol>
 		<symbol id=svg-notification viewBox="0 0 24 24">
 			<path d="M18.615 16.393l2.222 2.222v1.085h-17.675v-1.085l2.222-2.222v-5.478q0-2.584 1.318-4.496t3.644-2.481v-0.775q0-0.672 0.465-1.163t1.189-0.491 1.189 0.491 0.465 1.163v0.775q2.326 0.569 3.644 2.481t1.318 4.496v5.478zM12 23.008q-0.93 0-1.576-0.646t-0.646-1.525h4.445q0 0.879-0.672 1.525t-1.55 0.646z"/>
@@ -1085,8 +1088,8 @@ Possible causes of buffer overflow:
 		<symbol id=svg-chat viewBox="0 0 24 24">
 			<path d="M12 1.8c-6.5 0-11.8 4.1-11.8 9.3 0 2.4 1.2 4.6 3.1 6.3-0.1 1.6-0.4 3.8-1.6 4.9 2.3 0 4.6-1.5 5.9-2.5 1.3 0.4 2.8 0.6 4.3 0.6 6.5 0 11.8-4.1 11.8-9.3s-5.3-9.3-11.8-9.3zM6.9 13.6c-0.9 0-1.7-0.8-1.7-1.7s0.8-1.7 1.7-1.7 1.7 0.8 1.7 1.7-0.8 1.7-1.7 1.7zM12 13.6c-0.9 0-1.7-0.8-1.7-1.7s0.8-1.7 1.7-1.7 1.7 0.8 1.7 1.7-0.8 1.7-1.7 1.7zM17.1 13.6c-0.9 0-1.7-0.8-1.7-1.7s0.8-1.7 1.7-1.7 1.7 0.8 1.7 1.7-0.8 1.7-1.7 1.7z"/>
 		</symbol>
-		<symbol id=svg-settings viewBox="0 0 24 24">
-			<path d="M20.17 13.08c0.04-0.35 0.08-0.7 0.08-1.08s-0.03-0.73-0.08-1.08l2.32-1.81c0.21-0.16 0.26-0.46 0.13-0.7l-2.2-3.81c-0.13-0.24-0.43-0.33-0.67-0.24l-2.74 1.1c-0.57-0.44-1.19-0.8-1.86-1.08l-0.42-2.91c-0.03-0.26-0.26-0.46-0.54-0.46h-4.4c-0.28 0-0.51 0.2-0.54 0.46l-0.42 2.92c-0.67 0.28-1.29 0.65-1.86 1.08l-2.74-1.1c-0.25-0.1-0.54 0-0.67 0.24l-2.2 3.81c-0.14 0.24-0.08 0.54 0.13 0.7l2.32 1.82c-0.04 0.35-0.08 0.72-0.08 1.08s0.03 0.73 0.08 1.08l-2.32 1.82c-0.21 0.17-0.26 0.46-0.13 0.7l2.2 3.81c0.13 0.24 0.43 0.33 0.67 0.24l2.74-1.1c0.57 0.44 1.19 0.8 1.86 1.08l0.42 2.92c0.03 0.26 0.26 0.46 0.54 0.46h4.4c0.28 0 0.51 0.2 0.54-0.46l0.42-2.91c0.67-0.28 1.29-0.65 1.86-1.08l2.74 1.1c0.25 0.1 0.54 0 0.67-0.24l2.2-3.81c0.13-0.24 0.08-0.54-0.13-0.7l-2.32-1.81zM12 15.85c-2.12 0-3.85-1.73-3.85-3.85s1.73-3.85 3.85-3.85 3.85 1.73 3.85 3.85-1.73 3.85-3.85 3.85z"/>
+		<symbol id=svg-settings viewBox="0 0 20 20">
+			<path d="M16.47 8.69L18.53 8.89L18.53 11.11L16.47 11.31A6.6 6.6 0 0 1 15.50 13.65L16.82 15.24L15.24 16.82L13.65 15.50A6.6 6.6 0 0 1 11.31 16.47L11.11 18.53L8.89 18.53L8.69 16.47A6.6 6.6 0 0 1 6.35 15.50L4.76 16.82L3.18 15.24L4.50 13.65A6.6 6.6 0 0 1 3.53 11.31L1.47 11.11L1.47 8.89L3.53 8.69A6.6 6.6 0 0 1 4.50 6.35L3.18 4.76L4.76 3.18L6.35 4.50A6.6 6.6 0 0 1 8.69 3.53L8.89 1.47L11.11 1.47L11.31 3.53A6.6 6.6 0 0 1 13.65 4.50L15.24 3.18L16.82 4.76L15.50 6.35A6.6 6.6 0 0 1 16.47 8.69Z" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round /><circle cx=10 cy=10 r=2.6 fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round />
 		</symbol>
 		<symbol id=svg-pip-false viewBox="0 0 24 24">
 			<path d="M19.778 10.889h-8.889v6.667h8.889v-6.667zM24.222 19.778v-15.578c0-1.222-1-2.2-2.222-2.2h-20c-1.222 0-2.222 0.978-2.222 2.2v15.578c0 1.222 1 2.222 2.222 2.222h20c1.222 0 2.222-1 2.222-2.222zM22 19.8h-20v-15.611h20v15.611z"/>
@@ -1094,11 +1097,14 @@ Possible causes of buffer overflow:
 		<symbol id=svg-pip-true viewBox="0 0 24 24">
 			<path d="M24.222 19.778v-15.578c0-1.222-1-2.2-2.222-2.2h-20c-1.222 0-2.222 0.978-2.222 2.2v15.578c0 1.222 1 2.222 2.222 2.222h20c1.222 0 2.222-1 2.222-2.222zM22 19.8h-20v-15.611h20v15.611z"/>
 		</symbol>
-		<symbol id=svg-fullscreen-false viewBox="0 0 24 24">
-			<path d="M19.77 17.84l-3.12-3.12-1.92 1.92 3.12 3.12-3.12 3.12h8.16v-8.16zM9.28 1.11h-8.16v8.16l3.12-3.12 3.09 3.09 1.92-1.92-3.09-3.09zM9.28 16.65l-1.92-1.92-3.12 3.12-3.12-3.12v8.16h8.16l-3.12-3.12zM22.89 1.11h-8.16l3.12 3.12-3.09 3.09 1.92 1.92 3.09-3.09 3.12 3.12z"/>
+		<symbol id=svg-fullscreen-false viewBox="0 0 20 20">
+			<path d="M3 7.5V3h4.5M12.5 3H17v4.5M17 12.5V17h-4.5M7.5 17H3v-4.5" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round />
 		</symbol>
-		<symbol id=svg-fullscreen-true viewBox="0 0 24 24">
-			<path d="M18.03 20.02l3.22 3.22 1.99-1.99-3.22-3.22 3.22-3.22h-8.43v8.43zM0.76 9.19h8.43v-8.43l-3.22 3.22-3.19-3.19-1.99 1.99 3.19 3.19zM0.76 21.25l1.99 1.99 3.22-3.22 3.22 3.22v-8.43h-8.43l3.22 3.22zM14.81 9.19h8.43l-3.22-3.22 3.19-3.19-1.99-1.99-3.19 3.19-3.22-3.22z"/>
+		<symbol id=svg-fullscreen-true viewBox="0 0 20 20">
+			<path d="M7.5 3v4.5H3M12.5 3v4.5H17M17 12.5h-4.5V17M3 12.5h4.5V17" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round />
+		</symbol>
+		<symbol id=svg-clip viewBox="0 0 20 20">
+			<path d="M3 8.5h14v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5z" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round /><path d="M2.7 6.3 15.8 3.5l.5 2.3-13.1 2.8zM6.5 5.5l2.2 2.3M10.5 4.6l2.2 2.3" fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round />
 		</symbol>
 		<symbol id=svg-cut viewBox="0 0 24 24">
 			<path d="M23.48 7.51l-10.25 3.27 3.27-10.25c0.05-0.13 0.01-0.29-0.09-0.4s-0.25-0.14-0.39-0.1c-1.66 0.49-2.98 1.76-3.5 3.41l-2.68 8.43-2.28 0.73c-0.01-0.07-0.03-0.13-0.05-0.2-0.53-1.67-2.56-2.46-4.63-1.8-2.04 0.65-3.26 2.49-2.73 4.15 0.53 1.67 2.57 2.46 4.63 1.8 0 0 0.01 0 0.01 0l3.98-1.27-1.27 3.98c0 0 0 0.01 0 0.01-0.66 2.06 0.14 4.1 1.8 4.63 1.67 0.53 3.5-0.69 4.15-2.73 0.66-2.06-0.13-4.09-1.8-4.63-0.07-0.02-0.13-0.04-0.2-0.05l0.73-2.28 8.43-2.68c1.65-0.52 2.93-1.84 3.41-3.5 0.04-0.14 0-0.29-0.1-0.39s-0.25-0.13-0.4-0.09zM4.16 14.66c-1.07 0.35-2-0.01-2.17-0.53-0.17-0.54 0.42-1.36 1.46-1.69 1.07-0.34 2 0.01 2.17 0.53 0.17 0.54-0.42 1.36-1.46 1.69zM11.56 20.55c-0.33 1.04-1.15 1.64-1.69 1.46-0.52-0.16-0.87-1.1-0.53-2.17 0.33-1.04 1.15-1.63 1.69-1.46 0.53 0.17 0.87 1.1 0.53 2.17zM11.75 13.42c-0.32 0.32-0.85 0.32-1.16 0s-0.32-0.85 0-1.16c0.32-0.32 0.85-0.32 1.17 0s0.32 0.85 0 1.17z"/>

@@ -37,6 +37,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 
+/*
+	Le lecteur de Twitch se tait pendant que le notre joue a sa place.
+
+	Une regle de session par onglet bloque le direct que demande la page twitch.tv elle-meme : la
+	playlist d'usher, les playlists de video-weaver, les segments. Elle ne vise que les requetes dont
+	l'initiateur est twitch.tv, donc jamais celles de notre lecteur, qui partent de l'extension. Les
+	VOD de Twitch (usher /vod/, cloudfront) ne sont pas touchees.
+*/
+const TWITCH_LIVE_REGEX =
+	'^https://(usher\\.ttvnw\\.net/api/(v[0-9]+/)?channel/hls/|[^/]*\\.hls\\.ttvnw\\.net/|[^/]*\\.live-video\\.net/)';
+
+// Un identifiant de regle tient sur 32 bits signes ; Edge numerote ses onglets pres du milliard.
+function twitchPlayerRuleId(nTabId) {
+	return (nTabId % 2147483000) + 1;
+}
+
+function blockTwitchPlayer(nTabId, bBlock) {
+	const nRuleId = twitchPlayerRuleId(nTabId);
+	return chrome.declarativeNetRequest.updateSessionRules({
+		removeRuleIds: [nRuleId],
+		addRules: bBlock ? [{
+			id: nRuleId,
+			priority: 2,
+			action: { type: 'block' },
+			condition: {
+				regexFilter: TWITCH_LIVE_REGEX,
+				initiatorDomains: ['twitch.tv'],
+				tabIds: [nTabId]
+			}
+		}] : []
+	});
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.sQuery !== 'BlockTwitchPlayer' || !sender.tab) {
+		return false;
+	}
+	blockTwitchPlayer(sender.tab.id, message.bBlock === true).then(
+		() => sendResponse(true),
+		(oError) => {
+			console.error('BlockTwitchPlayer', oError);
+			sendResponse(false);
+		}
+	);
+	return true;
+});
+
+chrome.tabs.onRemoved.addListener((nTabId) => {
+	blockTwitchPlayer(nTabId, false).catch(() => {});
+});
+
 // Listener for `player.js` to check if the same channel is already open.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.sQuery === 'ThisChannelIsAlreadyOpen') {

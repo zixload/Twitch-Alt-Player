@@ -1,0 +1,480 @@
+/*
+	La barre du bas, habillee comme celle du lecteur de twitch.tv.
+
+	Au direct (etat 6) et en rediffusion (etat 8), Twitch pose trois etages sur un degrade noir : le
+	temps a gauche et la pastille LIVE a droite, puis le rail violet sur toute la largeur, puis la
+	rangee de boutons -- lecture et son a gauche ; qualite, Clip, reglages, mode cinema et plein ecran
+	a droite.
+
+	Cette feuille ne change que l'apparence et l'ordre visuel. Le rail relit son propre padding a
+	chaque clic (scale.js), et aucun script ne mesure la hauteur du panneau du bas : la geometrie peut
+	bouger ici sans rien fausser. Hors de ces deux etats, la barre garde sa rangee unique.
+*/
+
+:root {
+	--tw-purple: 145, 71, 255;
+	--tw-live: 235, 4, 0;
+	--tw-font: Inter, Roobert, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.panel.bottom {
+	font-family: var(--tw-font);
+	font-size: .8125rem;
+	font-weight: 600;
+	color: #fff;
+	text-shadow: none;
+}
+
+body[data-state="6"] .panel.bottom,
+body[data-state="8"] .panel.bottom {
+	padding: 2.25rem .5rem .3125rem;
+	row-gap: .125rem;
+	background: linear-gradient(to top, rgba(0, 0, 0, .8) 0%, rgba(0, 0, 0, .5) 50%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* ------------------------------------------------------------------ les boutons */
+
+.panel.bottom .panelitem {
+	height: 1.875rem;
+	line-height: 1.875rem;
+}
+
+body[data-state="6"] .panel.bottom .panelitem,
+body[data-state="8"] .panel.bottom .panelitem {
+	padding: 0 .3125rem;
+}
+
+.panel.bottom .button {
+	justify-content: center;
+	min-width: 1.875rem;
+	margin: 0 .0625rem;
+	border-radius: .25rem;
+}
+
+.panel.bottom .button>svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	fill: currentColor;
+	filter: none;
+	opacity: 1;
+	transition: none;
+}
+
+.panel.bottom .button:not(:disabled):hover>svg,
+.panel.bottom .button:enabled:active>svg {
+	transform: none;
+}
+
+.panel.bottom .clickable:not(:disabled):not(select):hover {
+	color: #fff !important;
+	background: rgba(255, 255, 255, .15) !important;
+}
+
+.panel.bottom .clickable:not(:disabled):not(select):active {
+	background: rgba(255, 255, 255, .25) !important;
+}
+
+/* L'ordre de Twitch a droite : vitesse et qualite, Clip, puis les icones. */
+#speed,
+#rewindquality,
+#qualitybadge,
+#createclip {
+	order: 1;
+}
+
+#togglemainmenu,
+#togglechat,
+.panel.bottom [data-window-toggle=settings]:not(#qualitybadge),
+#togglepictureinpicture,
+#togglestudio,
+#togglefullscreen {
+	order: 2;
+}
+
+#createclip {
+	gap: .375rem;
+	padding: 0 .5rem 0 .375rem !important;
+}
+
+.clip-text {
+	font-weight: 600;
+}
+
+/* La qualite du direct, en pastille claire : « 1080P60 ». */
+#qualitybadge {
+	align-self: center;
+	height: 1.25rem;
+	line-height: 1.25rem;
+	margin: 0 .375rem;
+	border: 0;
+	border-radius: .25rem;
+	padding: 0 .3125rem !important;
+	font: 700 .6875rem/1.25rem var(--tw-font);
+	letter-spacing: .01em;
+	color: #0e0e10;
+	background: rgba(255, 255, 255, .8);
+}
+
+.panel.bottom #qualitybadge:not(:disabled):hover {
+	color: #0e0e10 !important;
+	background: #fff !important;
+}
+
+.rewinding #qualitybadge {
+	display: none;
+}
+
+#speed,
+#rewindquality {
+	align-self: center;
+	height: 1.25rem;
+	border: 0;
+	border-radius: .25rem;
+	padding: 0 .25rem;
+	font: 700 .6875rem var(--tw-font);
+	color: #0e0e10;
+	background: rgba(255, 255, 255, .8);
+}
+
+#speed:not(:disabled):hover,
+#rewindquality:not(:disabled):hover {
+	color: #0e0e10;
+	background: #fff;
+}
+
+/* ------------------------------------------------------------------ le son */
+
+/* Le curseur ne sort qu'au survol du haut-parleur, comme chez Twitch. */
+.panel.bottom #volume {
+	flex: 0 0 0;
+	min-width: 0;
+	width: 0;
+	margin: 0;
+	padding: 0;
+	opacity: 0;
+	color: #fff;
+	transition: flex-basis .15s ease-out, opacity .15s ease-out, margin .15s ease-out;
+}
+
+.panel.bottom #togglemute:hover + #volume,
+.panel.bottom #volume:hover,
+.panel.bottom #volume:focus-visible,
+.panel.bottom #volume:active {
+	flex-basis: 5.5rem;
+	margin: 0 .5rem 0 .25rem;
+	opacity: 1;
+}
+
+.panel.bottom #volume::-webkit-slider-runnable-track {
+	height: .25rem;
+	border-radius: .125rem;
+	background: linear-gradient(to bottom, #fff, #fff) 0 0/var(--width, 0%) 100% no-repeat, rgba(255, 255, 255, .3);
+}
+
+.panel.bottom #volume::-webkit-slider-thumb {
+	margin-top: -.25rem;
+	width: .75rem;
+	height: .75rem;
+	background: #fff;
+	box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ le rail */
+
+body[data-state="6"] #scale,
+body[data-state="8"] #scale {
+	padding: .375rem .3125rem;
+	color: rgb(var(--tw-purple));
+}
+
+#scale .scale-background {
+	height: .1875rem;
+	border-radius: 0;
+	background: rgba(255, 255, 255, .3);
+	transition: height .1s ease-out;
+}
+
+#scale:hover .scale-background {
+	height: .3125rem;
+}
+
+#scale-watched {
+	border-radius: 0;
+	background: rgb(var(--tw-purple));
+}
+
+#scale-live {
+	background: rgba(255, 255, 255, .2);
+}
+
+/* ------------------------------------------------------------------ l'etage du haut */
+
+/* Le temps, a gauche au-dessus du rail. */
+body[data-state="6"] #position {
+	position: absolute;
+	top: .375rem;
+	left: .625rem;
+	height: 1.25rem;
+	line-height: 1.25rem;
+	padding: 0 .25rem;
+	border-radius: .25rem;
+	font: 600 .8125rem/1.25rem var(--tw-font);
+	font-variant-numeric: tabular-nums;
+	/* .label le teinte en couleur de titre, sombre sur ce degrade. */
+	color: #fff;
+	text-shadow: 0 0 .25rem rgba(0, 0, 0, .6);
+}
+
+/* La pastille LIVE, a droite au-dessus du rail : rouge au bord du direct, grise quand on a recule. */
+.golive-text {
+	display: none;
+}
+
+body[data-state="6"] #golive {
+	position: absolute;
+	top: .375rem;
+	right: .625rem;
+	width: auto;
+	height: 1.25rem;
+	margin: 0;
+	border-radius: .25rem;
+	padding: 0 .3125rem;
+	color: #fff;
+	background: rgba(255, 255, 255, .25);
+}
+
+body[data-state="6"] #golive.golive-live {
+	background: rgb(var(--tw-live));
+}
+
+body[data-state="6"] #golive:not(.golive-live):hover {
+	color: #fff !important;
+	background: rgba(255, 255, 255, .4) !important;
+}
+
+body[data-state="6"] #golive.golive-live:hover {
+	background: rgb(var(--tw-live)) !important;
+}
+
+body[data-state="6"] #golive .golive-dot {
+	display: none;
+}
+
+body[data-state="6"] .golive-text {
+	display: block;
+	font: 700 .75rem/1.25rem var(--tw-font);
+	letter-spacing: .02em;
+	text-transform: uppercase;
+}
+
+/* Dans la page, la vitesse se choisit depuis la barre sous l'image (embedhost.js) : Twitch n'en met
+   pas dans la sienne. La liste reste dans le DOM, c'est elle que modules/embed.js actionne. */
+.alt-embedded #speed {
+	display: none;
+}
+
+/* channelbar.css retire le temps de la barre, parce que sa barre de chaine l'affiche ; dans la page
+   de Twitch cette barre n'existe pas, le temps reprend sa place au-dessus du rail. */
+.alt-embedded body[data-state="6"] #position {
+	display: flex !important;
+}
+
+/* Le menu principal (⋮) n'a plus d'usage dans la page : les statistiques restent sur S. */
+.alt-embedded #togglemainmenu {
+	display: none;
+}
+
+/* ================================================================== les reglages */
+
+/*
+	Dans la page, deux groupes seulement : Lecture et Mise en tampon. Chat (le chat natif de Twitch est
+	a cote, le notre ne se charge jamais), Interface, Couleurs et Tous les reglages sont caches, pas
+	retires : leurs controles portent des ids que les scripts lisent au demarrage.
+*/
+.alt-embedded label[for=groupchat],
+.alt-embedded label[for=groupchat] + .groupofsettings,
+.alt-embedded label[for=groupinterface],
+.alt-embedded label[for=groupinterface] + .groupofsettings,
+.alt-embedded label[for=groupcolours],
+.alt-embedded label[for=groupcolours] + .groupofsettings,
+.alt-embedded label[for=groupallsettings],
+.alt-embedded label[for=groupallsettings] + .groupofsettings {
+	display: none;
+}
+
+/* Le menu de Twitch : un panneau sombre pose au-dessus de la roue, sans verre ni degrade. */
+.settings {
+	right: .5rem;
+	bottom: 3.375rem;
+	width: 22rem;
+	max-width: calc(100% - 1rem);
+	margin: 0;
+	border: 0;
+	border-radius: .375rem;
+	padding: .5rem;
+	font: 400 .8125rem/1.4 var(--tw-font);
+	color: #efeff1;
+	text-shadow: none;
+	background: #18181b;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	box-shadow: 0 .25rem .5rem rgba(0, 0, 0, .4), 0 0 .25rem rgba(0, 0, 0, .4);
+	transform-origin: bottom right;
+}
+
+/* Les groupes deviennent des lignes de menu, un chevron dit lequel est ouvert. */
+.settings .settingsheading {
+	position: relative;
+	margin: 0;
+	border: 0;
+	border-radius: .25rem;
+	padding: .375rem 2rem .375rem .5rem;
+	font: 600 .8125rem/1.5 var(--tw-font);
+	letter-spacing: 0;
+	text-align: left;
+	text-transform: none;
+	color: #efeff1;
+	background: transparent;
+}
+
+.settings .settingsheading:hover {
+	color: #efeff1;
+	background: rgba(83, 83, 95, .48);
+}
+
+.settings .settingsheading::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	right: .75rem;
+	width: .4375rem;
+	height: .4375rem;
+	border: solid currentColor;
+	border-width: 0 .125rem .125rem 0;
+	transform: translateY(-65%) rotate(45deg);
+	transition: transform .15s ease-out;
+}
+
+.settings input:not(:checked) + .settingsheading::after {
+	transform: translateY(-50%) rotate(-45deg);
+}
+
+.settings input:checked + .settingsheading {
+	color: #efeff1;
+	background: transparent;
+}
+
+.settings .groupofsettings {
+	height: auto;
+	max-height: 16rem;
+	overflow-y: auto;
+	padding: 0 .5rem .25rem;
+	border-bottom: .0625rem solid rgba(83, 83, 95, .48);
+	margin-bottom: .25rem;
+}
+
+.settings input:not(:checked) + .settingsheading + .groupofsettings {
+	height: 0;
+	padding: 0;
+	border: 0;
+	margin: 0;
+}
+
+.settings .setting {
+	min-height: 2.25rem;
+	margin: 0;
+}
+
+.settings .setting-name {
+	margin-right: 1rem;
+	color: #efeff1;
+}
+
+/* Champs plats, gris fonce, coins de 4 px : les listes de Twitch. */
+.settings select,
+.settings .setting-data button,
+.settings .numberinput-number.numberinput-number {
+	height: 1.875rem;
+	border: 0;
+	border-radius: .25rem;
+	padding: 0 .5rem;
+	font: 600 .8125rem var(--tw-font);
+	color: #efeff1;
+	background: rgba(83, 83, 95, .38);
+	box-shadow: none;
+}
+
+.settings select:enabled:hover,
+.settings .setting-data button:enabled:hover,
+.settings .numberinput-number.numberinput-number:enabled:hover {
+	background: rgba(83, 83, 95, .55);
+}
+
+.settings select:focus-visible,
+.settings button:focus-visible,
+.settings input:focus-visible {
+	outline: .125rem solid #a970ff;
+	outline-offset: 0;
+}
+
+.settings select>option,
+.settings select>optgroup {
+	color: #efeff1;
+	background: #18181b;
+}
+
+.settings .numberinput-minus.numberinput-minus,
+.settings .numberinput-plus.numberinput-plus {
+	min-width: 1.875rem;
+	padding: 0;
+}
+
+.settings .numberinput-number.numberinput-number {
+	min-width: 4rem;
+	max-width: 4rem;
+	margin: 0 .125rem;
+	text-align: center;
+}
+
+/* Les cases deviennent les interrupteurs de Twitch : piste grise, violette une fois active. */
+.settings .checkbox-icon {
+	position: relative;
+	width: 2.5rem;
+	height: 1.25rem;
+	border: .125rem solid #adadb8;
+	border-radius: 999px;
+	background: transparent;
+	transition: background-color .15s ease-out, border-color .15s ease-out;
+}
+
+.settings .checkbox-icon::after {
+	content: "";
+	position: absolute;
+	top: .125rem;
+	left: .125rem;
+	width: .75rem;
+	height: .75rem;
+	border-radius: 50%;
+	background: #adadb8;
+	transition: transform .15s ease-out, background-color .15s ease-out;
+}
+
+.settings input:checked + .checkbox-icon {
+	border-color: #a970ff;
+	background: #a970ff;
+}
+
+.settings input:checked + .checkbox-icon::after {
+	background: #0e0e10;
+	transform: translateX(1.25rem);
+}
+
+.settings .radio-icon {
+	border: .125rem solid #adadb8;
+	background: transparent;
+}
+
+.settings input:checked + .radio-icon {
+	border-color: #a970ff;
+	background: radial-gradient(circle, #a970ff 0 40%, transparent 45%);
+}

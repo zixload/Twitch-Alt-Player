@@ -46,9 +46,8 @@ AddExceptionHandler(() => {
     m_VodChat.Start();
     m_Unfreeze.Start();
     m_Rewind.Start();
-  }
-  if (window.top !== window) {
-    return;
+    m_Sync.Start(sChannel);
+    m_Embed.Start();
   }
   if (navigator.userAgent.includes("Gecko/")) {
     m_Debug.FinishWorkAndShowMessage("J0204");

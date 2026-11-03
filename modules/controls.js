@@ -386,7 +386,11 @@ const m_Controls = (() => {
       break;
 
     case "togglestudio":
-      m_FullscreenMode.ToggleStudio();
+      if (m_Embed.IsEmbedded()) {
+        m_Embed.ToggleTheatre();
+      } else {
+        m_FullscreenMode.ToggleStudio();
+      }
       break;
 
     case "togglefullscreen":
@@ -1153,7 +1157,38 @@ const m_Controls = (() => {
       }
     }
     nodeList.disabled = nodeList.length < 2;
+    PaintQualityBadge(oSelectedVariant);
   }
+
+  // La pastille a cote du bouton clip, facon Twitch : « 1080P60 », sans la mention de la source.
+  function PaintQualityBadge(oVariant) {
+    const nodeBadge = GetNode("qualitybadge");
+    const sLabel = oVariant ? oVariant.sLabel : "";
+    nodeBadge.textContent =
+      sLabel === "audio_only" ? GetText("J0144") : sLabel.replace(/\s*\(.*\)\s*$/, "").toUpperCase();
+    ShowElement(nodeBadge, sLabel !== "");
+  }
+
+  /*
+    Le temps a gauche au-dessus du rail : la ou l'on en est dans la diffusion, a la seconde. Au bord
+    du direct c'est sa duree ; en retard sur le direct ou dans l'enregistrement, la position vue.
+    Les metadonnees ne la donnent qu'une fois par minute, d'ou ce tour a part.
+  */
+  const PaintPosition = AddExceptionHandler(() => {
+    if (_nState !== STATE_PLAYING) {
+      return;
+    }
+    let nPosition = NaN;
+    if (m_Rewind.IsShown()) {
+      nPosition = m_Rewind.GetPosition();
+    } else if (Number.isFinite(m_Twitch.GetBroadcastElapsed())) {
+      nPosition = m_Twitch.GetBroadcastPosition(false);
+    }
+    // Zero, c'est l'enregistrement qui charge encore : on garde le temps d'avant.
+    if (Number.isFinite(nPosition) && nPosition > 0) {
+      GetNode("position").textContent = formatTimecode(nPosition);
+    }
+  });
 
   // Twitch nomme ses variantes en anglais ; deux de ces noms s'affichent traduits.
   function TranslateVariantLabel(sLabel) {
@@ -1221,6 +1256,7 @@ const m_Controls = (() => {
     GetNode("settingsimportfile").addEventListener("change", HandleSettingsImportFileChoice);
 
     startWheelVolumeChange();
+    setInterval(PaintPosition, 1e3);
     ChangeState(STATE_START);
     ApplyImageScaling();
     ApplyInterfaceAnimation();

@@ -1,0 +1,355 @@
+/* Notre lecteur dans la page de Twitch : voir embedhost.js. */
+
+/* L'iframe recouvre tout le lecteur natif, ses commandes et ses messages compris. */
+.tw5-embed {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+	background: #000;
+	z-index: 20;
+}
+
+/* En mini-lecteur, les clics passent a Twitch : retour a la chaine, fermeture. */
+.tw5-embed--mini {
+	pointer-events: none;
+}
+
+.persistent-player[data-tw5-host] video {
+	visibility: hidden;
+}
+
+/* ------------------------------------------------------------------ le mode cinema */
+
+/*
+	Un voile sur toute la page, perce a l'endroit de l'image et de la barre (clip-path, calcule par
+	embedhost.js). Le lecteur vit dans un contexte d'empilement de Twitch : le passer au-dessus du
+	voile par z-index ne marche pas, le trou si, et les clics y passent.
+*/
+
+.tw5-cinema {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, .92);
+	z-index: 4000;
+	cursor: pointer;
+	animation: tw5-fade .25s ease-out;
+}
+
+@keyframes tw5-fade {
+	from { opacity: 0; }
+}
+
+/* ------------------------------------------------------------------ la barre */
+
+/* Facon Enhancer for YouTube : une pilule sombre, des icones blanches au trait, rien d'ecrit. */
+.tw5-bar {
+	position: relative;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	gap: .2rem;
+	width: max-content;
+	margin: .8rem auto .2rem;
+	padding: .3rem .8rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, .1);
+	color: #fff;
+	user-select: none;
+}
+
+.tw-root--theme-light .tw5-bar {
+	background: rgba(0, 0, 0, .08);
+	color: #0e0e10;
+}
+
+.tw5-bar-slot {
+	position: relative;
+	display: flex;
+}
+
+.tw5-bar-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.2rem;
+	height: 3.2rem;
+	border-radius: 50%;
+	color: inherit;
+	background: transparent;
+	cursor: pointer;
+	transition: background-color .12s ease-out, color .12s ease-out;
+}
+
+.tw5-bar-button svg {
+	width: 2.2rem;
+	height: 2.2rem;
+}
+
+.tw5-bar-button:hover,
+.tw5-bar-button.tw5-open {
+	background: rgba(255, 255, 255, .15);
+}
+
+.tw-root--theme-light .tw5-bar-button:hover,
+.tw-root--theme-light .tw5-bar-button.tw5-open {
+	background: rgba(0, 0, 0, .1);
+}
+
+.tw5-bar-button.tw5-on {
+	color: #bf94ff;
+}
+
+.tw-root--theme-light .tw5-bar-button.tw5-on {
+	color: #772ce8;
+}
+
+.tw5-bar-button.tw5-unavailable {
+	opacity: .4;
+	cursor: default;
+}
+
+.tw5-bar-button.tw5-unavailable:hover {
+	background: transparent;
+}
+
+/*
+	Dans la rangee de Twitch, a cote de Suivre : plus de pilule ni de bande, des boutons ronds de
+	32 px a la couleur de ses boutons secondaires (Cadeau, cloche), qui suivent son theme.
+*/
+.tw5-bar.tw5-bar--row {
+	gap: .5rem;
+	width: auto;
+	margin: 0 .5rem 0 0;
+	padding: 0;
+	border-radius: 0;
+	background: none;
+	color: var(--color-text-button-secondary, #efeff1);
+}
+
+.tw5-bar--row .tw5-bar-button {
+	width: 3.2rem;
+	height: 3.2rem;
+	background: var(--color-background-button-secondary-default, rgba(83, 83, 95, .38));
+}
+
+.tw5-bar--row .tw5-bar-button svg {
+	width: 2rem;
+	height: 2rem;
+}
+
+.tw5-bar--row .tw5-bar-button:hover,
+.tw5-bar--row .tw5-bar-button.tw5-open {
+	background: var(--color-background-button-secondary-hover, rgba(83, 83, 95, .48));
+}
+
+.tw5-bar--row .tw5-bar-button:active {
+	background: var(--color-background-button-secondary-active, rgba(83, 83, 95, .55));
+}
+
+.tw5-bar--row .tw5-bar-button.tw5-unavailable:hover {
+	background: var(--color-background-button-secondary-default, rgba(83, 83, 95, .38));
+}
+
+/* ------------------------------------------------------------------ les menus */
+
+/* Accroches au body et places par embedhost.js sous leur bouton. */
+.tw5-pop {
+	position: fixed;
+	z-index: 5000;
+	display: flex;
+	align-items: center;
+	gap: .2rem;
+	padding: .5rem;
+	border-radius: 1.2rem;
+	background: #1f1f23;
+	color: #efeff1;
+	box-shadow: 0 .4rem 1.6rem rgba(0, 0, 0, .5);
+	font-size: 1.3rem;
+	font-weight: 600;
+	white-space: nowrap;
+	animation: tw5-fade .12s ease-out;
+}
+
+.tw5-pop[hidden] {
+	display: none;
+}
+
+.tw5-pop-speed {
+	min-width: 4.4rem;
+	height: 2.8rem;
+	border-radius: .8rem;
+	padding: 0 .6rem;
+	color: inherit;
+	background: transparent;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+}
+
+.tw5-pop-speed:hover {
+	background: rgba(255, 255, 255, .1);
+}
+
+.tw5-pop-speed.tw5-on {
+	color: #fff;
+	background: #9147ff;
+}
+
+.tw5-pop-boost {
+	width: 14rem;
+	margin: 0 .6rem;
+	accent-color: #9147ff;
+	cursor: pointer;
+}
+
+.tw5-pop-boost-value {
+	min-width: 4.8rem;
+	padding-right: .4rem;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ regarder ensemble */
+
+/* Le strict necessaire : creer ou entrer un code ; dedans, le code, qui regarde, partir. */
+.tw5-pop--column {
+	flex-direction: column;
+	align-items: stretch;
+	gap: .6rem;
+	width: 22rem;
+	padding: 1rem;
+	white-space: normal;
+}
+
+.tw5-sync-out,
+.tw5-sync-in {
+	display: flex;
+	flex-direction: column;
+	gap: .6rem;
+}
+
+.tw5-sync-out[hidden],
+.tw5-sync-in[hidden],
+.tw5-sync-error[hidden],
+.tw5-sync-status[hidden],
+.tw5-pop--column button[hidden] {
+	display: none;
+}
+
+.tw5-sync-primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 3rem;
+	border-radius: .4rem;
+	color: #fff;
+	background: #9147ff;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.tw5-sync-primary:hover {
+	background: #772ce8;
+}
+
+.tw5-sync-code {
+	height: 3rem;
+	border: 0;
+	border-radius: .4rem;
+	padding: 0 1rem;
+	color: #efeff1;
+	background: rgba(83, 83, 95, .38);
+	font-family: inherit;
+	font-size: 1.3rem;
+	font-weight: 600;
+}
+
+.tw5-sync-code:not(:placeholder-shown) {
+	letter-spacing: .15em;
+	text-transform: uppercase;
+}
+
+.tw5-sync-code:focus {
+	outline: .2rem solid #a970ff;
+}
+
+.tw5-sync-head {
+	display: flex;
+	align-items: center;
+	gap: .8rem;
+}
+
+.tw5-sync-dot {
+	flex: none;
+	width: .8rem;
+	height: .8rem;
+	border-radius: 50%;
+	background: #adadb8;
+}
+
+.tw5-sync-dot[data-tw5-status=synced] {
+	background: #00f593;
+}
+
+.tw5-sync-dot[data-tw5-status=offline],
+.tw5-sync-dot[data-tw5-status=norecording] {
+	background: #ff8280;
+}
+
+.tw5-sync-room {
+	padding: 0;
+	color: #efeff1;
+	background: none;
+	font-family: inherit;
+	font-size: 1.6rem;
+	font-weight: 700;
+	letter-spacing: .12em;
+	cursor: copy;
+}
+
+.tw5-sync-room:hover {
+	color: #bf94ff;
+}
+
+.tw5-sync-members {
+	margin-left: auto;
+	color: #adadb8;
+}
+
+.tw5-sync-status,
+.tw5-sync-error {
+	color: #adadb8;
+	font-weight: 400;
+}
+
+.tw5-sync-error {
+	color: #ff8280;
+}
+
+.tw5-sync-links {
+	display: flex;
+	justify-content: flex-end;
+	gap: 1.2rem;
+}
+
+.tw5-sync-link {
+	padding: 0;
+	color: #adadb8;
+	background: none;
+	font: inherit;
+	font-weight: 400;
+	cursor: pointer;
+}
+
+.tw5-sync-link:hover {
+	color: #efeff1;
+	text-decoration: underline;
+}
+
+.tw5-sync-link[data-tw5-sync=goto] {
+	margin-right: auto;
+	color: #bf94ff;
+}

@@ -196,7 +196,8 @@ const m_ChannelBar = (() => {
 
 	function start() {
 		_elBar = document.getElementById('alt-channelbar');
-		if (_elBar === null) {
+		// Dans la page de Twitch, le titre et les boutons de la chaine sont sous l'image.
+		if (_elBar === null || m_Embed.IsEmbedded()) {
 			return;
 		}
 

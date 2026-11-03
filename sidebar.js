@@ -588,7 +588,8 @@ const m_Sidebar = (() => {
 
 	function start() {
 		_elSidebar = document.getElementById('alt-sidebar');
-		if (_elSidebar === null) {
+		// Dans la page de Twitch, sa propre colonne de chaines est deja la.
+		if (_elSidebar === null || m_Embed.IsEmbedded()) {
 			return;
 		}
 		_elStatus = _elSidebar.querySelector('.alt-sb-status');

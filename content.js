@@ -34,11 +34,6 @@ function finishWork(pExceptionOrMessageCode) {
   throw void 0;
 }
 
-function setPageAddress(sAddress, bReplace = false) {
-  location[bReplace ? "replace" : "assign"](sAddress);
-  // location[bReplace ? 'replace' : 'assign'](sAddress);
-}
-
 function insertOnPage() {
   const nodeScript = document.createElement("script");
   // const nodeScript = document.createElement('script');
@@ -53,24 +48,9 @@ function thisAddressCanBeRedirected(oAddress) {
   return !oAddress.search.includes(DO_NOT_REDIRECT_ADDRESS);
 }
 
-function getNonRedirectableAddress(oAddress) {
-  return `${oAddress.protocol}//${oAddress.host}${oAddress.pathname}${
-    oAddress.search.length > 1
-      ? `${oAddress.search}&${DO_NOT_REDIRECT_ADDRESS}`
-      : `?${DO_NOT_REDIRECT_ADDRESS}`
-  }${oAddress.hash}`;
-  // return `${oAddress.protocol}//${oAddress.host}${oAddress.pathname}${oAddress.search.length > 1 ? `${oAddress.search}&${DO_NOT_REDIRECT_ADDRESS}` : `?${DO_NOT_REDIRECT_ADDRESS}`}${oAddress.hash}`;
-}
-
-function disableAutoRedirectForThisPage() {
-  if (thisAddressCanBeRedirected(location)) {
-    history.replaceState(
-      history.state,
-      "",
-      getNonRedirectableAddress(location)
-    );
-    // history.replaceState(history.state, '', getNonRedirectableAddress(location));
-  }
+// Une VOD ou un clip : Twitch y joue autre chose que le direct, notre lecteur s'efface.
+function isTwitchVideoPage(oAddress) {
+  return /^\/(videos\/\d|[^/]+\/(clip|video)\/)/.test(oAddress.pathname);
 }
 
 parseAddress.THIS_IS_NOT_A_CHANNEL_CODE = new Set([
@@ -164,6 +144,11 @@ function requestChannelState(oParsedAddress) {
   sendRequest();
 }
 
+/*
+  Notre lecteur prend la place de celui de Twitch sur la page d'une chaine en direct. Ailleurs, il
+  suit le mini-lecteur de Twitch tant qu'il existe ; sur une VOD, une chaine hors ligne, ou quand le
+  viewer l'a coupe, il s'efface et Twitch reprend la main.
+*/
 function pageAddressChanged(sMethod) {
   g_oParsedAddress = parseAddress(location);
   g_sAddressSettingMethod = sMethod;
@@ -171,9 +156,17 @@ function pageAddressChanged(sMethod) {
     !g_oParsedAddress.bCanRedirect ||
     !m_Settings.Get("bAutoRedirectAllowed")
   ) {
-    // if (!g_oParsedAddress.bCanRedirect || !m_Settings.Get('bAutoRedirectAllowed')) {
     if (g_nLastCheck === -2) {
       g_nLastCheck = -1;
+    }
+    if (
+      !m_Settings.Get("bAutoRedirectAllowed") ||
+      g_oParsedAddress.sPage === "POSSIBLY_LIVE_BROADCAST" ||
+      isTwitchVideoPage(location)
+    ) {
+      m_EmbedHost.Unmount();
+    } else {
+      m_EmbedHost.Away();
     }
     return;
   }
@@ -182,11 +175,13 @@ function pageAddressChanged(sMethod) {
     g_sChannelCode === g_oParsedAddress.sChannelCode &&
     performance.now() - g_nLastCheck < STORE_CHANNEL_STATE
   ) {
-    // if (!g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode && performance.now() - g_nLastCheck < STORE_CHANNEL_STATE) {
-    if (g_bIsStreaming) {
-      redirectToOurPlayer(g_sChannelCode);
-    }
+    showChannel();
     return;
+  }
+  // Le minuteur revient sur une chaine hors ligne : le lecteur de Twitch n'a rien a jouer, ou joue
+  // ce que nous laissons passer (diffusion chiffree, visionnage partage). Ne pas le couper.
+  if (sMethod !== "TIMER") {
+    m_EmbedHost.Prepare();
   }
   if (g_oRequest && g_sChannelCode === g_oParsedAddress.sChannelCode) {
     g_nLastCheck = -2;
@@ -284,33 +279,55 @@ function processResponse({ target: oRequest }) {
     g_bIsStreaming =
       !bBroadcastEndedOrEncoded && !bCoWatching;
     // g_bIsStreaming = !bStreamFinishedOrEncoded && !bWatchParty;
-    if (g_bIsStreaming && bRedirect) {
-      redirectToOurPlayer(g_sChannelCode);
+    if (bRedirect) {
+      showChannel();
     }
   } else {
+    // Sans reponse, on ne sait pas : Twitch garde la main plutot que de rester muet.
+    if (g_nLastCheck === -2) {
+      m_EmbedHost.Unmount();
+    }
     g_nLastCheck = 0;
   }
 }
 
-function launchOurPlayer(sChannelCode) {
-  const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  m_Log.Wow(`[content.js] Navigating to page ${sPlayerAddress}`);
-  disableAutoRedirectForThisPage();
-  setPageAddress(sPlayerAddress);
+// La page est celle de g_sChannelCode et son etat est connu.
+function showChannel() {
+  if (g_bIsStreaming) {
+    m_EmbedHost.Mount(g_sChannelCode);
+  } else {
+    m_EmbedHost.Unmount();
+  }
 }
 
-function redirectToOurPlayer(sChannelCode) {
-  const sPlayerAddress = GetOurPlayerAddress(sChannelCode);
-  m_Log.Wow(
-    `[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`
-  );
-  // m_Log.Wow(`[content.js] Changing page address from ${location.href} to ${sPlayerAddress}`);
-  document.documentElement.setAttribute(
-    "data-tw5-redirect",
-    sPlayerAddress
-  );
-  // document.documentElement.setAttribute('data-tw5-redirect', sPlayerAddress);
-  setPageAddress(sPlayerAddress, true);
+// Une chaine hors ligne peut passer en direct pendant qu'on est sur sa page.
+function recheckOfflineChannel() {
+  if (
+    g_oParsedAddress &&
+    g_oParsedAddress.bCanRedirect &&
+    !g_oRequest &&
+    !m_EmbedHost.IsMounted() &&
+    m_Settings.Get("bAutoRedirectAllowed")
+  ) {
+    pageAddressChanged("TIMER");
+  }
+}
+
+/*
+  Le bouton de la barre du haut coupe ou rend notre lecteur. Coupe alors qu'il jouait, la page se
+  recharge : le lecteur de Twitch, bloque jusque-la, repart de zero.
+*/
+function toggleEmbeddedPlayer() {
+  const b = !m_Settings.Get("bAutoRedirectAllowed");
+  m_Log.Wow(`[content.js] Embedded player allowed: ${b}`);
+  m_Settings.Change("bAutoRedirectAllowed", b);
+  updateOurButton();
+  if (b) {
+    g_nLastCheck = 0;
+    pageAddressChanged("BUTTON");
+  } else if (m_EmbedHost.Unmount()) {
+    location.reload();
+  }
 }
 
 function handlePointerDownAndClick(oEvent) {
@@ -345,12 +362,6 @@ function handlePopState(oEvent) {
     }
     pageAddressChanged("POPSTATE");
     // pageAddressChanged('POPSTATE');
-    if (document.documentElement.hasAttribute("data-tw5-redirect")) {
-      // if (document.documentElement.hasAttribute('data-tw5-redirect')) {
-      m_Log.Wow("[content.js] Hiding popstate event");
-      // m_Log.Wow('[content.js] Hiding popstate event');
-      oEvent.stopImmediatePropagation();
-    }
   }
 }
 
@@ -363,30 +374,11 @@ function handlePushState(oEvent) {
   // pageAddressChanged('PUSHSTATE');
 }
 
-function handleLaunchOurPlayer(oEvent) {
+function handleToggleEmbeddedPlayer(oEvent) {
   oEvent.preventDefault();
-  if (
-    oEvent.button === LEFT_BUTTON &&
-    g_oParsedAddress.sPage === "POSSIBLY_LIVE_BROADCAST"
-  ) {
-    // if (oEvent.button === LEFT_BUTTON && g_oParsedAddress.sPage === 'POSSIBLY_LIVE_STREAM') {
-    launchOurPlayer(g_oParsedAddress.sChannelCode);
-  } else {
-    m_Log.Wow(
-      `[content.js] Not starting the player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`
-    );
-    // m_Log.Wow(`[content.js] Do not launch player Button=${oEvent.button} Page=${g_oParsedAddress.sPage}`);
+  if (oEvent.type === "contextmenu" || oEvent.button === LEFT_BUTTON) {
+    toggleEmbeddedPlayer();
   }
-}
-
-function handleToggleAutoRedirect(oEvent) {
-  oEvent.preventDefault();
-  const b = !m_Settings.Get("bAutoRedirectAllowed");
-  // const b = !m_Settings.Get('bAutoRedirectAllowed');
-  m_Log.Wow(`[content.js] Auto-redirect allowed: ${b}`);
-  m_Settings.Change("bAutoRedirectAllowed", b);
-  // m_Settings.Change('bAutoRedirectAllowed', b);
-  updateOurButton();
 }
 
 function handleCloseHelp(oEvent) {
@@ -599,13 +591,8 @@ function insertOurButton() {
     );
   }
   const nodeButton = getOurButton();
-  nodeButton.addEventListener("click", handleLaunchOurPlayer);
-  // nodeButton.addEventListener('click', handleLaunchOurPlayer);
-  nodeButton.addEventListener(
-    "contextmenu",
-    handleToggleAutoRedirect
-  );
-  // nodeButton.addEventListener('contextmenu', handleToggleAutoRedirect);
+  nodeButton.addEventListener("click", handleToggleEmbeddedPlayer);
+  nodeButton.addEventListener("contextmenu", handleToggleEmbeddedPlayer);
   if (
     !g_oParsedAddress.bMobileVersion &&
     !m_Settings.Get("bAutoRedirectNoticed")
@@ -834,6 +821,7 @@ AddExceptionHandler(() => {
       // pageAddressChanged('LOAD');
       window.addEventListener("tw5-pushstate", handlePushState);
       // window.addEventListener('tw5-pushstate', handlePushState);
+      setInterval(AddExceptionHandler(recheckOfflineChannel), 6e4);
       insertOnPage();
       insertOurButtonFirstTime();
     })

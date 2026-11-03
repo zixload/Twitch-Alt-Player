@@ -137,6 +137,14 @@ const RESPONSE_CODE = "Server returned code ";
 
 let g_nExactTime = NaN;
 
+/*
+  L'heure reelle de chaque segment du direct (#EXT-X-PROGRAM-DATE-TIME, en millisecondes), par
+  numero de segment : la liste la lit, le lecteur la reprend quand le segment entre dans le tampon.
+  Le numero survit au convertisseur, l'objet segment non. Sert au synchroniseur (modules/sync.js).
+*/
+const g_mnSegmentDateTime = new Map();
+const SEGMENT_DATE_TIME_LIMIT = 200;
+
 if (!navigator.clipboard) {
   navigator.clipboard = {};
 }

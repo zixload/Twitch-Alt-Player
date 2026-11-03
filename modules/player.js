@@ -87,6 +87,8 @@ const m_Player = (() => {
   let _bWaitForBufferFill = true;
   // L'ecart entre l'horloge de l'element video et la position dans la diffusion.
   let _nBroadcastOffset = NaN;
+  // L'ecart entre l'horloge de l'element video et l'heure reelle des segments, en secondes.
+  let _nCaptureOffset = NaN;
   let _bSeekNeeded = false;
   /*
     Le DVR du direct. Suit-on le bord (true) ou le spectateur a-t-il rembobine dans le tampon deja
@@ -365,6 +367,23 @@ const m_Player = (() => {
         `[Player] Broadcast offset: ${m_Log.F1(nBroadcastOffset)}s`
       );
       _nBroadcastOffset = nBroadcastOffset;
+    }
+  }
+
+  /*
+    L'heure reelle de l'image : celle que la liste donne au segment, posee sur la fin du tampon une
+    fois le segment ajoute -- il en est le dernier. Vrai en MPEG-TS comme en fMP4, et identique chez
+    tous les spectateurs. Un segment sans heure (publicite, liste qui n'en porte pas) ne change rien.
+  */
+  function CalculateCaptureOffset(oSegment) {
+    const nDateTime = g_mnSegmentDateTime.get(oSegment.nNumber);
+    if (nDateTime === undefined) {
+      return;
+    }
+    g_mnSegmentDateTime.delete(oSegment.nNumber);
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length !== 0) {
+      _nCaptureOffset = nDateTime / 1e3 + oSegment.nDuration - oBuffer.end(oBuffer.length - 1);
     }
   }
 
@@ -818,6 +837,7 @@ const m_Player = (() => {
     _bAsyncOperation = false;
     g_maQueue.Remove(oSegment);
     CalculateBroadcastOffset(oSegment);
+    CalculateCaptureOffset(oSegment);
     // Une rediffusion attend en tete de file : inutile de verifier la lecture du direct.
     if (!(g_maQueue[0] && g_maQueue[0].pData === STATE_REPEAT)) {
       const nCheck = CheckPlaybackPosition(CHECK_SEGMENT_ADDITION);
@@ -900,6 +920,7 @@ const m_Player = (() => {
     if (oSegment.pData === STATE_BROADCAST_START) {
       Check(_oMediaSource.sourceBuffers.length === 0);
       _nBroadcastOffset = NaN;
+      _nCaptureOffset = NaN;
       m_Controls.ChangeState(oSegment.pData);
       g_maQueue.Remove(0);
       AddNextSegment();
@@ -1036,6 +1057,51 @@ const m_Player = (() => {
   function GetLiveDepth() {
     const oBuffer = _oMediaElement.buffered;
     return oBuffer.length === 0 ? 0 : oBuffer.end(oBuffer.length - 1) - oBuffer.start(0);
+  }
+
+  /*
+    Ce dont le synchroniseur a besoin (modules/sync.js). Deux horloges que Twitch ecrit dans chaque
+    segment et que tous les spectateurs recoivent a l'identique : la position dans la diffusion et
+    l'heure d'encodage. NaN tant qu'aucun segment ne les a portees (un flux fMP4 n'en porte pas).
+  */
+  function GetLiveClocks() {
+    if (m_Controls.GetState() !== STATE_PLAYING) {
+      return null;
+    }
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length === 0) {
+      return null;
+    }
+    return {
+      nCurrent: _oMediaElement.currentTime,
+      nStart: oBuffer.start(0),
+      nEnd: oBuffer.end(oBuffer.length - 1),
+      nBroadcastOffset: _nBroadcastOffset,
+      nCaptureOffset: _nCaptureOffset,
+      // La pause voulue, pas celle de l'element : il s'arrete aussi quand il attend des donnees.
+      bPaused: _bLivePaused,
+    };
+  }
+
+  // Se placer exactement a ce temps media du tampon, meme tout pres du bord : le synchroniseur
+  // tient un retard choisi, que SeekLiveTo prendrait pour un retour au direct.
+  function SeekLiveExactly(nMediaTime) {
+    Check(m_Controls.GetState() === STATE_PLAYING);
+    const oBuffer = _oMediaElement.buffered;
+    if (oBuffer.length === 0) {
+      return;
+    }
+    SetFollowingLive(false);
+    _oMediaElement.currentTime = Clamp(nMediaTime, oBuffer.start(0), oBuffer.end(oBuffer.length - 1));
+    UpdateLiveScale();
+  }
+
+  // Le synchroniseur rattrape un petit ecart en accelerant ou ralentissant a peine.
+  function SetLiveRate(nRate) {
+    Check(nRate > 0);
+    if (m_Controls.GetState() === STATE_PLAYING && _oMediaElement.playbackRate !== nRate) {
+      _oMediaElement.playbackRate = nRate;
+    }
   }
 
   // Sauter au bord du direct et s'y recaler. Le tampon normal de latence nous en separe.
@@ -1239,6 +1305,9 @@ const m_Player = (() => {
     IsFollowingLive,
     SeekLiveTo,
     SeekLiveToBehind,
+    GetLiveClocks,
+    SeekLiveExactly,
+    SetLiveRate,
     GetLiveDepth,
     JumpToLive,
     SeekReplayTo,

@@ -231,6 +231,10 @@ body {
 /* .hidechat #chat */
 	display: none
 }
+/* Dans la page de Twitch, son chat est a cote : pas de bouton pour le notre (voir modules/embed.js). */
+.alt-embedded #togglechat {
+	display: none
+}
 #chatsize {
 /* #chatsize */
 	flex: 0 0 .625rem;

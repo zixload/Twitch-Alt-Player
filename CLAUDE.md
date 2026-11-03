@@ -27,6 +27,13 @@ that replaces Twitch's player with its own: HLS fetching, server-side ad bypass 
 playlist requested without ads, MPEG-TS → fMP4 remuxing in a Web Worker, a diagnostics panel (`S`),
 replay of the buffered stream, chat panel, follow/notify buttons.
 
+**Since 2026-11-03 the player lives inside the real twitch.tv page.** `embedhost.js` frames
+`player.html` in Twitch's `.persistent-player`, and silences Twitch's own live stream for that tab
+(declarativeNetRequest session rule in `background.js`, `webRequest` in the Firefox build). Twitch's
+page stays native: its chat, sidebar and channel info are used, so the player hides its own when it
+is framed (`modules/embed.js`, `window.top !== window`). Opened on its own, `player.html` is still the
+full page the harness drives. The full-page redirect is gone.
+
 Forked from Alexander Choporov's original (BSD licence — keep his copyright line in `LICENSE`).
 Phase 1 translated every identifier from Russian to English. Phase 2 extracted every module into
 its own file and rewrote it; it is complete as of 2026-09-14.
@@ -41,7 +48,12 @@ There is no build step. Files load exactly as `manifest.json` and `player.html` 
 |---|---|
 | `manifest.json` | Permissions, content scripts, web-accessible resources |
 | `background.js` | Service worker: detects third-party extensions, prevents duplicate player tabs |
-| `content.js`, `gqltoken.js`, `autoclaim.js` | Content scripts on twitch.tv: redirect button, GraphQL integrity token, channel points |
+| `content.js`, `gqltoken.js`, `autoclaim.js` | Content scripts on twitch.tv: which page is a live channel, the on/off button in Twitch's top bar, GraphQL integrity token, channel points |
+| `embedhost.js`, `embedhost.css` | Content script on twitch.tv: frames the player in `.persistent-player`, silences Twitch's player, and adds round buttons to Twitch's Follow/Subscribe row (cinema, speed, volume boost, Watch together). Their menus hang from `<body>`, or Twitch's row would clip them |
+| `modules/embed.js` | The player's side of the frame: reports its state to the page, applies speed and boost (Web Audio), maps studio mode to Twitch's theatre mode |
+| `modules/sync.js`, `sync-relay/` | "Watch together": rooms on a Cloudflare Worker + Durable Object (free plan, `wss://tw5-sync.tw5-sync-relay.workers.dev`). Members align on `#EXT-X-PROGRAM-DATE-TIME` (`g_mnSegmentDateTime`), which every viewer receives, in MPEG-TS and fMP4 alike |
+| `twitch-skin.css` | Dresses the bottom bar and the settings menu like Twitch's own player; hides the settings groups that mean nothing inside Twitch's page |
+| `firefox/`, `tools/firefox/build.js` | The Firefox / Zen build, generated from this tree (see `firefox/INSTALLATION.md`) |
 | `content_injection.js`, `gql_injection.js` | Run in the Twitch page context (token capture) |
 | `player.html` | The player page; its `<script defer>` list is the load order |
 | `common.js` | Shared helpers and constants, `m_Log`, `m_Settings`, the settings key migration (the only intentional Cyrillic) |

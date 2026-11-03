@@ -78,8 +78,9 @@ const m_Chat = (() => {
     }
   }
 
+  // Dans la page de Twitch, son chat est deja a cote : le notre ne se charge jamais.
   function ApplyPanelState() {
-    const nState = m_Settings.Get("nChatState");
+    const nState = m_Embed.IsEmbedded() ? CHAT_UNLOADED : m_Settings.Get("nChatState");
     m_Log.Wow(`[Chat] New panel state: ${nState}`);
     CancelPanelDrag();
     switch (nState) {

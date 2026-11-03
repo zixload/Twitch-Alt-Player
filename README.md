@@ -1,7 +1,8 @@
 # Twitch-Alt-Player
 
-A Chrome extension that replaces the Twitch player with its own: no ads, and a timeline that runs
-from the start of the broadcast instead of the last few minutes.
+A Chrome extension (and a Firefox / Zen build) that replaces the Twitch player with its own, inside
+the real twitch.tv page: no ads, and a timeline that runs from the start of the broadcast instead of
+the last few minutes. Twitch's chat, sidebar and channel page stay exactly as they are.
 
 ## What it does
 
@@ -27,6 +28,17 @@ the moment it started to right now.
 This needs the channel to keep its broadcasts (most do). When a channel does not, the bar falls
 back to what the browser holds — a few minutes.
 
+### Under the picture
+
+Round buttons in Twitch's own Follow / Subscribe row:
+
+- **Cinema mode** dims the page around the picture.
+- **Speed**, once you are behind the live edge.
+- **Volume boost**, up to 400 %.
+- **Watch together** creates a room or joins one with a code. Everyone in it sees the same frame,
+  within a few hundredths of a second. Pauses, seeks and returns to live are shared. The room relay
+  runs on Cloudflare's free plan (`sync-relay/`).
+
 ### The rest
 
 - **Skips ads** — plays the stream through a second playlist Twitch serves without the stitched-in
@@ -43,6 +55,8 @@ back to what the browser holds — a few minutes.
 ## Install
 
 Open `chrome://extensions`, turn on Developer mode, and use **Load unpacked** on this folder.
+
+For Firefox or Zen, run `node tools/firefox/build.js` and follow `firefox/INSTALLATION.md`.
 
 ## How it works
 

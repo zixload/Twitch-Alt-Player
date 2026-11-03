@@ -59,7 +59,7 @@ const WINDOW = ('window document navigator location history screen localStorage 
 	+ 'Node Element HTMLElement HTMLVideoElement HTMLMediaElement HTMLCanvasElement HTMLInputElement '
 	+ 'HTMLIFrameElement HTMLSelectElement HTMLOptionElement Document DocumentFragment Window Text Range '
 	+ 'Image Option Audio Video Selection Attr Comment NodeList HTMLCollection DOMParser XMLHttpRequest '
-	+ 'MutationObserver ResizeObserver IntersectionObserver MediaSource SourceBuffer MediaError '
+	+ 'MutationObserver ResizeObserver IntersectionObserver MediaSource SourceBuffer MediaError AudioContext '
 	+ 'CanvasRenderingContext2D ImageData OffscreenCanvas Path2D WebSocket Notification Storage '
 	+ 'PointerEvent MouseEvent KeyboardEvent WheelEvent InputEvent FocusEvent DragEvent TouchEvent '
 	+ 'alert confirm prompt open close scrollTo getSelection devicePixelRatio innerWidth innerHeight '

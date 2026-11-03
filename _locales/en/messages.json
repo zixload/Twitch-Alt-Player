@@ -683,7 +683,7 @@
 	},
 	"F0600":
 	{
-		"message": "Right click toggles auto start<br>of the Alternate Player.&ensp;Left<br>click starts the Alternate Player."
+		"message": "Alternate Player on Twitch:<br>click to turn it on or off."
 	},
 	"F0604":
 	{
@@ -1610,5 +1610,97 @@
 	"A0928":
 	{
 		"message": "Studio mode: the video fills the screen and the chat stays beside it.\nESCAPE leaves it."
+	},
+	"F2000":
+	{
+		"message": "Cinema mode: dims the page around the picture (Esc to leave)"
+	},
+	"F2001":
+	{
+		"message": "Playback speed"
+	},
+	"F2002":
+	{
+		"message": "Volume boost, up to 400 %"
+	},
+	"F2003":
+	{
+		"message": "Playback speed: available once you rewind"
+	},
+	"F2004":
+	{
+		"message": "Clip"
+	},
+	"F2005":
+	{
+		"message": "LIVE"
+	},
+	"F2010":
+	{
+		"message": "Watch together"
+	},
+	"F2011":
+	{
+		"message": "Create a room"
+	},
+	"F2012":
+	{
+		"message": "Join with a code"
+	},
+	"F2014":
+	{
+		"message": "Leave the room"
+	},
+	"F2016":
+	{
+		"message": "Connecting…"
+	},
+	"F2017":
+	{
+		"message": "In sync"
+	},
+	"F2018":
+	{
+		"message": "Catching up…"
+	},
+	"F2020":
+	{
+		"message": "Loading…"
+	},
+	"F2021":
+	{
+		"message": "The room is watching $1"
+	},
+	"F2022":
+	{
+		"message": "Go to that channel"
+	},
+	"F2023":
+	{
+		"message": "This channel carries no timing data: synced to the live edge only"
+	},
+	"F2024":
+	{
+		"message": "Relay unreachable, retrying…"
+	},
+	"F2026":
+	{
+		"message": "Copy the room code"
+	},
+	"F2027":
+	{
+		"message": "Copied"
+	},
+	"F2028":
+	{
+		"message": "This broadcast has no recording to rewind into"
+	},
+	"F2029":
+	{
+		"message": "That code is not valid"
+	},
+	"F2030":
+	{
+		"message": "$1 watching"
 	}
 }

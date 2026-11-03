@@ -739,6 +739,7 @@ const m_Playlist = (() => {
     let oNewSegment = null;
     let bDiscontinuity = false;
     let nTime = NaN;
+    let nDateTime = NaN;
     let nVersion = 1;
 
     for (const { sLine, sTagName, sTagValue } of TagsAndUrls(sListBeingParsed)) {
@@ -769,6 +770,8 @@ const m_Playlist = (() => {
           */
           oNewSegment = Object.create(null);
           ReadSegmentHeader(oList, oNewSegment, sTagValue, nTime);
+          oNewSegment.nDateTime = nDateTime;
+          nDateTime = NaN;
           /*
             Une publicite fait perdre la position dans la chronologie, et pas seulement pour
             elle : NaN + 1 reste NaN, donc les segments qui la suivent n'en ont plus non plus,
@@ -846,9 +849,14 @@ const m_Playlist = (() => {
           m_Log.Oops(`[Playlist] Found #EXT-X-START=${sTagValue}`);
           break;
 
+        // L'heure reelle du segment qui suit : la meme pour tous les spectateurs, quel que soit le
+        // conteneur. Le synchroniseur s'en sert pour dater l'image a l'ecran.
+        case "-X-PROGRAM-DATE-TIME":
+          nDateTime = Date.parse(sTagValue);
+          break;
+
         // Reconnue sans etre exploitee. La branche doit exister pour la trace ; sans elle la
         // balise serait simplement ignoree, ce qui est deja ce qui se passe.
-        case "-X-PROGRAM-DATE-TIME":
         case "-X-DISCONTINUITY-SEQUENCE":
           break;
 
@@ -1259,6 +1267,13 @@ const m_Playlist = (() => {
           oSegment.bDiscontinuity || _bAppendDiscontinuity
         )
       );
+      if (Number.isFinite(oSegment.nDateTime)) {
+        g_mnSegmentDateTime.set(oQueued.nNumber, oSegment.nDateTime);
+        // Un segment jete avant d'entrer dans le tampon laisserait son heure : on borne.
+        if (g_mnSegmentDateTime.size > SEGMENT_DATE_TIME_LIMIT) {
+          g_mnSegmentDateTime.delete(g_mnSegmentDateTime.keys().next().value);
+        }
+      }
       // Un segment fMP4 emporte de quoi etre joue sans passer par le demultiplexeur.
       if (oNewSegments.sInitSegmentUrl) {
         oQueued.sInitSegmentUrl = oNewSegments.sInitSegmentUrl;
