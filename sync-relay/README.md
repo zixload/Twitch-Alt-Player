@@ -31,6 +31,8 @@ Clients connect to `/room/<CODE>`, where the code is six characters from `A-Z` (
 - `{t: "welcome", a, n}` on arrival: the room's anchor (or `null` for a new room) and the member count.
 - `{t: "anchor", a, n}` when another member changes the anchor.
 - `{t: "members", n}` when someone joins or leaves.
+- `{t: "pong", c, ts}` in answer to `{t: "ping", c}`: the relay's time in milliseconds. A room on
+  a video has no Twitch clock, so its members set their clocks by this one.
 
 A client sends `{t: "anchor", a}`. The relay stores it and relays it to the other members. A room
 forgets everything when its last member leaves.

@@ -56,6 +56,12 @@ export class Room extends DurableObject {
 		if (oMessage === null || typeof oMessage != "object") {
 			return;
 		}
+		// L'heure du relais, pour les salons qui n'ont pas celle de Twitch (une VOD) : le client mesure
+		// l'aller-retour et s'y cale.
+		if (oMessage.t === "ping" && Number.isFinite(oMessage.c)) {
+			oSocket.send(JSON.stringify({ t: "pong", c: oMessage.c, ts: Date.now() }));
+			return;
+		}
 		if (oMessage.t === "anchor" && oMessage.a !== null && typeof oMessage.a == "object") {
 			await this.ctx.storage.put("anchor", oMessage.a);
 			this.broadcast({ t: "anchor", a: oMessage.a, n: this.ctx.getWebSockets().length }, oSocket);
