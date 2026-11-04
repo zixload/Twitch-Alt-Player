@@ -289,6 +289,12 @@ const m_Sync = (() => {
   }
 
   function followLive(oLocal) {
+    if (oLocal.sSource === "vod") {
+      // Une video enregistree n'a pas de direct a suivre. Le salon a ete annonce au direct
+      // pendant que la video chargeait encore : on le recale sur la position reelle.
+      announce({ k: "at", p: oLocal.nPosition, s: serverNow(), r: oLocal.nRate, z: oLocal.bPaused });
+      return;
+    }
     if (oLocal.sSource === "rewind") {
       m_Rewind.Stop();
       return;
